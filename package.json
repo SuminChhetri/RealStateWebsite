@@ -1,0 +1,40 @@
+{
+  "name": "meridian-celpip",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Meridian — a CELPIP preparation platform that trains learners systematically toward CLB 12.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "db:push": "tsx src/lib/db/migrate.ts",
+    "db:seed": "tsx src/lib/db/seed.ts",
+    "db:reset": "rm -f data/meridian.db data/meridian.db-shm data/meridian.db-wal && npm run db:push && npm run db:seed",
+    "setup": "npm run db:reset",
+    "test": "node --test --import tsx tests/*.test.ts"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.10.0",
+    "drizzle-orm": "^0.44.2",
+    "next": "^15.3.4",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "server-only": "^0.0.1",
+    "zod": "^3.25.67"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.15.30",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "drizzle-kit": "^0.31.10",
+    "playwright": "^1.62.1",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=20.11"
+  }
+}

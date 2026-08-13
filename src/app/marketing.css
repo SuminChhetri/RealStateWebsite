@@ -1,0 +1,79 @@
+/* The landing page shares the design system and adds only what it needs. */
+
+.marketing {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.marketing-inner {
+  width: 100%;
+  max-width: 64rem;
+  margin: 0 auto;
+  padding-inline: var(--s5);
+}
+
+.marketing-bar {
+  border-bottom: 1px solid var(--rule);
+  padding-block: var(--s4);
+}
+
+.marketing-hero {
+  padding-block: var(--s9) var(--s8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s5);
+  max-width: 52rem;
+}
+
+.marketing-headline {
+  font-size: clamp(2rem, 1.4rem + 3vw, 3.25rem);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  max-width: 22ch;
+}
+
+.marketing-lede {
+  font-family: var(--font-reading);
+  font-size: 1.15rem;
+  line-height: 1.65;
+  color: var(--ink-secondary);
+  max-width: 40rem;
+}
+
+.marketing-section {
+  padding-block: var(--s7);
+  border-top: 1px solid var(--rule-faint);
+}
+
+.marketing-loop {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--s5);
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  counter-reset: loop;
+}
+
+.marketing-loop li {
+  border-top: 2px solid var(--accent);
+  padding-top: var(--s3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.marketing-cta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+  align-items: flex-start;
+  padding-block: var(--s8);
+}
+
+.marketing-foot {
+  margin-top: auto;
+  border-top: 1px solid var(--rule-faint);
+  padding-block: var(--s5);
+}

@@ -1,0 +1,787 @@
+import type { SeedStimulus } from './types';
+
+/**
+ * Listening corpus — original scripts and items.
+ *
+ * Scripts are written to be *heard*, not read: contractions, self-corrections,
+ * overlapping priorities, and the hesitation markers real speakers produce. The
+ * difficulty levers are the same ones the test uses — number of voices,
+ * information density, abstraction, and how much of the answer depends on how
+ * something is said rather than what is said.
+ *
+ * Audio is rendered in the browser from these scripts (see
+ * `lib/providers`): every learner hears the same words, at no cost, offline.
+ * The transcript is withheld until the item set is submitted, then shown in
+ * full so a missed item can be traced back to the exact line.
+ */
+export const listeningStimuli: SeedStimulus[] = [
+  {
+    slug: 'listen-problem-permit',
+    skill: 'listening',
+    partType: 'listening.problem_solving',
+    title: 'A problem with a parking permit',
+    level: 8,
+    topic: 'municipal services',
+    script: [
+      { speaker: 'Narrator', voice: 'narrator', text: 'You will hear a conversation between a resident and a service desk clerk. You will hear it once.' },
+      { speaker: 'Resident', voice: 'speaker_a', text: "Hi. I renewed my residential parking permit online three weeks ago, and I got a ticket on Tuesday anyway." },
+      { speaker: 'Clerk', voice: 'speaker_b', text: "Let's have a look. Do you have the confirmation number from the renewal?" },
+      { speaker: 'Resident', voice: 'speaker_a', text: "I've got the email. It says reference four-one-seven-two-nine. Sorry — four-one-seven-nine-two." },
+      { speaker: 'Clerk', voice: 'speaker_b', text: "Four-one-seven-nine-two. Right, I can see it. The renewal went through, but it was applied to a plate ending in K-D-M." },
+      { speaker: 'Resident', voice: 'speaker_a', text: "That's my old car. I sold it in January. The new one ends in T-R-B." },
+      { speaker: 'Clerk', voice: 'speaker_b', text: "Then that's your answer. The system doesn't link the permit to you, it links it to the plate. When you renewed, it pre-filled the plate from last year and you'd have had to change it manually." },
+      { speaker: 'Resident', voice: 'speaker_a', text: "It didn't ask me to confirm it?" },
+      { speaker: 'Clerk', voice: 'speaker_b', text: "It shows it, but it doesn't stop you. You're the fourth person this month. I've flagged it to the web team twice." },
+      { speaker: 'Resident', voice: 'speaker_a', text: "So what happens with the ticket?" },
+      { speaker: 'Clerk', voice: 'speaker_b', text: "You can dispute it. Because the permit was paid and valid, just recorded against the wrong plate, that's usually cancelled on review. It's not automatic, though — you have to file it, and there's a fifteen-day window from the date on the ticket." },
+      { speaker: 'Resident', voice: 'speaker_a', text: "Tuesday. So I've got until the twenty-eighth or so." },
+      { speaker: 'Clerk', voice: 'speaker_b', text: "Count from the date printed on the ticket, not the day you found it. And update the plate today, or you'll get another one on Thursday when they sweep the street." },
+      { speaker: 'Resident', voice: 'speaker_a', text: "Can you change the plate from here?" },
+      { speaker: 'Clerk', voice: 'speaker_b', text: "I can. I need the ownership document or the insurance slip for the new vehicle. Not a photo of the plate — I know that seems backwards, but the plate itself doesn't prove it's yours." },
+      { speaker: 'Resident', voice: 'speaker_a', text: "I've got the insurance on my phone." },
+      { speaker: 'Clerk', voice: 'speaker_b', text: "That'll do. And when you file the dispute, attach the renewal confirmation as well as the ticket. Half the disputes I see get delayed because people send only the ticket." },
+    ],
+    questions: [
+      {
+        slug: 'listen-permit-q1',
+        microSkill: 'listening.distractor_resistance',
+        prompt: 'What is the resident’s renewal reference number?',
+        options: [
+          { key: 'A', text: '41729', rationale: 'The first version, which the resident immediately corrects.' },
+          { key: 'B', text: '41792', rationale: 'Correct: the corrected number, repeated back by the clerk.' },
+          { key: 'C', text: '41927', rationale: 'Neither version of the number given in the conversation.' },
+          { key: 'D', text: '47192', rationale: 'The right digits in the wrong order — a plausible mishearing.' },
+        ],
+        answerKey: 'B',
+        explanation:
+          'A self-correction ("Sorry —") replaces what came before it. The clerk repeating the number is the confirmation. Train yourself to overwrite, not average, when a speaker corrects a detail.',
+        takeaway: 'Listen for “sorry”, “actually”, “make that” — everything before them is void.',
+        level: 8,
+        difficulty: 7.6,
+      },
+      {
+        slug: 'listen-permit-q2',
+        microSkill: 'listening.detail_recall',
+        prompt: 'Why did the ticket happen?',
+        options: [
+          { key: 'A', text: 'The renewal payment failed', rationale: 'The clerk confirms the renewal went through.' },
+          { key: 'B', text: 'The permit was registered to the resident’s previous plate', rationale: 'Correct: the renewal pre-filled the old plate ending K-D-M.' },
+          { key: 'C', text: 'The permit expired before the renewal was processed', rationale: 'No gap in coverage is mentioned.' },
+          { key: 'D', text: 'The resident parked outside the permitted zone', rationale: 'Zones are never discussed.' },
+        ],
+        answerKey: 'B',
+        explanation:
+          'The cause is stated once and then explained. When a conversation moves from "what happened" to "why the system allows it", the cause has already been given — do not wait for a clearer statement.',
+        level: 7,
+        difficulty: 6.6,
+      },
+      {
+        slug: 'listen-permit-q3',
+        microSkill: 'listening.inference',
+        prompt: 'What does the clerk imply about the online renewal system?',
+        options: [
+          { key: 'A', text: 'It has a known flaw that has been reported and not fixed', rationale: 'Correct: fourth person this month, flagged twice.' },
+          { key: 'B', text: 'It is being replaced later this year', rationale: 'No replacement is mentioned.' },
+          { key: 'C', text: 'It works correctly and the resident made an unusual error', rationale: '"You\'re the fourth person this month" says the opposite.' },
+          { key: 'D', text: 'It cannot handle vehicle changes at all', rationale: 'It can — it pre-fills and allows editing.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'Two facts combine into the inference: frequency ("fourth person") and unresolved reporting ("flagged it twice"). Inference in listening usually means joining two nearby statements.',
+        level: 9,
+        difficulty: 8.7,
+      },
+      {
+        slug: 'listen-permit-q4',
+        microSkill: 'listening.detail_recall',
+        prompt: 'What must the resident provide to change the plate at the desk?',
+        options: [
+          { key: 'A', text: 'A photograph of the new licence plate', rationale: 'Explicitly refused by the clerk: a plate photo proves nothing about ownership.' },
+          { key: 'B', text: 'The ownership document or insurance slip', rationale: 'Correct: either document proves the vehicle is the resident’s.' },
+          { key: 'C', text: 'The parking ticket and the renewal email', rationale: 'Those are for the dispute, not the plate change.' },
+          { key: 'D', text: 'A signed declaration from the previous owner', rationale: 'Never mentioned; the previous owner plays no part in the process.' },
+        ],
+        answerKey: 'B',
+        explanation:
+          'The conversation contains two separate document lists — one for the plate change, one for the dispute. Where a speaker gives two lists, tag each with its purpose as you hear it.',
+        takeaway: 'When a speaker gives two lists, label them immediately; they will be swapped in the options.',
+        level: 8,
+        difficulty: 7.9,
+      },
+      {
+        slug: 'listen-permit-q5',
+        microSkill: 'listening.inference',
+        prompt: 'What does the clerk correct about the resident’s calculation of the deadline?',
+        options: [
+          { key: 'A', text: 'The window is thirty days, not fifteen', rationale: 'Fifteen days is stated once and not revised.' },
+          { key: 'B', text: 'The count starts from the date on the ticket, not the day it was found', rationale: 'Correct: the clerk corrects the method rather than the date the resident guessed.' },
+          { key: 'C', text: 'The deadline falls on the twenty-eighth, as the resident said', rationale: 'The clerk does not confirm the date; he corrects the method.' },
+          { key: 'D', text: 'Weekends are excluded from the count', rationale: 'Not mentioned; the fifteen days are given without qualification.' },
+        ],
+        answerKey: 'B',
+        explanation:
+          'The resident states a conclusion; the clerk answers by correcting the *method* rather than the number. Answers to questions are not always in the same register as the question.',
+        level: 10,
+        difficulty: 9.4,
+      },
+      {
+        slug: 'listen-permit-q6',
+        microSkill: 'listening.function',
+        prompt: 'Why does the clerk say “I know that seems backwards”?',
+        options: [
+          { key: 'A', text: 'To acknowledge that the rule is counter-intuitive before justifying it', rationale: 'Correct: he pre-empts the objection and then explains that a plate photo proves nothing about ownership.' },
+          { key: 'B', text: 'To apologise for an error the desk has made', rationale: 'No error is being admitted.' },
+          { key: 'C', text: 'To suggest the resident complain about the policy', rationale: 'He explains the policy rather than inviting complaint.' },
+          { key: 'D', text: 'To indicate that the requirement may be waived', rationale: 'It is not waived; insurance is accepted instead.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'Function items ask what a speaker is *doing*. Here, pre-empting an objection — a move you will hear constantly in service conversations and should learn to name instantly.',
+        level: 10,
+        difficulty: 9.6,
+      },
+      {
+        slug: 'listen-permit-q7',
+        microSkill: 'listening.prediction',
+        prompt: 'What will most likely happen if the resident does nothing until Thursday?',
+        options: [
+          { key: 'A', text: 'The original ticket will be cancelled automatically', rationale: 'Cancellation requires a filed dispute and review.' },
+          { key: 'B', text: 'A second ticket will be issued during the street sweep', rationale: 'Correct: "you\'ll get another one on Thursday when they sweep the street".' },
+          { key: 'C', text: 'The permit will be suspended', rationale: 'Suspension is never mentioned.' },
+          { key: 'D', text: 'The dispute window will close', rationale: 'The window runs fifteen days from the ticket date.' },
+        ],
+        answerKey: 'B',
+        explanation:
+          'Prediction items are answered by the warning a speaker gives, not by general reasoning. The clerk states the consequence directly; catching it depends on holding it while other information arrives.',
+        level: 8,
+        difficulty: 7.7,
+      },
+      {
+        slug: 'listen-permit-q8',
+        microSkill: 'listening.detail_recall',
+        prompt: 'What does the clerk say causes delays in half the disputes he sees?',
+        options: [
+          { key: 'A', text: 'Filing after the fifteen-day window', rationale: 'A different failure, not the one he attributes the delays to.' },
+          { key: 'B', text: 'Submitting only the ticket without the renewal confirmation', rationale: 'Correct: the clerk names this as the cause of delay in half the disputes he sees.' },
+          { key: 'C', text: 'Sending photographs instead of documents', rationale: 'That concerns the plate change.' },
+          { key: 'D', text: 'Disputes filed at the desk rather than online', rationale: 'Filing channel is not discussed.' },
+        ],
+        answerKey: 'B',
+        explanation:
+          'The last line of a conversation frequently carries an item. Attention drops as a dialogue winds down — the final advice is often exactly what is tested.',
+        level: 8,
+        difficulty: 7.5,
+      },
+    ],
+  },
+
+  {
+    slug: 'listen-daily-neighbour',
+    skill: 'listening',
+    partType: 'listening.daily_life',
+    title: 'Two neighbours and a shared driveway',
+    level: 7,
+    topic: 'community',
+    script: [
+      { speaker: 'Narrator', voice: 'narrator', text: 'You will hear a conversation between two neighbours.' },
+      { speaker: 'Wen', voice: 'speaker_a', text: "Marc, have you got a second? It's about the driveway again." },
+      { speaker: 'Marc', voice: 'speaker_b', text: "Let me guess. The van." },
+      { speaker: 'Wen', voice: 'speaker_a', text: "The van. It's not the parking, honestly — it's that when it's there I can't see past it turning out, and there are kids on that corner at half eight." },
+      { speaker: 'Marc', voice: 'speaker_b', text: "Yeah. My brother-in-law's been using it for the renovation. It's meant to be four more days." },
+      { speaker: 'Wen', voice: 'speaker_a', text: "Four days I can live with. It's the not knowing. Last time it was two weeks and nobody said anything." },
+      { speaker: 'Marc', voice: 'speaker_b', text: "That's fair. I should have told you in March." },
+      { speaker: 'Wen', voice: 'speaker_a', text: "I'm not trying to make it a thing." },
+      { speaker: 'Marc', voice: 'speaker_b', text: "No, you're right though. Look — what if he parks on the far side, past the hedge? It's a longer walk with the tools but you'd have the sightline." },
+      { speaker: 'Wen', voice: 'speaker_a', text: "That would solve it entirely." },
+      { speaker: 'Marc', voice: 'speaker_b', text: "I'll tell him tonight. And if it goes past Friday I'll message you rather than let you work it out from the window." },
+      { speaker: 'Wen', voice: 'speaker_a', text: "Thanks. Genuinely." },
+    ],
+    questions: [
+      {
+        slug: 'listen-neighbour-q1',
+        microSkill: 'listening.gist',
+        prompt: 'What is Wen’s actual concern?',
+        options: [
+          { key: 'A', text: 'That the van takes her parking space', rationale: 'She says explicitly it is not the parking.' },
+          { key: 'B', text: 'That the van blocks her view when pulling out', rationale: 'Correct, and she ties it to children on the corner.' },
+          { key: 'C', text: 'That the renovation is noisy in the morning', rationale: 'Noise is never mentioned.' },
+          { key: 'D', text: 'That the van is parked illegally', rationale: 'Legality does not come up.' },
+        ],
+        answerKey: 'B',
+        explanation:
+          'She names and rejects the obvious complaint before giving the real one. Speakers often clear away the expected objection first — wait for the "it\'s that…" clause.',
+        level: 7,
+        difficulty: 6.4,
+      },
+      {
+        slug: 'listen-neighbour-q2',
+        microSkill: 'listening.speaker_attitude',
+        prompt: 'How does Marc respond to the complaint?',
+        options: [
+          { key: 'A', text: 'Defensively, explaining why the van must stay', rationale: 'He concedes and proposes a change.' },
+          { key: 'B', text: 'By accepting responsibility and offering a practical fix', rationale: 'Correct: "I should have told you in March", then the hedge suggestion.' },
+          { key: 'C', text: 'Dismissively, treating the concern as minor', rationale: '"That\'s fair" and "you\'re right though" indicate the opposite.' },
+          { key: 'D', text: 'By asking Wen to raise it with his brother-in-law', rationale: 'He undertakes to speak to him himself.' },
+        ],
+        answerKey: 'B',
+        explanation:
+          'Attitude is carried by short acknowledgement phrases as much as by content. "That\'s fair" and "you\'re right though" are concessions, and concessions signal a cooperative stance.',
+        level: 8,
+        difficulty: 7.2,
+      },
+      {
+        slug: 'listen-neighbour-q3',
+        microSkill: 'listening.detail_recall',
+        prompt: 'What does Marc propose?',
+        options: [
+          { key: 'A', text: 'Moving the van to the far side of the hedge', rationale: 'Correct: it costs a longer walk with tools but restores the sightline.' },
+          { key: 'B', text: 'Finishing the renovation four days early', rationale: 'The four days are the existing estimate.' },
+          { key: 'C', text: 'Parking on the street overnight', rationale: 'Street parking is not raised.' },
+          { key: 'D', text: 'Asking Wen to use the rear exit', rationale: 'Never suggested; Marc changes his own arrangements rather than hers.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'The proposal is framed as a question ("what if he parks…"). Suggestions in conversation frequently arrive as questions, not statements.',
+        level: 6,
+        difficulty: 5.9,
+      },
+      {
+        slug: 'listen-neighbour-q4',
+        microSkill: 'listening.inference',
+        prompt: 'What was the problem in March?',
+        options: [
+          { key: 'A', text: 'The van damaged the driveway surface', rationale: 'No damage is mentioned.' },
+          { key: 'B', text: 'The van stayed two weeks without any notice', rationale: 'Correct: "Last time it was two weeks and nobody said anything."' },
+          { key: 'C', text: 'A different vehicle blocked the driveway', rationale: 'The reference is to the same situation.' },
+          { key: 'D', text: 'Wen complained and was ignored', rationale: 'She says she did not raise it.' },
+        ],
+        answerKey: 'B',
+        explanation:
+          'The March reference is split across two turns: Wen supplies the duration and the silence, Marc supplies the month. Keep a running memory of who added which fact.',
+        level: 8,
+        difficulty: 7.8,
+      },
+      {
+        slug: 'listen-neighbour-q5',
+        microSkill: 'listening.speaker_attitude',
+        prompt: 'Why does Wen say “I’m not trying to make it a thing”?',
+        options: [
+          { key: 'A', text: 'To withdraw the complaint', rationale: 'She does not withdraw it; the fix is agreed immediately afterwards.' },
+          { key: 'B', text: 'To signal that she wants the problem solved without conflict', rationale: 'Correct: it protects the relationship while keeping the request on the table.' },
+          { key: 'C', text: 'To indicate that she has complained before', rationale: 'She states she did not complain in March.' },
+          { key: 'D', text: 'To express frustration at repeating herself', rationale: 'The tone is de-escalating, not frustrated.' },
+        ],
+        answerKey: 'B',
+        explanation:
+          'This is face-work: protecting the relationship while keeping the request. It is one of the highest-frequency moves in Canadian everyday interaction and a common Part 2 item.',
+        level: 9,
+        difficulty: 8.5,
+      },
+      {
+        slug: 'listen-neighbour-q6',
+        microSkill: 'listening.detail_recall',
+        prompt: 'What does Marc promise to do if the work runs past Friday?',
+        options: [
+          { key: 'A', text: 'Move the van off the property entirely', rationale: 'Not what he undertakes.' },
+          { key: 'B', text: 'Send Wen a message rather than leave her guessing', rationale: 'Correct: it answers the concern she named as the real one.' },
+          { key: 'C', text: 'Ask his brother-in-law to finish early', rationale: 'No such undertaking is made; the four-day estimate stands.' },
+          { key: 'D', text: 'Pay for a parking space nearby', rationale: 'Never mentioned; the fix proposed is free.' },
+        ],
+        answerKey: 'B',
+        explanation:
+          'The commitment addresses the concern Wen named as the real one — "it\'s the not knowing". Good listeners track whether a solution matches the stated problem.',
+        level: 7,
+        difficulty: 6.8,
+      },
+    ],
+  },
+
+  {
+    slug: 'listen-info-clinic-intake',
+    skill: 'listening',
+    partType: 'listening.information',
+    title: 'Instructions before a clinic appointment',
+    level: 9,
+    topic: 'health services',
+    script: [
+      { speaker: 'Narrator', voice: 'narrator', text: 'You will hear a clinic coordinator giving instructions to a new patient.' },
+      { speaker: 'Coordinator', voice: 'speaker_a', text: "So, your assessment is on the eleventh at ten fifteen. Arrive by ten, because the intake form takes about that long and we can't start late — the room is booked to the hour." },
+      { speaker: 'Coordinator', voice: 'speaker_a', text: "Bring the referral letter, your health card, and a list of everything you're currently taking. When I say everything, I mean supplements and anything over the counter as well, not just prescriptions. People leave those off and then we spend the appointment reconstructing them." },
+      { speaker: 'Coordinator', voice: 'speaker_a', text: "You'll get a text reminder two days before. If you need to reschedule, do it through the link in that text rather than calling — the phone line is only staffed until two, and the online system will show you the cancellations, which is usually faster." },
+      { speaker: 'Coordinator', voice: 'speaker_a', text: "One thing that catches people out: the parking under the building is for the medical offices on floors three to seven. We're on the second floor, which sounds like it should be included, but it isn't. Use the lot on Beaumont Street — the first ninety minutes are free if you validate at our desk." },
+      { speaker: 'Coordinator', voice: 'speaker_a', text: "The assessment itself is about forty minutes. You'll get written results within ten business days, and we'll call you before that only if something needs immediate attention. So no news in week one is normal, not a bad sign." },
+    ],
+    questions: [
+      {
+        slug: 'listen-clinic-q1',
+        microSkill: 'listening.detail_recall',
+        prompt: 'What time should the patient arrive?',
+        options: [
+          { key: 'A', text: '10:00', rationale: 'Correct: fifteen minutes before the appointment, for the intake form.' },
+          { key: 'B', text: '10:15', rationale: 'That is the appointment time, not the arrival time.' },
+          { key: 'C', text: '09:45', rationale: 'Not stated; the instruction is to arrive by ten.' },
+          { key: 'D', text: '11:00', rationale: 'Confuses the hour booking with the arrival time.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'Two times in one sentence, and the second one given is the one you need. Instruction monologues routinely pair an appointment time with an earlier arrival time — capture both.',
+        level: 7,
+        difficulty: 6.5,
+      },
+      {
+        slug: 'listen-clinic-q2',
+        microSkill: 'listening.note_taking',
+        prompt: 'What must the patient bring?',
+        options: [
+          { key: 'A', text: 'Referral letter, health card, and prescription list only', rationale: 'The coordinator explicitly widens this beyond prescriptions.' },
+          { key: 'B', text: 'Referral letter, health card, and a full list including supplements and over-the-counter items', rationale: 'Correct: the coordinator widens the third item beyond prescriptions.' },
+          { key: 'C', text: 'Health card and parking validation', rationale: 'Validation is obtained at the desk, not brought.' },
+          { key: 'D', text: 'Referral letter and photo identification', rationale: 'Photo ID is never mentioned.' },
+        ],
+        answerKey: 'B',
+        explanation:
+          'The speaker gives a three-item list, then expands the third item. Expansions arrive after the list, so do not close your notes when the list ends.',
+        takeaway: 'A list is often followed by a qualifier that changes one of its items. Keep listening.',
+        level: 8,
+        difficulty: 7.8,
+      },
+      {
+        slug: 'listen-clinic-q3',
+        microSkill: 'listening.detail_recall',
+        prompt: 'How should the patient reschedule?',
+        options: [
+          { key: 'A', text: 'By calling the clinic before two o’clock', rationale: 'Possible but explicitly not recommended.' },
+          { key: 'B', text: 'Through the link in the reminder text', rationale: 'Correct, with two reasons given.' },
+          { key: 'C', text: 'By replying to the reminder text', rationale: 'Replying is not the method described.' },
+          { key: 'D', text: 'In person at the second-floor desk', rationale: 'Not mentioned as a rescheduling route.' },
+        ],
+        answerKey: 'B',
+        explanation:
+          'When a speaker offers a preferred method and a fallback, the item usually tests the preferred one. Note the recommendation, not merely the possibilities.',
+        level: 7,
+        difficulty: 6.9,
+      },
+      {
+        slug: 'listen-clinic-q4',
+        microSkill: 'listening.distractor_resistance',
+        prompt: 'Why can the patient not use the parking under the building?',
+        options: [
+          { key: 'A', text: 'It is reserved for staff', rationale: 'It is for medical offices on specific floors, not staff.' },
+          { key: 'B', text: 'The clinic is on the second floor, which is outside the covered floors', rationale: 'Correct: it covers floors three to seven.' },
+          { key: 'C', text: 'It is full before ten in the morning', rationale: 'Capacity is not mentioned.' },
+          { key: 'D', text: 'It requires validation the clinic cannot provide', rationale: 'Validation applies to the Beaumont Street lot.' },
+        ],
+        answerKey: 'B',
+        explanation:
+          'The speaker flags this as the thing that "catches people out" and then explains why the intuitive assumption fails. Signposted traps are gifts — mark them when you hear the signpost.',
+        level: 9,
+        difficulty: 8.6,
+      },
+      {
+        slug: 'listen-clinic-q5',
+        microSkill: 'listening.inference',
+        prompt: 'What does the coordinator want the patient to understand about the results timeline?',
+        options: [
+          { key: 'A', text: 'A call in the first week would indicate urgency', rationale: 'Correct: they call early only if something needs immediate attention.' },
+          { key: 'B', text: 'Results always arrive within one week', rationale: 'Written results take up to ten business days.' },
+          { key: 'C', text: 'The patient should call if nothing arrives in a week', rationale: 'The opposite: silence in week one is normal.' },
+          { key: 'D', text: 'Results are delivered by phone as standard', rationale: 'Written results are standard.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'The final sentence exists to prevent anxiety, and the inference is its mirror image: if silence is normal, a call is not. Read a reassurance for what it implies about the alternative.',
+        level: 10,
+        difficulty: 9.5,
+      },
+      {
+        slug: 'listen-clinic-q6',
+        microSkill: 'listening.note_taking',
+        prompt: 'How long is the assessment itself, and how long is free parking?',
+        options: [
+          { key: 'A', text: '40 minutes; 90 minutes free', rationale: 'Correct: the assessment runs forty minutes, and the Beaumont lot gives ninety free with validation.' },
+          { key: 'B', text: '15 minutes; 90 minutes free', rationale: 'Fifteen minutes is the intake form allowance.' },
+          { key: 'C', text: '40 minutes; 60 minutes free', rationale: 'Ninety minutes is stated.' },
+          { key: 'D', text: '60 minutes; 90 minutes free', rationale: 'The hour is how long the room is booked.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'Four durations appear in this monologue: the intake form, the room booking, the assessment, and the parking. Items combine two of them, so note each with its label rather than as a bare number.',
+        takeaway: 'Numbers without labels are useless. Write “park 90” not “90”.',
+        level: 9,
+        difficulty: 8.9,
+      },
+    ],
+  },
+
+  {
+    slug: 'listen-news-transit-strike',
+    skill: 'listening',
+    partType: 'listening.news',
+    title: 'News item: a transit service reduction',
+    level: 10,
+    topic: 'public affairs',
+    script: [
+      { speaker: 'Narrator', voice: 'narrator', text: 'You will hear a news report.' },
+      { speaker: 'Reporter', voice: 'reporter', text: "Riders on three of the city's busiest routes will see fewer buses from Monday, after the transit authority confirmed what it is calling a temporary service adjustment." },
+      { speaker: 'Reporter', voice: 'reporter', text: "The authority says the reduction is driven by a shortage of qualified operators rather than by funding, and points to a training programme that has doubled in size since March. The union disputes the framing. Its position is that the shortage is a consequence of scheduling practices that have made the job less attractive, and that recruitment cannot outrun resignations." },
+      { speaker: 'Reporter', voice: 'reporter', text: "Both sides agree on the number: the authority is roughly ninety operators short. They disagree on what that number means. For the authority it is a pipeline problem that will resolve by autumn. For the union it is evidence that the pipeline is filling a bucket with a hole in it." },
+      { speaker: 'Reporter', voice: 'reporter', text: "City councillors have asked for a report before the next budget cycle. Notably, the request was for data on resignations, not on hiring — a small choice of wording that suggests which explanation the council finds more plausible." },
+      { speaker: 'Reporter', voice: 'reporter', text: "For riders, the practical effect is a wait of up to twelve minutes at peak, against eight at present. The authority says it will review the change in November." },
+    ],
+    questions: [
+      {
+        slug: 'listen-news-q1',
+        microSkill: 'listening.gist',
+        prompt: 'What is the main subject of the report?',
+        options: [
+          { key: 'A', text: 'A dispute over the cause of a bus service reduction', rationale: 'Correct: both the cut and the competing explanations are central.' },
+          { key: 'B', text: 'A strike by transit operators', rationale: 'No strike is reported.' },
+          { key: 'C', text: 'A city council budget decision', rationale: 'The council appears only in one paragraph, requesting data.' },
+          { key: 'D', text: 'A new operator training programme', rationale: 'The programme is evidence in the dispute, not the subject.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'News items usually state the event first and the contest over its meaning second. A main-idea answer needs to cover both.',
+        level: 8,
+        difficulty: 7.7,
+      },
+      {
+        slug: 'listen-news-q2',
+        microSkill: 'listening.function',
+        prompt: 'What is the function of “what it is calling a temporary service adjustment”?',
+        options: [
+          { key: 'A', text: 'To quote the authority’s official terminology while distancing the reporter from it', rationale: 'Correct: "what it is calling" attributes the phrase rather than endorsing it.' },
+          { key: 'B', text: 'To confirm that the reduction is temporary', rationale: 'The construction avoids confirming exactly that.' },
+          { key: 'C', text: 'To criticise the authority for poor communication', rationale: 'No criticism of communication is made.' },
+          { key: 'D', text: 'To indicate that the term is a technical one', rationale: 'It is presented as the authority\'s framing, not as jargon.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'Attribution phrases — "what it calls", "so-called", "described as" — mark language the reporter is not adopting. This is one of the most reliable signals of stance in broadcast news.',
+        takeaway: '“What X calls…” means the reporter is holding the phrase at arm’s length.',
+        level: 11,
+        difficulty: 10.5,
+      },
+      {
+        slug: 'listen-news-q3',
+        microSkill: 'listening.inference',
+        prompt: 'What do the authority and the union agree on?',
+        options: [
+          { key: 'A', text: 'The cause of the operator shortage', rationale: 'This is precisely the disagreement.' },
+          { key: 'B', text: 'The size of the shortage', rationale: 'Correct: "Both sides agree on the number… roughly ninety operators short."' },
+          { key: 'C', text: 'The timeline for resolution', rationale: 'Autumn is the authority\'s view; the union rejects the premise.' },
+          { key: 'D', text: 'The effect on peak waiting times', rationale: 'Waiting times come from the authority, with no union comment.' },
+        ],
+        answerKey: 'B',
+        explanation:
+          'When a report separates agreement from disagreement explicitly, the item almost always tests that separation. Note the pivot sentence when you hear it.',
+        level: 9,
+        difficulty: 8.4,
+      },
+      {
+        slug: 'listen-news-q4',
+        microSkill: 'listening.inference',
+        prompt: 'What does the reporter suggest by noting the council asked for resignation data rather than hiring data?',
+        options: [
+          { key: 'A', text: 'That the council doubts the authority’s pipeline explanation', rationale: 'Correct: the wording choice signals which account the council finds plausible.' },
+          { key: 'B', text: 'That the council is required to review resignations annually', rationale: 'No such requirement is mentioned.' },
+          { key: 'C', text: 'That hiring data is unavailable', rationale: 'Availability is not raised.' },
+          { key: 'D', text: 'That the council supports the authority’s position', rationale: 'The inference points the other way.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'The reporter marks the inference with "notably" and then draws it explicitly. Discourse markers of significance — notably, tellingly, revealingly — flag the sentence that carries the analysis.',
+        level: 11,
+        difficulty: 10.7,
+      },
+      {
+        slug: 'listen-news-q5',
+        microSkill: 'listening.detail_recall',
+        prompt: 'What is the practical effect for riders?',
+        options: [
+          { key: 'A', text: 'Peak waits rise from eight minutes to up to twelve', rationale: 'Correct: both figures are given at the end of the report.' },
+          { key: 'B', text: 'Three routes will be cancelled entirely', rationale: 'Three routes see fewer buses, not cancellation.' },
+          { key: 'C', text: 'Waits rise from twelve minutes to twenty', rationale: 'Reverses the figures and invents the second one.' },
+          { key: 'D', text: 'Service changes take effect in November', rationale: 'November is the review date; the change starts Monday.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'Distractor D swaps two dates that appear in adjacent sentences. In news items, hold each date with the event it belongs to.',
+        level: 8,
+        difficulty: 7.9,
+      },
+    ],
+  },
+
+  {
+    slug: 'listen-discussion-community-grant',
+    skill: 'listening',
+    partType: 'listening.discussion',
+    title: 'Three volunteers decide how to spend a grant',
+    level: 11,
+    topic: 'community',
+    script: [
+      { speaker: 'Narrator', voice: 'narrator', text: 'You will hear three members of a community association discussing how to spend a grant.' },
+      { speaker: 'Aditi', voice: 'speaker_a', text: "Twelve thousand, and we have to spend it by March or return it. I think that constraint should shape the decision more than we're letting it." },
+      { speaker: 'Beau', voice: 'speaker_b', text: "Agreed on the constraint. I still think the kitchen is the right call. It's the thing everyone asks for and it's the thing that makes the hall rentable, which is income after the grant is gone." },
+      { speaker: 'Camille', voice: 'speaker_c', text: "I don't disagree that it's the most wanted. I'd question whether it's deliverable by March. Three quotes, a permit, and a contractor in February — I've watched that go wrong twice." },
+      { speaker: 'Beau', voice: 'speaker_b', text: "It went wrong because we started in December. We're starting in September." },
+      { speaker: 'Camille', voice: 'speaker_c', text: "That's fair, actually. Although the permit office is the part we don't control." },
+      { speaker: 'Aditi', voice: 'speaker_a', text: "Can I put a different option on the table? Not because I prefer it — because it changes what failure looks like. If we split it: six on the kitchen design and permits, six on the accessibility ramp, which needs no permit, then if the kitchen slips we've still spent the money on something." },
+      { speaker: 'Beau', voice: 'speaker_b', text: "That's spending money to protect ourselves from a risk rather than to do the most good." },
+      { speaker: 'Aditi', voice: 'speaker_a', text: "Yes. That's exactly what it is. I'm saying that might be worth it." },
+      { speaker: 'Camille', voice: 'speaker_c', text: "The ramp isn't a consolation prize, though. Two of our regulars stopped coming because of those steps. I'd rank it above the kitchen on need, below it on demand." },
+      { speaker: 'Beau', voice: 'speaker_b', text: "Now that I'll take seriously. That's a different argument from the risk one." },
+      { speaker: 'Aditi', voice: 'speaker_a', text: "So can we agree on the ramp first, regardless of what we do with the rest?" },
+      { speaker: 'Camille', voice: 'speaker_c', text: "Yes." },
+      { speaker: 'Beau', voice: 'speaker_b', text: "Yes — but I want the kitchen quotes started this month, not after the ramp is finished." },
+    ],
+    questions: [
+      {
+        slug: 'listen-grant-q1',
+        microSkill: 'listening.speaker_relationship',
+        prompt: 'What is Beau’s original position?',
+        options: [
+          { key: 'A', text: 'Spend the whole grant on the kitchen', rationale: 'Correct: he argues for it on demand and on future rental income.' },
+          { key: 'B', text: 'Split the grant between two projects', rationale: 'That is Aditi\'s proposal, which he initially resists.' },
+          { key: 'C', text: 'Prioritise the accessibility ramp', rationale: 'He comes to accept the ramp, but not as his opening position.' },
+          { key: 'D', text: 'Return the grant if the deadline cannot be met', rationale: 'Nobody proposes returning it.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'In three-way discussions, fix each speaker\'s opening position before tracking movement. Positions shift, and items test both the start and the end.',
+        level: 8,
+        difficulty: 7.6,
+      },
+      {
+        slug: 'listen-grant-q2',
+        microSkill: 'listening.speaker_attitude',
+        prompt: 'What is Camille’s attitude to the kitchen proposal?',
+        options: [
+          { key: 'A', text: 'She opposes it because the ramp matters more', rationale: 'She ranks the ramp higher on need but not by opposing the kitchen outright.' },
+          { key: 'B', text: 'She accepts its popularity but doubts it can be delivered in time', rationale: 'Correct: "I don\'t disagree that it\'s the most wanted. I\'d question whether it\'s deliverable."' },
+          { key: 'C', text: 'She supports it once Beau explains the September start', rationale: 'She concedes the point but immediately raises the permit office.' },
+          { key: 'D', text: 'She is indifferent between the options', rationale: 'She has clear views on both.' },
+        ],
+        answerKey: 'B',
+        explanation:
+          'The structure "I don\'t disagree that X. I\'d question whether Y" concedes one axis and attacks another. Learning to hear the axis change is a top-band listening skill.',
+        takeaway: 'Agreement on one dimension is not agreement. Track which dimension is being conceded.',
+        level: 11,
+        difficulty: 10.6,
+      },
+      {
+        slug: 'listen-grant-q3',
+        microSkill: 'listening.function',
+        prompt: 'Why does Aditi say “Not because I prefer it — because it changes what failure looks like”?',
+        options: [
+          { key: 'A', text: 'To clarify that she is arguing about risk rather than merit', rationale: 'Correct, and Beau names this distinction a moment later.' },
+          { key: 'B', text: 'To indicate she opposes the kitchen', rationale: 'She explicitly avoids stating a preference.' },
+          { key: 'C', text: 'To criticise the group for poor planning', rationale: 'No criticism is offered.' },
+          { key: 'D', text: 'To propose returning part of the grant', rationale: 'The opposite: her aim is that the money is spent.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'She pre-labels the type of argument she is making. When a speaker announces the category of their own contribution, that announcement is usually the item.',
+        level: 11,
+        difficulty: 10.8,
+      },
+      {
+        slug: 'listen-grant-q4',
+        microSkill: 'listening.inference',
+        prompt: 'What changes Beau’s mind?',
+        options: [
+          { key: 'A', text: 'The risk of losing the grant', rationale: 'He dismisses the risk argument as self-protective.' },
+          { key: 'B', text: 'Evidence that people stopped attending because of the steps', rationale: 'Correct: "Now that I\'ll take seriously. That\'s a different argument."' },
+          { key: 'C', text: 'Camille’s point about the permit office', rationale: 'He answers that point rather than conceding to it.' },
+          { key: 'D', text: 'Aditi’s proposal to split the funding', rationale: 'He rejects the reasoning behind the split.' },
+        ],
+        answerKey: 'B',
+        explanation:
+          'Beau distinguishes explicitly between two arguments for the same conclusion, accepting one and rejecting the other. Which argument persuades is a distinct question from what someone agrees to.',
+        level: 11,
+        difficulty: 10.9,
+      },
+      {
+        slug: 'listen-grant-q5',
+        microSkill: 'listening.discourse_markers',
+        prompt: 'What does Camille signal with “That’s fair, actually. Although…”?',
+        options: [
+          { key: 'A', text: 'Full agreement with Beau’s response', rationale: 'The "although" reopens the objection.' },
+          { key: 'B', text: 'A genuine concession followed by a narrowed version of her objection', rationale: 'Correct: she gives up the December comparison but keeps the permit risk.' },
+          { key: 'C', text: 'Polite disagreement with no real concession', rationale: '"Actually" marks a real update in her view.' },
+          { key: 'D', text: 'A change of subject', rationale: 'She stays on the same question.' },
+        ],
+        answerKey: 'B',
+        explanation:
+          'Concede-then-narrow is how careful speakers stay credible while keeping a position. The word after "although" tells you what survived the concession.',
+        level: 11,
+        difficulty: 10.7,
+      },
+      {
+        slug: 'listen-grant-q6',
+        microSkill: 'listening.speaker_relationship',
+        prompt: 'What is agreed at the end?',
+        options: [
+          { key: 'A', text: 'The ramp goes ahead, and kitchen quotes start immediately', rationale: 'Correct: the ramp is agreed by all three, with Beau adding the quotes condition.' },
+          { key: 'B', text: 'The grant is split evenly between the two projects', rationale: 'The split proposal is not adopted as stated.' },
+          { key: 'C', text: 'The kitchen goes ahead first', rationale: 'The ramp is agreed first.' },
+          { key: 'D', text: 'The decision is deferred to the next meeting', rationale: 'A decision is reached.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'Endings frequently attach a condition to an agreement. "Yes — but" is still a yes; the item tests whether you captured the "but".',
+        level: 10,
+        difficulty: 9.4,
+      },
+      {
+        slug: 'listen-grant-q7',
+        microSkill: 'listening.inference',
+        prompt: 'How does Camille rank the two projects?',
+        options: [
+          { key: 'A', text: 'Ramp above kitchen on need, below it on demand', rationale: 'Correct, and stated in exactly those terms.' },
+          { key: 'B', text: 'Kitchen above ramp on both need and demand', rationale: 'Reverses the need ranking.' },
+          { key: 'C', text: 'Ramp above kitchen on both', rationale: 'She concedes demand favours the kitchen.' },
+          { key: 'D', text: 'She declines to rank them', rationale: 'She ranks them explicitly.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'A two-axis ranking delivered in one sentence is dense listening. Segment it as you hear it: axis one, direction; axis two, direction.',
+        level: 10,
+        difficulty: 9.8,
+      },
+      {
+        slug: 'listen-grant-q8',
+        microSkill: 'listening.speaker_attitude',
+        prompt: 'How would you describe the tone of the discussion?',
+        options: [
+          { key: 'A', text: 'Adversarial, with each speaker defending a fixed position', rationale: 'Positions move; concessions are frequent.' },
+          { key: 'B', text: 'Deliberative, with participants distinguishing between kinds of argument', rationale: 'Correct: the speakers separate risk arguments from merit arguments explicitly.' },
+          { key: 'C', text: 'Informal and unfocused', rationale: 'The discussion is tightly structured around a decision.' },
+          { key: 'D', text: 'Deferential, with two speakers following the third', rationale: 'All three shape the outcome.' },
+        ],
+        answerKey: 'B',
+        explanation:
+          'Tone at this level is inferred from the moves, not the volume: naming argument types, conceding explicitly, separating risk from merit.',
+        level: 10,
+        difficulty: 9.9,
+      },
+    ],
+  },
+
+  {
+    slug: 'listen-view-volunteering',
+    skill: 'listening',
+    partType: 'listening.viewpoints',
+    title: 'A researcher on why volunteers stop',
+    level: 11,
+    topic: 'society',
+    script: [
+      { speaker: 'Narrator', voice: 'narrator', text: 'You will hear part of an interview with a researcher who studies volunteering.' },
+      { speaker: 'Researcher', voice: 'speaker_a', text: "The question organisations ask me is almost always how to recruit more volunteers. It's rarely the useful question. Recruitment in most sectors is fine. Retention past the fourth month is where the losses are, and the causes are surprisingly consistent." },
+      { speaker: 'Researcher', voice: 'speaker_a', text: "The first is role ambiguity. People leave not because the work is hard but because they can't tell whether they did it well. A volunteer who receives no signal about their performance will supply their own, and it is usually negative." },
+      { speaker: 'Researcher', voice: 'speaker_a', text: "The second is what I'd call the competence mismatch, and it cuts both ways. Under-using a skilled volunteer is well documented. What's less discussed is over-placing an enthusiastic one — giving someone a responsibility they aren't ready for because they said yes. That person leaves too, and they leave feeling it was their failure." },
+      { speaker: 'Researcher', voice: 'speaker_a', text: "Now, I want to be careful here. These are patterns in the exit interviews we can collect, and exit interviews are collected from people who tell you they're leaving. The volunteer who simply stops answering messages is the largest group and the least understood. Anything I say about them is inference." },
+      { speaker: 'Researcher', voice: 'speaker_a', text: "Where I'd push back on the sector is the reflex to solve this with recognition events. Recognition addresses the feeling of being unvalued. It doesn't address not knowing whether you're doing the job properly, which is a different problem and a cheaper one to fix — a two-minute conversation at the end of a shift does more than a dinner in June." },
+    ],
+    questions: [
+      {
+        slug: 'listen-vol-q1',
+        microSkill: 'listening.gist',
+        prompt: 'What is the researcher’s central claim?',
+        options: [
+          { key: 'A', text: 'Organisations should recruit volunteers more selectively', rationale: 'Recruitment is described as largely fine.' },
+          { key: 'B', text: 'Retention, not recruitment, is where organisations lose volunteers', rationale: 'Correct: recruitment is described as fine; the losses are past the fourth month.' },
+          { key: 'C', text: 'Volunteers leave mainly because the work is too demanding', rationale: 'Explicitly rejected: "not because the work is hard".' },
+          { key: 'D', text: 'Recognition events should be held more frequently', rationale: 'The researcher pushes back on that reflex.' },
+        ],
+        answerKey: 'B',
+        explanation:
+          'The claim arrives as a correction of the question the researcher is usually asked. When a speaker reframes the question, the reframing is the thesis.',
+        level: 9,
+        difficulty: 8.6,
+      },
+      {
+        slug: 'listen-vol-q2',
+        microSkill: 'listening.inference',
+        prompt: 'What does the researcher mean by saying a volunteer without feedback “will supply their own”?',
+        options: [
+          { key: 'A', text: 'They will ask colleagues for an assessment', rationale: 'Nothing about asking others.' },
+          { key: 'B', text: 'They will judge their own performance, usually harshly', rationale: 'Correct: "and it is usually negative".' },
+          { key: 'C', text: 'They will set their own goals for the role', rationale: 'Goal-setting is not the subject.' },
+          { key: 'D', text: 'They will request a formal review', rationale: 'The opposite of the described behaviour.' },
+        ],
+        answerKey: 'B',
+        explanation:
+          'The pronoun "it" resolves to the self-supplied signal, and the clause after it tells you its direction. Short trailing clauses often carry the whole meaning.',
+        level: 10,
+        difficulty: 9.7,
+      },
+      {
+        slug: 'listen-vol-q3',
+        microSkill: 'listening.function',
+        prompt: 'Why does the researcher say “I want to be careful here”?',
+        options: [
+          { key: 'A', text: 'To introduce a limitation in the evidence being described', rationale: 'Correct: exit interviews exclude the largest group of leavers.' },
+          { key: 'B', text: 'To soften a criticism of volunteer organisations', rationale: 'The criticism comes later and is not softened.' },
+          { key: 'C', text: 'To indicate that the next point is confidential', rationale: 'Nothing in the interview suggests confidentiality.' },
+          { key: 'D', text: 'To signal disagreement with other researchers', rationale: 'No other researchers are referenced.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'A hedge before evidence is nearly always about the limits of that evidence. Expect the sampling problem to follow.',
+        takeaway: 'When a speaker hedges, listen for what the evidence cannot cover.',
+        level: 11,
+        difficulty: 10.6,
+      },
+      {
+        slug: 'listen-vol-q4',
+        microSkill: 'listening.inference',
+        prompt: 'What does the researcher say about volunteers who simply stop responding?',
+        options: [
+          { key: 'A', text: 'They are the smallest and best-documented group', rationale: 'Reverses both claims made about this group.' },
+          { key: 'B', text: 'They are the largest group and least understood', rationale: 'Correct: they are named as the largest group and the least understood.' },
+          { key: 'C', text: 'They leave for the same reasons as those who give notice', rationale: 'The researcher says anything said about them is inference.' },
+          { key: 'D', text: 'They usually return within a year', rationale: 'Not mentioned; the researcher says anything said about them is inference.' },
+        ],
+        answerKey: 'B',
+        explanation:
+          'Option C is the trap for a listener who heard the general argument but missed the epistemic caveat. Caveats are content, not filler.',
+        level: 10,
+        difficulty: 9.6,
+      },
+      {
+        slug: 'listen-vol-q5',
+        microSkill: 'listening.discourse_markers',
+        prompt: 'What does “Where I’d push back on the sector” introduce?',
+        options: [
+          { key: 'A', text: 'A concession to common practice', rationale: 'It introduces disagreement, not concession.' },
+          { key: 'B', text: 'The researcher’s disagreement with a common response to the problem', rationale: 'Correct: recognition events treated as the wrong remedy.' },
+          { key: 'C', text: 'A summary of the preceding points', rationale: 'New material follows rather than a summary.' },
+          { key: 'D', text: 'A qualification of the earlier evidence', rationale: 'The qualification came in the previous paragraph.' },
+        ],
+        answerKey: 'B',
+        explanation:
+          '"Where I\'d push back" is a signposted disagreement. In viewpoint listening, these markers tell you a position is coming before the content arrives — the moment to sharpen attention.',
+        level: 10,
+        difficulty: 9.8,
+      },
+      {
+        slug: 'listen-vol-q6',
+        microSkill: 'listening.speaker_attitude',
+        prompt: 'What is the researcher’s view of recognition events?',
+        options: [
+          { key: 'A', text: 'They are worthless and should be abandoned', rationale: 'Too strong: they are said to address a real but different problem.' },
+          { key: 'B', text: 'They address a genuine but different problem from the main one', rationale: 'Correct: they address feeling unvalued, not role ambiguity.' },
+          { key: 'C', text: 'They are the most cost-effective retention tool', rationale: 'The two-minute conversation is presented as cheaper and more effective.' },
+          { key: 'D', text: 'They should be replaced with financial incentives', rationale: 'Never suggested anywhere in the interview.' },
+        ],
+        answerKey: 'B',
+        explanation:
+          'Distractor A intensifies a measured criticism into a rejection. At CLB 11 the difference between "insufficient" and "worthless" is exactly what is being tested.',
+        level: 11,
+        difficulty: 10.9,
+      },
+    ],
+  },
+];
