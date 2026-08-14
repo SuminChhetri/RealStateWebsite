@@ -5,6 +5,7 @@ import { requireSession } from '@/lib/auth/guard';
 import { db } from '@/lib/db/client';
 import { evaluations, writingSubmissions, writingTasks } from '@/lib/db/schema';
 import { getProfile } from '@/lib/learner/profile';
+import { replenishWriting, writingPoolStatus } from '@/lib/practice/replenish';
 import { LevelScale } from '@/components/Level';
 import './writing.css';
 
@@ -13,8 +14,13 @@ export const dynamic = 'force-dynamic';
 
 export default async function WritingPage() {
   const session = await requireSession();
+  // Make more prompts before the learner runs out of ones they have not done.
+  // Normally a no-op.
+  await replenishWriting(session.userId, session.orgId);
+
   const profile = await getProfile(session.userId, session.orgId);
   const estimate = profile.skills.find((s) => s.skill === 'writing')!;
+  const pool = await writingPoolStatus(session.userId, session.orgId);
 
   const tasks = (await db
     .select()
@@ -117,6 +123,12 @@ export default async function WritingPage() {
         </section>
       ) : null}
 
+      <p className="tiny faint" style={{ marginBottom: 'var(--s5)' }}>
+        {pool.total} prompt{pool.total === 1 ? '' : 's'} available — {pool.authored} written by an author,{' '}
+        {pool.generated} assembled by the prompt generator, with more made before you run out. Generated prompts
+        are marked. They are combinatorial, so across many you will notice a family resemblance the authored ones
+        do not have; the analysis you get back is identical either way.
+      </p>
       {[
         { label: 'Task 1 · Writing an Email', items: emails, note: 'A message with a purpose and required content points.' },
         { label: 'Task 2 · Responding to Survey Questions', items: surveys, note: 'Choose one option and argue for it.' },
@@ -142,6 +154,15 @@ export default async function WritingPage() {
                   </div>
                   <h3 className="serif" style={{ fontSize: '1.15rem' }}>
                     {task.title}
+                    {task.origin === 'generated' ? (
+                      <span
+                        className="badge badge-quiet"
+                        style={{ marginLeft: 'var(--s2)' }}
+                        title="Assembled by the prompt generator from authored situation frames. The analysis you get back is identical — it scores your text against the requirements above."
+                      >
+                        Generated
+                      </span>
+                    ) : null}
                   </h3>
                   <p className="small muted">{truncate(task.scenario, 170)}</p>
                 </div>

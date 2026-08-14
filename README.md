@@ -219,6 +219,8 @@ correctness is *decidable*:
 | Service encounters (listening) | Facts generated before anything is spoken | The reference number a speaker corrects mid-sentence, the fee, the size of the window, the document to bring. The script is built around the facts, so the key comes from the data. |
 | Vocabulary in context | The curated lexicon | The headword is blanked from the example sentence written for it; distractors are same-part-of-speech entries, and each rationale is that entry's own authored definition. |
 | Usage | The grammar points' wrong/right/why triples | The key is decided by the rule; the feedback is the explanation already written for it. |
+| Writing prompts | Authored situation frames, complications and requirement templates | A prompt has no key — nothing about it can be *incorrect*. And the marking does not depend on it: the analyser scores the learner's text against the stated requirements, so a generated prompt yields the same analysis as an authored one. Requirements name the generated specifics, so a memorised template cannot satisfy them. |
+| Speaking prompts | Authored frames per task type; scenes assembled from settings, figures, conditions and time markers | Same argument. Moves are detected in the transcript against `successCriteria`, and pause structure is measured from the audio without reference to the prompt at all. |
 
 **Where the line is.** Generated items cover the micro-skills where the answer
 is a *fact* — locating it, holding it across turns, not being pulled off it by a
@@ -239,7 +241,13 @@ rather than lowering the standard. Standalone generated items are excluded from
 diagnostic, section and mock modes, so a simulation still follows the published
 blueprint exactly.
 
-Generators are tested in bulk — 400 seeds per generator — because they fail
+Prompts carry a limitation the items do not, and it is stated on the page as
+well as here: they are combinatorial, so across thirty of them a family
+resemblance appears that thirty authored prompts would not have. They exist for
+the fortieth timed rehearsal, when the authored set has run out — not as a
+substitute for it, which is why authored prompts are always offered first.
+
+Generators are tested in bulk — up to 400 seeds per generator — because they fail
 rarely and expensively. A duplicate-option defect in the schedule generator
 survived a 60-seed run at a rate of about 1 in 70, which would have reached a
 learner inside a fortnight.

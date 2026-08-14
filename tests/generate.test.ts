@@ -10,7 +10,14 @@ import {
   generateScheduleStimulus,
   generateUsageItem,
 } from '../src/lib/content/generate';
-import { validateQuestion, validateStimulus } from '../src/lib/content/validate';
+import { generateWritingTask } from '../src/lib/content/generate/scenario';
+import { generateSpeakingTask } from '../src/lib/content/generate/speaking-prompt';
+import {
+  validateQuestion,
+  validateSpeakingTask,
+  validateStimulus,
+  validateWritingTask,
+} from '../src/lib/content/validate';
 import { vocabulary } from '../src/lib/content/seed/vocabulary';
 import { grammarPoints } from '../src/lib/content/seed/grammar';
 import { tryMicroSkill } from '../src/lib/content/taxonomy';
@@ -269,4 +276,95 @@ test('two different seeds do not produce the same material', () => {
   const aSlugs = new Set(a.stimuli.map((s) => s.slug));
   const overlap = b.stimuli.filter((s) => aSlugs.has(s.slug));
   assert.deepEqual(overlap, [], 'different seeds collided');
+});
+
+/* ------------------------------------------------------------------ */
+/* Prompts                                                             */
+/* ------------------------------------------------------------------ */
+
+/**
+ * A prompt has no key, so the failure mode is different: not a wrong answer but
+ * a brief too thin to write two hundred words from, or one so generic that a
+ * memorised template satisfies it. Both are checkable.
+ */
+
+test('every generated writing task passes the content validator', () => {
+  for (const seed of SEEDS.slice(0, 200)) {
+    const task = generateWritingTask(seed);
+    const result = validateWritingTask(task);
+    const bad = result.findings.filter((f) => f.severity !== 'info');
+    assert.deepEqual(bad, [], `${seed}: ${bad.map((e) => e.message).join('; ')}`);
+    assert.ok(task.requirements.length >= 4, `${seed}: too few required points`);
+    assert.ok(task.minWords < task.maxWords);
+  }
+});
+
+test('no generated prompt leaves an unfilled slot', () => {
+  // A stray {amount} in a scenario is the characteristic template bug, and it
+  // would be visible to the learner.
+  for (const seed of SEEDS.slice(0, 200)) {
+    const task = generateWritingTask(seed);
+    const text = [task.scenario, task.instructions, ...task.requirements, task.modelNotes].join(' ');
+    assert.ok(!/\{\w+\}/.test(text), `${seed}: unfilled slot in "${text.match(/\{\w+\}/)?.[0]}"`);
+  }
+  for (const n of [1, 2, 3, 4, 5, 6, 7, 8]) {
+    for (const seed of SEEDS.slice(0, 40)) {
+      const task = generateSpeakingTask(n, seed);
+      const text = [task.prompt, JSON.stringify(task.context ?? {}), task.modelNotes].join(' ');
+      assert.ok(!/\{\w+\}/.test(text), `t${n}/${seed}: unfilled slot`);
+    }
+  }
+});
+
+test('generated writing requirements name the specifics of their own scenario', () => {
+  // The property that stops a memorised answer from satisfying the prompt: at
+  // least one requirement must refer to something only this version contains.
+  let checked = 0;
+  for (const seed of SEEDS.slice(0, 200)) {
+    const task = generateWritingTask(seed);
+    if (task.taskType !== 'writing.email') continue;
+    checked++;
+    const scenarioFigures = task.scenario.match(/\$[\d,]+|\b\d+\b/g) ?? [];
+    const anchored = task.requirements.some((r) =>
+      scenarioFigures.some((figure) => r.includes(figure)),
+    );
+    assert.ok(anchored, `${seed}: no requirement refers to a specific from the scenario`);
+  }
+  assert.ok(checked > 40, 'not enough email tasks sampled');
+});
+
+test('every generated speaking task passes the validator, for all eight types', () => {
+  for (const n of [1, 2, 3, 4, 5, 6, 7, 8]) {
+    for (const seed of SEEDS.slice(0, 60)) {
+      const task = generateSpeakingTask(n, seed);
+      const result = validateSpeakingTask(task);
+      const bad = result.findings.filter((f) => f.severity !== 'info');
+      assert.deepEqual(bad, [], `t${n}/${seed}: ${bad.map((e) => e.message).join('; ')}`);
+      assert.equal(task.taskNumber, n);
+      assert.ok(task.successCriteria.length >= 4, `t${n}: thin criteria`);
+    }
+  }
+});
+
+test('scene tasks describe something with people, conditions and a time marker', () => {
+  for (const n of [3, 4, 8]) {
+    for (const seed of SEEDS.slice(0, 60)) {
+      const task = generateSpeakingTask(n, seed);
+      const scene = task.context?.scene ?? '';
+      assert.ok(scene.length > 200, `t${n}/${seed}: scene too thin to describe for a minute`);
+      // Three located figures, so a describer has an order to choose.
+      assert.ok(/In the foreground,/.test(scene), `t${n}/${seed}: no foreground`);
+      assert.ok(/To one side,/.test(scene), `t${n}/${seed}: no second figure`);
+      assert.ok(/Behind them,/.test(scene), `t${n}/${seed}: no third figure`);
+      if (n === 8) assert.ok(/What is strange is that/.test(scene), 'task 8 needs the mismatch named');
+      if (n === 4) assert.ok(/Right now,/.test(scene), 'task 4 needs an unresolved situation');
+    }
+  }
+});
+
+test('the same seed and task number always yield the same prompt', () => {
+  assert.deepEqual(generateWritingTask('stable'), generateWritingTask('stable'));
+  for (const n of [1, 3, 5, 8]) {
+    assert.deepEqual(generateSpeakingTask(n, 'stable'), generateSpeakingTask(n, 'stable'));
+  }
 });

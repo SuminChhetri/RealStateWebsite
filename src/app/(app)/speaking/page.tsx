@@ -5,6 +5,7 @@ import { requireSession } from '@/lib/auth/guard';
 import { db } from '@/lib/db/client';
 import { evaluations, speakingSubmissions, speakingTasks } from '@/lib/db/schema';
 import { getProfile } from '@/lib/learner/profile';
+import { replenishSpeaking, speakingPoolStatus } from '@/lib/practice/replenish';
 import { LevelScale } from '@/components/Level';
 
 export const metadata: Metadata = { title: 'Speaking' };
@@ -12,8 +13,13 @@ export const dynamic = 'force-dynamic';
 
 export default async function SpeakingPage() {
   const session = await requireSession();
+  // One fresh prompt per task type when the learner is close to having done
+  // them all. Normally a no-op.
+  await replenishSpeaking(session.userId, session.orgId);
+
   const profile = await getProfile(session.userId, session.orgId);
   const estimate = profile.skills.find((s) => s.skill === 'speaking')!;
+  const pool = await speakingPoolStatus(session.userId, session.orgId);
 
   const tasks = (await db
     .select()
@@ -127,6 +133,12 @@ export default async function SpeakingPage() {
         </section>
       ) : null}
 
+      <p className="tiny faint" style={{ marginBottom: 'var(--s5)' }}>
+        {pool.total} prompt{pool.total === 1 ? '' : 's'} available — {pool.authored} written by an author,{' '}
+        {pool.generated} assembled by the prompt generator, with more made before you run out. Generated prompts
+        are marked. They are combinatorial, so across many you will notice a family resemblance the authored ones
+        do not have; the analysis you get back is identical either way.
+      </p>
       <section>
         <div className="section-head">
           <h2 style={{ fontSize: '1.05rem', fontFamily: 'var(--font-body)', fontWeight: 600 }}>The eight tasks</h2>
@@ -154,7 +166,18 @@ export default async function SpeakingPage() {
                         style={{ textDecoration: 'none', display: 'block' }}
                       >
                         <div className="stack stack-1">
-                          <p style={{ fontWeight: 500 }}>{task.title}</p>
+                          <p style={{ fontWeight: 500 }}>
+                            {task.title}
+                            {task.origin === 'generated' ? (
+                              <span
+                                className="badge badge-quiet"
+                                style={{ marginLeft: 'var(--s2)' }}
+                                title="Assembled by the prompt generator from authored frames. The analysis is identical — pause structure comes from your audio and the moves are detected in your transcript."
+                              >
+                                Generated
+                              </span>
+                            ) : null}
+                          </p>
                           <p className="small muted">{truncate(task.prompt, 130)}</p>
                         </div>
                       </Link>

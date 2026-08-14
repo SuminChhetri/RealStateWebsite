@@ -273,6 +273,11 @@ export const writingTasks = pgTable(
     topic: text('topic').notNull().default('general'),
     /** Teaching notes shown after submission: what a strong response does. */
     modelNotes: text('model_notes').notNull(),
+    /** See `stimuli.origin`. Generated prompts are marked wherever they appear. */
+    origin: text('origin', { enum: ['authored', 'generated'] })
+      .notNull()
+      .default('authored'),
+    generatorSeed: text('generator_seed'),
     status: text('status', {
       enum: ['draft', 'in_review', 'approved', 'published', 'retired'],
     })
@@ -303,6 +308,11 @@ export const speakingTasks = pgTable(
     /** JSON string[]: the moves a high-level response makes, in order. */
     successCriteria: text('success_criteria').notNull(),
     modelNotes: text('model_notes').notNull(),
+    /** See `stimuli.origin`. Generated prompts are marked wherever they appear. */
+    origin: text('origin', { enum: ['authored', 'generated'] })
+      .notNull()
+      .default('authored'),
+    generatorSeed: text('generator_seed'),
     status: text('status', {
       enum: ['draft', 'in_review', 'approved', 'published', 'retired'],
     })
