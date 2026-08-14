@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { requireSession } from '@/lib/auth/guard';
 import { db } from '@/lib/db/client';
-import { lessons } from '@/lib/db/schema';
+import { lessonProgress, lessons } from '@/lib/db/schema';
 import { getProfile } from '@/lib/learner/profile';
 import { SKILL_LABELS, tryMicroSkill, type Domain } from '@/lib/content/taxonomy';
 
@@ -18,6 +18,19 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
   const profile = await getProfile(session.userId, session.orgId);
 
   const all = (await db.select().from(lessons).where(eq(lessons.status, 'published')));
+
+  // What this learner has already worked through, and how it went. A library
+  // that cannot tell you what you have done is a list, not a record.
+  const progressRows = await db
+    .select({
+      lessonId: lessonProgress.lessonId,
+      total: lessonProgress.checkpointsTotal,
+      correct: lessonProgress.checkpointsCorrect,
+      completedAt: lessonProgress.completedAt,
+    })
+    .from(lessonProgress)
+    .where(and(eq(lessonProgress.userId, session.userId), eq(lessonProgress.orgId, session.orgId)));
+  const progressByLesson = new Map(progressRows.map((row) => [row.lessonId, row]));
 
   // Which lessons remediate a micro-skill this learner is actually behind on.
   const weakSlugs = new Set(
@@ -120,6 +133,23 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
                     <span className="tiny faint numeric">{lesson.minutes} min</span>
                   </div>
                   <p className="small muted">{lesson.summary}</p>
+                  {(() => {
+                    const done = progressByLesson.get(lesson.id);
+                    if (!done?.completedAt) return null;
+                    const clean = done.correct === done.total;
+                    return (
+                      <p className="tiny">
+                        <span className={`badge ${clean ? 'badge-positive' : 'badge-caution'}`}>
+                          Done · {done.correct}/{done.total}
+                        </span>
+                        {clean ? null : (
+                          <span className="faint" style={{ marginLeft: 'var(--s2)' }}>
+                            the ones you missed are in your review queue
+                          </span>
+                        )}
+                      </p>
+                    );
+                  })()}
                 </div>
               </Link>
             ))}

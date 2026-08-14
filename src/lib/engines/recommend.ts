@@ -34,6 +34,16 @@ export interface RecommendationInput {
   /** Days since the learner last practised each skill. */
   daysSincePractice: Record<string, number>;
   productiveCounts: { writing: number; speaking: number };
+  /**
+   * Micro-skills the learner has already worked a lesson through to the end.
+   *
+   * Without this the planner recommends the same lesson indefinitely, because
+   * a weak estimate is exactly the condition that produces the recommendation
+   * and reading a lesson does not move an estimate. Completing the lesson is
+   * the signal that the method has been taught; what is needed after that is
+   * practice, not the lesson again.
+   */
+  lessonsCompletedFor: string[];
   hasDiagnostic: boolean;
   now: number;
 }
@@ -74,6 +84,7 @@ export function recommend(input: RecommendationInput): Recommendation[] {
   }
 
   const daysToExam = daysUntil(input.examDate, input.now);
+  const lessonsDone = new Set(input.lessonsCompletedFor);
   const candidates: Recommendation[] = [];
 
   /* -------- 1. Review debt -------- */
@@ -137,7 +148,7 @@ export function recommend(input: RecommendationInput): Recommendation[] {
       // Where a weakness is well evidenced, the lesson is worth more than
       // another set of the same questions: repeating a drill you do not
       // understand practises the misunderstanding.
-      if (observations >= 6 && weak.theta < input.targetLevel - 1.5) {
+      if (observations >= 6 && weak.theta < input.targetLevel - 1.5 && !lessonsDone.has(weak.microSkill)) {
         candidates.push({
           kind: 'lesson',
           skill: skillEstimate.skill,

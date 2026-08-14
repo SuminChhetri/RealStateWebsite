@@ -54,7 +54,7 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
         </div>
       </header>
 
-      <LessonView blocks={blocks} />
+      <LessonView blocks={blocks} lessonSlug={lesson.slug} />
 
       <section style={{ marginTop: 'var(--s7)' }}>
         <div className="panel stack stack-4">

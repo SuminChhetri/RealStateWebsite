@@ -4,6 +4,8 @@ import {
   attempts,
   evaluations,
   learnerProfiles,
+  lessonProgress,
+  lessons,
   mistakes,
   progressSnapshots,
   reviewCards,
@@ -261,6 +263,25 @@ export async function getRecommendations(
     .orderBy(desc(mistakes.occurrences))
     .limit(20);
 
+  // Which methods have already been taught. A lesson worked through to the end
+  // is the signal that the planner should stop offering it and start offering
+  // practice instead — reading a lesson never moves an estimate, so without
+  // this the same recommendation returns forever.
+  const completedLessons = await db
+    .select({ microSkills: lessons.microSkills })
+    .from(lessonProgress)
+    .innerJoin(lessons, eq(lessons.id, lessonProgress.lessonId))
+    .where(
+      and(
+        eq(lessonProgress.userId, userId),
+        eq(lessonProgress.orgId, orgId),
+        sql`${lessonProgress.completedAt} is not null`,
+      ),
+    );
+  const lessonsCompletedFor = [
+    ...new Set(completedLessons.flatMap((row) => JSON.parse(row.microSkills) as string[])),
+  ];
+
   return recommend({
     targetLevel: profile.targetLevel,
     examDate: profile.examDate,
@@ -285,6 +306,7 @@ export async function getRecommendations(
     dueReviewCount: profile.dueReviewCount,
     daysSincePractice: profile.daysSincePractice,
     productiveCounts: profile.productiveCounts,
+    lessonsCompletedFor,
     hasDiagnostic: profile.hasDiagnostic,
     now: Math.floor(Date.now() / 1000),
   });

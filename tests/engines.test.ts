@@ -339,6 +339,7 @@ test('recommend: the diagnostic comes first and nothing else does', () => {
     dueReviewCount: 12,
     daysSincePractice: {},
     productiveCounts: { writing: 0, speaking: 0 },
+    lessonsCompletedFor: [],
     hasDiagnostic: false,
     now: 1_700_000_000,
   });
@@ -359,6 +360,7 @@ test('recommend: every suggestion explains itself and the day is not monotonous'
     dueReviewCount: 8,
     daysSincePractice: { reading: 1, listening: 2, writing: 3, speaking: 40 },
     productiveCounts: { writing: 3, speaking: 0 },
+    lessonsCompletedFor: [],
     hasDiagnostic: true,
     now: 1_700_000_000,
   });
@@ -518,4 +520,53 @@ test('password: the weak-password check rejects and accepts as documented', asyn
   assert.ok(passwordProblems('alllettersonly').some((p) => p.includes('number')));
   assert.ok(passwordProblems('my-password-123').some((p) => p.includes('guess')));
   assert.equal(passwordProblems('quiet-harbour-49').length, 0);
+});
+
+test('a completed lesson stops the planner offering the same lesson again', () => {
+  // The condition that produces a lesson recommendation is a weak, well-evidenced
+  // micro-skill — and reading a lesson never moves an estimate. Without the
+  // completion signal the recommendation is permanent.
+  const base = {
+    targetLevel: 11,
+    examDate: null,
+    minutesAvailable: 45,
+    skills: [
+      {
+        skill: 'reading' as const,
+        level: 7,
+        se: 0.4,
+        observations: 40,
+        weakest: [{ microSkill: 'reading.inference', theta: 6.5, se: 0.4, gapToSkill: 0.5 }],
+        strongest: [],
+        timePressureGap: null,
+        coverage: 0.8,
+      },
+    ],
+    microEstimates: [
+      { microSkill: 'reading.inference', skill: 'reading', theta: 6.5, se: 0.4, observations: 20 },
+    ],
+    mistakes: [],
+    dueReviewCount: 0,
+    daysSincePractice: { reading: 1 },
+    productiveCounts: { writing: 3, speaking: 3 },
+    hasDiagnostic: true,
+    now: Math.floor(Date.now() / 1000),
+  };
+
+  const before = recommend({ ...base, lessonsCompletedFor: [] });
+  assert.ok(
+    before.some((r) => r.kind === 'lesson' && r.microSkill === 'reading.inference'),
+    'a weak, well-evidenced micro-skill should produce a lesson recommendation',
+  );
+
+  const after = recommend({ ...base, lessonsCompletedFor: ['reading.inference'] });
+  assert.ok(
+    !after.some((r) => r.kind === 'lesson' && r.microSkill === 'reading.inference'),
+    'the lesson should not be recommended again once it has been completed',
+  );
+  // The gap has not gone away, so the practice recommendation must survive.
+  assert.ok(
+    after.some((r) => r.kind === 'drill' && r.microSkill === 'reading.inference'),
+    'practice on the same micro-skill should still be recommended',
+  );
 });

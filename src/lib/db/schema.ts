@@ -684,7 +684,7 @@ export const reviewCards = pgTable(
     orgId: text('org_id')
       .notNull()
       .references(() => organizations.id, { onDelete: 'cascade' }),
-    kind: text('kind', { enum: ['vocabulary', 'grammar', 'mistake', 'question'] }).notNull(),
+    kind: text('kind', { enum: ['vocabulary', 'grammar', 'mistake', 'question', 'lesson_point'] }).notNull(),
     refId: text('ref_id').notNull(),
     stability: doublePrecision('stability').notNull().default(1),
     difficulty: doublePrecision('difficulty').notNull().default(5),
@@ -703,6 +703,49 @@ export const reviewCards = pgTable(
 );
 
 /** Rolling mastery estimate per micro-skill — the core of the diagnosis. */
+/**
+ * What a learner did inside a lesson.
+ *
+ * Lessons used to be a dead end: the checkpoints gave feedback on the page and
+ * then nothing happened — no record, no consequence, and no way for the study
+ * plan to know the lesson had been read. Retrieval that leaves no trace cannot
+ * be scheduled, and a lesson the planner cannot see gets recommended forever.
+ *
+ * One row per learner per lesson, updated in place. `responses` keeps the
+ * per-checkpoint detail so the summary can say *which* idea did not land rather
+ * than only how many were missed.
+ */
+export const lessonProgress = pgTable(
+  'lesson_progress',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    orgId: text('org_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    lessonId: text('lesson_id')
+      .notNull()
+      .references(() => lessons.id, { onDelete: 'cascade' }),
+    checkpointsTotal: integer('checkpoints_total').notNull().default(0),
+    checkpointsCorrect: integer('checkpoints_correct').notNull().default(0),
+    /** JSON: [{index, correct, prompt}] — the detail behind the score. */
+    responses: text('responses').notNull().default('[]'),
+    /** JSON string[]: micro-skills whose checkpoint was missed. */
+    missedMicroSkills: text('missed_micro_skills').notNull().default('[]'),
+    /** How many times the learner has come back to this lesson. */
+    visits: integer('visits').notNull().default(1),
+    startedAt: integer('started_at').notNull().default(now),
+    completedAt: integer('completed_at'),
+    updatedAt: integer('updated_at').notNull().default(now),
+  },
+  (t) => [
+    uniqueIndex('lesson_progress_user_lesson_idx').on(t.userId, t.orgId, t.lessonId),
+    index('lesson_progress_completed_idx').on(t.userId, t.orgId, t.completedAt),
+  ],
+);
+
 export const skillEstimates = pgTable(
   'skill_estimates',
   {

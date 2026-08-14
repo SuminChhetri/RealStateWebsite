@@ -81,8 +81,16 @@ Retest.** The loop is the product; every surface is a view onto part of it.
   measured from a transcript; pronunciation declared out of scope.
 - **Mistakes** — a mistake stays open until proved fixed three times on later
   items.
+- **Lessons** — checkpoints are retrieval, not decoration: the result is
+  recorded, a missed checkpoint becomes a review card, the lesson reports what
+  did and did not land, and the planner stops recommending a lesson once it has
+  been worked through. A checkpoint deliberately does *not* move the ability
+  estimate — it sits under the paragraph that answers it, so getting it right is
+  evidence you read the page, not evidence you can do this under exam
+  conditions.
 - **Review** — spaced retrieval scheduled at the point predicted recall falls to
-  90%, covering items, grammar patterns and the learner's own errors.
+  90%, covering items, grammar patterns, missed lesson checkpoints and the
+  learner's own errors.
 - **Progress** — movement smaller than the uncertainty band is reported as
   noise, not progress.
 - **CLB path & study plan** — gap per skill, an honest hours projection, and an

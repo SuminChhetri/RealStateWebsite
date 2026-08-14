@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
+import Link from 'next/link';
 import type { LessonBlock } from '@/lib/content/seed/types';
+import { completeLesson, type LessonOutcome } from '@/lib/practice/lesson-actions';
 
 /**
  * Lesson rendering.
@@ -11,18 +13,169 @@ import type { LessonBlock } from '@/lib/content/seed/types';
  * arrives, and a drill hides the answer until the learner has committed to
  * one. Reading prose about a technique produces recognition; being asked to
  * produce it produces recall.
+ *
+ * Checkpoint answers are collected here and submitted when the last one is
+ * answered. Until that existed, a lesson gave feedback on the page and then
+ * ended — nothing was recorded, so nothing could come back, and the study plan
+ * could not tell a lesson that had been worked through from one that had never
+ * been opened.
  */
-export function LessonView({ blocks }: { blocks: LessonBlock[] }) {
+export function LessonView({ blocks, lessonSlug }: { blocks: LessonBlock[]; lessonSlug: string }) {
+  const checkpointIndices = blocks
+    .map((block, i) => (block.type === 'checkpoint' ? i : -1))
+    .filter((i) => i >= 0);
+
+  const [answers, setAnswers] = useState<Record<number, { correct: boolean; prompt: string }>>({});
+  const [outcome, setOutcome] = useState<LessonOutcome | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  const answered = Object.keys(answers).length;
+  const allAnswered = checkpointIndices.length > 0 && answered === checkpointIndices.length;
+
+  function record(index: number, correct: boolean, prompt: string) {
+    // First answer only. Changing it afterwards would let a learner convert a
+    // miss into a hit by clicking again, which would make the record useless.
+    setAnswers((current) => (index in current ? current : { ...current, [index]: { correct, prompt } }));
+  }
+
+  function submit() {
+    if (!allAnswered || outcome || pending) return;
+    startTransition(async () => {
+      const result = await completeLesson({
+        lessonSlug,
+        responses: checkpointIndices.map((index) => ({
+          index,
+          prompt: answers[index]?.prompt ?? '',
+          correct: answers[index]?.correct ?? false,
+        })),
+      });
+      setOutcome(result);
+    });
+  }
+
   return (
     <div className="stack stack-6">
       {blocks.map((block, i) => (
-        <Block key={i} block={block} index={i} />
+        <Block key={i} block={block} index={i} onAnswer={record} />
       ))}
+
+      {checkpointIndices.length > 0 ? (
+        <LessonClose
+          total={checkpointIndices.length}
+          answered={answered}
+          allAnswered={allAnswered}
+          outcome={outcome}
+          pending={pending}
+          onSubmit={submit}
+        />
+      ) : null}
     </div>
   );
 }
 
-function Block({ block, index }: { block: LessonBlock; index: number }) {
+/**
+ * The end of the lesson.
+ *
+ * Before the last checkpoint is answered this is a progress line, because
+ * telling someone what they scored while they are still working is noise. After
+ * submission it is the only part of the lesson that says what happens next.
+ */
+function LessonClose({
+  total,
+  answered,
+  allAnswered,
+  outcome,
+  pending,
+  onSubmit,
+}: {
+  total: number;
+  answered: number;
+  allAnswered: boolean;
+  outcome: LessonOutcome | null;
+  pending: boolean;
+  onSubmit: () => void;
+}) {
+  if (outcome?.ok) {
+    const perfect = outcome.correct === outcome.total;
+    return (
+      <section
+        className="panel stack stack-4"
+        style={{ borderLeft: `3px solid var(--${perfect ? 'positive' : 'caution'})` }}
+        aria-live="polite"
+      >
+        <div className="stack stack-2">
+          <p className="eyebrow">Lesson complete</p>
+          <h2 style={{ fontSize: '1.15rem' }}>
+            {outcome.correct} of {outcome.total} checkpoints right
+          </h2>
+        </div>
+
+        {perfect ? (
+          <p className="small measure-wide">
+            Every checkpoint landed. That is recognition confirmed, not skill confirmed — the technique is only
+            proved when it survives a timed set, so the useful next step is practice rather than another lesson.
+          </p>
+        ) : (
+          <div className="stack stack-3">
+            <p className="small measure-wide">
+              {outcome.total - outcome.correct} checkpoint
+              {outcome.total - outcome.correct === 1 ? '' : 's'} did not land. Each one is now in your review
+              queue — {outcome.scheduled} card{outcome.scheduled === 1 ? '' : 's'} added, due straight away, and
+              the interval grows each time you get it right. Re-reading the lesson now would produce
+              recognition; being asked again cold is what produces recall.
+            </p>
+            {outcome.missed.length ? (
+              <p className="small muted">
+                This lesson teaches{' '}
+                {outcome.missed.map((m) => m.label.toLowerCase()).join(', ')}. Those micro-skills are what to
+                watch in your next set.
+              </p>
+            ) : null}
+          </div>
+        )}
+
+        <div className="row wrap" style={{ gap: 'var(--s3)' }}>
+          <Link className="btn btn-primary" href="/review">
+            Go to review
+          </Link>
+          <Link className="btn" href="/home">
+            Back to today
+          </Link>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="panel-quiet stack stack-3">
+      <p className="eyebrow">Checkpoints</p>
+      <p className="small">
+        {answered} of {total} answered.
+        {allAnswered ? ' Record the result so the ones you missed come back.' : ' Answer each one as you reach it.'}
+      </p>
+      <div>
+        <button className="btn btn-primary" type="button" onClick={onSubmit} disabled={!allAnswered || pending}>
+          {pending ? 'Saving…' : 'Finish lesson'}
+        </button>
+      </div>
+      {outcome && !outcome.ok && outcome.error ? (
+        <p className="small" style={{ color: 'var(--critical)' }} role="alert">
+          {outcome.error}
+        </p>
+      ) : null}
+    </section>
+  );
+}
+
+function Block({
+  block,
+  index,
+  onAnswer,
+}: {
+  block: LessonBlock;
+  index: number;
+  onAnswer: (index: number, correct: boolean, prompt: string) => void;
+}) {
   switch (block.type) {
     case 'prose':
       return (
@@ -116,7 +269,7 @@ function Block({ block, index }: { block: LessonBlock; index: number }) {
       );
 
     case 'checkpoint':
-      return <Checkpoint block={block} index={index} />;
+      return <Checkpoint block={block} index={index} onAnswer={onAnswer} />;
 
     case 'drill':
       return <Drill block={block} />;
@@ -126,8 +279,22 @@ function Block({ block, index }: { block: LessonBlock; index: number }) {
   }
 }
 
-function Checkpoint({ block, index }: { block: Extract<LessonBlock, { type: 'checkpoint' }>; index: number }) {
+function Checkpoint({
+  block,
+  index,
+  onAnswer,
+}: {
+  block: Extract<LessonBlock, { type: 'checkpoint' }>;
+  index: number;
+  onAnswer: (index: number, correct: boolean, prompt: string) => void;
+}) {
   const [chosen, setChosen] = useState<number | null>(null);
+
+  function choose(i: number) {
+    if (chosen !== null) return; // the first answer is the one that counts
+    setChosen(i);
+    onAnswer(index, block.options[i].correct === true, block.question);
+  }
 
   return (
     <section className="panel stack stack-4" style={{ borderLeft: '3px solid var(--skill-listening)' }}>
@@ -145,7 +312,7 @@ function Checkpoint({ block, index }: { block: Extract<LessonBlock, { type: 'che
                 role="radio"
                 aria-checked={selected}
                 className="runner-option"
-                onClick={() => setChosen(i)}
+                onClick={() => choose(i)}
                 data-selected={selected || undefined}
                 style={{
                   borderColor: revealed && option.correct ? 'var(--positive)' : undefined,
