@@ -37,7 +37,7 @@ export async function POST(request: Request) {
   const session = await requireSessionApi();
   if (!session) return NextResponse.json({ error: 'Not signed in.' }, { status: 401 });
 
-  const limit = rateLimit(`speaking:${session.userId}`, 60, 3600);
+  const limit = await rateLimit(`speaking:${session.userId}`, 60, 3600);
   if (!limit.ok) {
     return NextResponse.json(
       { error: 'Too many submissions in the last hour. Try again shortly.' },
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Submission details were malformed.' }, { status: 400 });
   }
 
-  const task = db.select().from(speakingTasks).where(eq(speakingTasks.slug, parsedMeta.taskSlug)).get();
+  const task = (await db.select().from(speakingTasks).where(eq(speakingTasks.slug, parsedMeta.taskSlug)).limit(1))[0];
   if (!task || task.status !== 'published') {
     return NextResponse.json({ error: 'That task could not be found.' }, { status: 404 });
   }
@@ -109,7 +109,7 @@ export async function POST(request: Request) {
   const now = nowSeconds();
   const evaluationId = newId('evl');
 
-  db.transaction((tx) => {
+  await db.transaction(async (tx) => {
     tx.insert(speakingSubmissions)
       .values({
         id: submissionId,
@@ -123,9 +123,9 @@ export async function POST(request: Request) {
         transcriptSource: parsedMeta.transcriptSource,
         timeline: JSON.stringify(parsedMeta.envelope.slice(0, 1500)),
       })
-      .run();
+      ;
 
-    tx.insert(evaluations)
+    await tx.insert(evaluations)
       .values({
         id: evaluationId,
         userId: session.userId,
@@ -146,7 +146,7 @@ export async function POST(request: Request) {
         coaching: JSON.stringify(evaluation.coaching),
         limitations: JSON.stringify(evaluation.limitations),
       })
-      .run();
+      ;
 
     // Dimensions that come back well below target become entries in the
     // mistake bank, so speaking weaknesses feed the same loop as everything
@@ -154,7 +154,7 @@ export async function POST(request: Request) {
     for (const dimension of evaluation.dimensions) {
       if (dimension.level > 7.5) continue;
       const errorCode = `${dimension.microSkill}.pattern`;
-      const existing = tx
+      const existing = (await tx
         .select()
         .from(mistakes)
         .where(
@@ -165,15 +165,15 @@ export async function POST(request: Request) {
             eq(mistakes.microSkill, dimension.microSkill),
           ),
         )
-        .get();
+        .limit(1))[0];
 
       if (existing) {
-        tx.update(mistakes)
+        await tx.update(mistakes)
           .set({ occurrences: existing.occurrences + 1, lastSeenAt: now, provedStreak: 0, resolvedAt: null })
           .where(eq(mistakes.id, existing.id))
-          .run();
+          ;
       } else {
-        tx.insert(mistakes)
+        await tx.insert(mistakes)
           .values({
             id: newId('mis'),
             userId: session.userId,
@@ -186,12 +186,12 @@ export async function POST(request: Request) {
             summary: dimension.note,
             detail: dimension.evidence.join(' · '),
           })
-          .run();
+          ;
       }
     }
   });
 
-  audit({
+  await audit({
     orgId: session.orgId,
     actorId: session.userId,
     action: 'speaking.submit',

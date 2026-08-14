@@ -20,39 +20,39 @@ export const dynamic = 'force-dynamic';
 export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ saved?: string }> }) {
   const query = await searchParams;
   const session = await requireSession();
-  const profile = getProfile(session.userId, session.orgId);
-  const row = db
+  const profile = await getProfile(session.userId, session.orgId);
+  const row = (await db
     .select()
     .from(learnerProfiles)
     .where(and(eq(learnerProfiles.userId, session.userId), eq(learnerProfiles.orgId, session.orgId)))
-    .get()!;
+    .limit(1))[0]!;
 
   const counts = {
-    attempts: db
-      .select({ c: sql<number>`count(*)` })
+    attempts: (await db
+      .select({ c: sql<number>`count(*)::int` })
       .from(attempts)
       .where(and(eq(attempts.userId, session.userId), eq(attempts.orgId, session.orgId)))
-      .get()?.c ?? 0,
-    evaluations: db
-      .select({ c: sql<number>`count(*)` })
+      .limit(1))[0]?.c ?? 0,
+    evaluations: (await db
+      .select({ c: sql<number>`count(*)::int` })
       .from(evaluations)
       .where(and(eq(evaluations.userId, session.userId), eq(evaluations.orgId, session.orgId)))
-      .get()?.c ?? 0,
-    estimates: db
-      .select({ c: sql<number>`count(*)` })
+      .limit(1))[0]?.c ?? 0,
+    estimates: (await db
+      .select({ c: sql<number>`count(*)::int` })
       .from(skillEstimates)
       .where(and(eq(skillEstimates.userId, session.userId), eq(skillEstimates.orgId, session.orgId)))
-      .get()?.c ?? 0,
-    mistakes: db
-      .select({ c: sql<number>`count(*)` })
+      .limit(1))[0]?.c ?? 0,
+    mistakes: (await db
+      .select({ c: sql<number>`count(*)::int` })
       .from(mistakes)
       .where(and(eq(mistakes.userId, session.userId), eq(mistakes.orgId, session.orgId)))
-      .get()?.c ?? 0,
-    cards: db
-      .select({ c: sql<number>`count(*)` })
+      .limit(1))[0]?.c ?? 0,
+    cards: (await db
+      .select({ c: sql<number>`count(*)::int` })
       .from(reviewCards)
       .where(and(eq(reviewCards.userId, session.userId), eq(reviewCards.orgId, session.orgId)))
-      .get()?.c ?? 0,
+      .limit(1))[0]?.c ?? 0,
   };
 
   const plan = entitlements('learner_free');

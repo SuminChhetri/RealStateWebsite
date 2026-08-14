@@ -11,13 +11,13 @@ export const dynamic = 'force-dynamic';
 export default async function GrammarPage() {
   const session = await requireSession();
 
-  const points = db.select().from(grammarPoints).orderBy(grammarPoints.level).all();
+  const points = (await db.select().from(grammarPoints).orderBy(grammarPoints.level));
 
-  const yourErrors = db
+  const yourErrors = (await db
     .select()
     .from(mistakes)
     .where(and(eq(mistakes.userId, session.userId), eq(mistakes.orgId, session.orgId)))
-    .all();
+    );
 
   const errorCounts = new Map<string, number>();
   for (const mistake of yourErrors) {

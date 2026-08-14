@@ -13,7 +13,7 @@ const HORIZONS = [7, 14, 30, 60, 90];
 export default async function PlanPage({ searchParams }: { searchParams: Promise<{ days?: string }> }) {
   const query = await searchParams;
   const session = await requireSession();
-  const profile = getProfile(session.userId, session.orgId);
+  const profile = await getProfile(session.userId, session.orgId);
 
   const requested = Number(query.days);
   const horizon = HORIZONS.includes(requested)

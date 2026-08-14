@@ -31,7 +31,7 @@ export default async function WritingFeedbackPage({ params }: { params: Promise<
   const { id } = await params;
   const session = await requireSession();
 
-  const row = db
+  const row = (await db
     .select({
       submission: writingSubmissions,
       task: writingTasks,
@@ -50,7 +50,7 @@ export default async function WritingFeedbackPage({ params }: { params: Promise<
         eq(writingSubmissions.orgId, session.orgId),
       ),
     )
-    .get();
+    .limit(1))[0];
 
   if (!row || !row.evaluation) notFound();
 

@@ -1,11 +1,15 @@
 /**
  * Meridian relational schema.
  *
- * Dialect: SQLite (better-sqlite3) for local-first development with zero
- * external services. Every construct used here (integer PKs, text columns,
- * unix-epoch integers for timestamps, JSON-encoded text for structured
- * payloads) maps 1:1 onto PostgreSQL, so the production migration is a
- * dialect swap in `client.ts` plus a `pgTable` re-export — no model changes.
+ * Dialect: PostgreSQL, hosted on Supabase. The application connects as a
+ * normal Postgres role over the connection pooler and enforces tenancy in
+ * `lib/auth/guard.ts`; it does not use Supabase Auth or PostgREST.
+ *
+ * Because a Supabase project also exposes these tables through PostgREST using
+ * a publishable anon key, every table is additionally locked down with
+ * row-level security and no permissive policy (see the RLS migration). The
+ * server's own role bypasses RLS, so the application is unaffected, while a
+ * leaked anon key reaches nothing.
  *
  * Conventions:
  *  - `orgId` on every tenant-scoped row. Authorization is enforced in
@@ -17,15 +21,29 @@
  *    under `lib/content/taxonomy.ts` and is referenced here by stable slug.
  */
 import { sql } from 'drizzle-orm';
-import { index, integer, sqliteTable, text, uniqueIndex, real } from 'drizzle-orm/sqlite-core';
+import {
+  boolean,
+  doublePrecision,
+  index,
+  integer,
+  pgTable,
+  text,
+  uniqueIndex,
+} from 'drizzle-orm/pg-core';
 
-const now = sql`(unixepoch())`;
+/**
+ * Timestamps are unix seconds rather than `timestamptz`. Every engine in this
+ * product reasons in unix seconds — scheduler intervals, decay windows, streak
+ * arithmetic — so storing them natively keeps one representation end to end and
+ * avoids a conversion at every boundary.
+ */
+const now = sql`(extract(epoch from now())::int)`;
 
 /* ------------------------------------------------------------------ */
 /* Tenancy & identity                                                  */
 /* ------------------------------------------------------------------ */
 
-export const organizations = sqliteTable(
+export const organizations = pgTable(
   'organizations',
   {
     id: text('id').primaryKey(),
@@ -43,7 +61,7 @@ export const organizations = sqliteTable(
   (t) => [uniqueIndex('organizations_slug_idx').on(t.slug)],
 );
 
-export const users = sqliteTable(
+export const users = pgTable(
   'users',
   {
     id: text('id').primaryKey(),
@@ -59,7 +77,7 @@ export const users = sqliteTable(
   (t) => [uniqueIndex('users_email_idx').on(t.email)],
 );
 
-export const memberships = sqliteTable(
+export const memberships = pgTable(
   'memberships',
   {
     id: text('id').primaryKey(),
@@ -80,7 +98,7 @@ export const memberships = sqliteTable(
   ],
 );
 
-export const authSessions = sqliteTable(
+export const authSessions = pgTable(
   'auth_sessions',
   {
     id: text('id').primaryKey(), // sha256 of the cookie token; the raw token is never stored
@@ -101,7 +119,7 @@ export const authSessions = sqliteTable(
 /* Learner profile                                                     */
 /* ------------------------------------------------------------------ */
 
-export const learnerProfiles = sqliteTable(
+export const learnerProfiles = pgTable(
   'learner_profiles',
   {
     id: text('id').primaryKey(),
@@ -137,7 +155,7 @@ export const learnerProfiles = sqliteTable(
 /* ------------------------------------------------------------------ */
 
 /** Reading passages and listening scripts share one stimulus table. */
-export const stimuli = sqliteTable(
+export const stimuli = pgTable(
   'stimuli',
   {
     id: text('id').primaryKey(),
@@ -156,7 +174,7 @@ export const stimuli = sqliteTable(
     level: integer('level').notNull(),
     wordCount: integer('word_count').notNull().default(0),
     /** Flesch-Kincaid grade computed at seed time; surfaced in the content console. */
-    readability: real('readability'),
+    readability: doublePrecision('readability'),
     topic: text('topic').notNull().default('general'),
     status: text('status', {
       enum: ['draft', 'in_review', 'approved', 'published', 'retired'],
@@ -172,7 +190,7 @@ export const stimuli = sqliteTable(
   ],
 );
 
-export const questions = sqliteTable(
+export const questions = pgTable(
   'questions',
   {
     id: text('id').primaryKey(),
@@ -196,8 +214,8 @@ export const questions = sqliteTable(
     takeaway: text('takeaway'),
     level: integer('level').notNull(),
     /** Seeded difficulty in logits; updated by item analytics once data exists. */
-    difficulty: real('difficulty').notNull().default(0),
-    discrimination: real('discrimination'),
+    difficulty: doublePrecision('difficulty').notNull().default(0),
+    discrimination: doublePrecision('discrimination'),
     targetSeconds: integer('target_seconds').notNull().default(60),
     orderInSet: integer('order_in_set').notNull().default(0),
     status: text('status', {
@@ -215,7 +233,7 @@ export const questions = sqliteTable(
   ],
 );
 
-export const writingTasks = sqliteTable(
+export const writingTasks = pgTable(
   'writing_tasks',
   {
     id: text('id').primaryKey(),
@@ -250,7 +268,7 @@ export const writingTasks = sqliteTable(
   (t) => [uniqueIndex('writing_tasks_slug_idx').on(t.slug)],
 );
 
-export const speakingTasks = sqliteTable(
+export const speakingTasks = pgTable(
   'speaking_tasks',
   {
     id: text('id').primaryKey(),
@@ -283,7 +301,7 @@ export const speakingTasks = sqliteTable(
   ],
 );
 
-export const lessons = sqliteTable(
+export const lessons = pgTable(
   'lessons',
   {
     id: text('id').primaryKey(),
@@ -313,7 +331,7 @@ export const lessons = sqliteTable(
   ],
 );
 
-export const vocabularyEntries = sqliteTable(
+export const vocabularyEntries = pgTable(
   'vocabulary_entries',
   {
     id: text('id').primaryKey(),
@@ -341,7 +359,7 @@ export const vocabularyEntries = sqliteTable(
   ],
 );
 
-export const grammarPoints = sqliteTable(
+export const grammarPoints = pgTable(
   'grammar_points',
   {
     id: text('id').primaryKey(),
@@ -367,7 +385,7 @@ export const grammarPoints = sqliteTable(
 /* Content governance                                                  */
 /* ------------------------------------------------------------------ */
 
-export const contentVersions = sqliteTable(
+export const contentVersions = pgTable(
   'content_versions',
   {
     id: text('id').primaryKey(),
@@ -386,7 +404,7 @@ export const contentVersions = sqliteTable(
   ],
 );
 
-export const contentReviews = sqliteTable(
+export const contentReviews = pgTable(
   'content_reviews',
   {
     id: text('id').primaryKey(),
@@ -405,7 +423,7 @@ export const contentReviews = sqliteTable(
 );
 
 /** Aggregated psychometrics per item; recomputed from attempt data. */
-export const itemStats = sqliteTable(
+export const itemStats = pgTable(
   'item_stats',
   {
     questionId: text('question_id')
@@ -414,13 +432,13 @@ export const itemStats = sqliteTable(
     exposures: integer('exposures').notNull().default(0),
     correct: integer('correct').notNull().default(0),
     /** p-value (proportion correct). */
-    pValue: real('p_value'),
+    pValue: doublePrecision('p_value'),
     /** Point-biserial correlation with total score. */
-    discrimination: real('discrimination'),
-    medianSeconds: real('median_seconds'),
+    discrimination: doublePrecision('discrimination'),
+    medianSeconds: doublePrecision('median_seconds'),
     /** JSON {optionKey: count} for distractor analysis. */
     optionCounts: text('option_counts').notNull().default('{}'),
-    flagged: integer('flagged', { mode: 'boolean' }).notNull().default(false),
+    flagged: boolean('flagged').notNull().default(false),
     flagReason: text('flag_reason'),
     updatedAt: integer('updated_at').notNull().default(now),
   },
@@ -430,7 +448,7 @@ export const itemStats = sqliteTable(
 /* Practice & assessment                                               */
 /* ------------------------------------------------------------------ */
 
-export const attempts = sqliteTable(
+export const attempts = pgTable(
   'attempts',
   {
     id: text('id').primaryKey(),
@@ -448,7 +466,7 @@ export const attempts = sqliteTable(
     }).notNull(),
     /** JSON: how the item selector built this attempt (targets, filters, seed). */
     blueprint: text('blueprint').notNull().default('{}'),
-    timed: integer('timed', { mode: 'boolean' }).notNull().default(true),
+    timed: boolean('timed').notNull().default(true),
     timeLimitSeconds: integer('time_limit_seconds'),
     startedAt: integer('started_at').notNull().default(now),
     completedAt: integer('completed_at'),
@@ -456,10 +474,10 @@ export const attempts = sqliteTable(
     rawScore: integer('raw_score'),
     maxScore: integer('max_score'),
     /** Estimated practice level on the CLB scale (never an official score). */
-    estimatedLevel: real('estimated_level'),
+    estimatedLevel: doublePrecision('estimated_level'),
     /** Standard error of the level estimate — drives confidence language in UI. */
-    levelSe: real('level_se'),
-    abandoned: integer('abandoned', { mode: 'boolean' }).notNull().default(false),
+    levelSe: doublePrecision('level_se'),
+    abandoned: boolean('abandoned').notNull().default(false),
   },
   (t) => [
     index('attempts_user_idx').on(t.userId, t.orgId, t.startedAt),
@@ -467,7 +485,7 @@ export const attempts = sqliteTable(
   ],
 );
 
-export const attemptItems = sqliteTable(
+export const attemptItems = pgTable(
   'attempt_items',
   {
     id: text('id').primaryKey(),
@@ -481,11 +499,11 @@ export const attemptItems = sqliteTable(
     questionVersion: integer('question_version').notNull().default(1),
     orderIndex: integer('order_index').notNull().default(0),
     response: text('response'),
-    correct: integer('correct', { mode: 'boolean' }),
+    correct: boolean('correct'),
     elapsedMs: integer('elapsed_ms').notNull().default(0),
     /** Did the learner change their mind? A signal of uncertainty. */
-    changedAnswer: integer('changed_answer', { mode: 'boolean' }).notNull().default(false),
-    flaggedForReview: integer('flagged_for_review', { mode: 'boolean' }).notNull().default(false),
+    changedAnswer: boolean('changed_answer').notNull().default(false),
+    flaggedForReview: boolean('flagged_for_review').notNull().default(false),
     answeredAt: integer('answered_at'),
   },
   (t) => [
@@ -494,7 +512,7 @@ export const attemptItems = sqliteTable(
   ],
 );
 
-export const writingSubmissions = sqliteTable(
+export const writingSubmissions = pgTable(
   'writing_submissions',
   {
     id: text('id').primaryKey(),
@@ -513,7 +531,7 @@ export const writingSubmissions = sqliteTable(
     /** Planning notes captured in the planner pane — used for coaching, never scored. */
     planNotes: text('plan_notes'),
     elapsedSeconds: integer('elapsed_seconds').notNull().default(0),
-    timed: integer('timed', { mode: 'boolean' }).notNull().default(true),
+    timed: boolean('timed').notNull().default(true),
     /** Keystroke-derived: revisions made after the first draft sentence. */
     revisionCount: integer('revision_count').notNull().default(0),
     submittedAt: integer('submitted_at').notNull().default(now),
@@ -521,7 +539,7 @@ export const writingSubmissions = sqliteTable(
   (t) => [index('writing_submissions_user_idx').on(t.userId, t.orgId, t.submittedAt)],
 );
 
-export const speakingSubmissions = sqliteTable(
+export const speakingSubmissions = pgTable(
   'speaking_submissions',
   {
     id: text('id').primaryKey(),
@@ -553,7 +571,7 @@ export const speakingSubmissions = sqliteTable(
 );
 
 /** One evaluation row per productive submission (writing or speaking). */
-export const evaluations = sqliteTable(
+export const evaluations = pgTable(
   'evaluations',
   {
     id: text('id').primaryKey(),
@@ -570,9 +588,9 @@ export const evaluations = sqliteTable(
     engineVersion: text('engine_version').notNull(),
     /** JSON {dimension: {level, evidence[], note}} */
     dimensions: text('dimensions').notNull(),
-    estimatedLevel: real('estimated_level').notNull(),
+    estimatedLevel: doublePrecision('estimated_level').notNull(),
     /** Half-width of the reported band, e.g. 0.5 → "CLB 9–10". */
-    levelSe: real('level_se').notNull().default(0.5),
+    levelSe: doublePrecision('level_se').notNull().default(0.5),
     /** JSON [{severity,category,message,span,suggestion}] */
     findings: text('findings').notNull().default('[]'),
     /** JSON: the strengths / priorities / next-drill coaching payload. */
@@ -591,7 +609,7 @@ export const evaluations = sqliteTable(
 /* Learning state                                                      */
 /* ------------------------------------------------------------------ */
 
-export const mistakes = sqliteTable(
+export const mistakes = pgTable(
   'mistakes',
   {
     id: text('id').primaryKey(),
@@ -630,7 +648,7 @@ export const mistakes = sqliteTable(
  * Unified spaced-retrieval scheduler state. One row per (learner, item).
  * Implements a difficulty/stability/retrievability model — see lib/engines/srs.ts.
  */
-export const reviewCards = sqliteTable(
+export const reviewCards = pgTable(
   'review_cards',
   {
     id: text('id').primaryKey(),
@@ -642,8 +660,8 @@ export const reviewCards = sqliteTable(
       .references(() => organizations.id, { onDelete: 'cascade' }),
     kind: text('kind', { enum: ['vocabulary', 'grammar', 'mistake', 'question'] }).notNull(),
     refId: text('ref_id').notNull(),
-    stability: real('stability').notNull().default(1),
-    difficulty: real('difficulty').notNull().default(5),
+    stability: doublePrecision('stability').notNull().default(1),
+    difficulty: doublePrecision('difficulty').notNull().default(5),
     reps: integer('reps').notNull().default(0),
     lapses: integer('lapses').notNull().default(0),
     lastReviewedAt: integer('last_reviewed_at'),
@@ -659,7 +677,7 @@ export const reviewCards = sqliteTable(
 );
 
 /** Rolling mastery estimate per micro-skill — the core of the diagnosis. */
-export const skillEstimates = sqliteTable(
+export const skillEstimates = pgTable(
   'skill_estimates',
   {
     id: text('id').primaryKey(),
@@ -672,15 +690,15 @@ export const skillEstimates = sqliteTable(
     skill: text('skill').notNull(),
     microSkill: text('micro_skill').notNull(),
     /** Ability on the CLB scale (continuous). */
-    theta: real('theta').notNull().default(7),
+    theta: doublePrecision('theta').notNull().default(7),
     /** Uncertainty; shrinks with evidence. High SE ⇒ "not enough evidence yet". */
-    se: real('se').notNull().default(2.5),
+    se: doublePrecision('se').notNull().default(2.5),
     observations: integer('observations').notNull().default(0),
     correct: integer('correct').notNull().default(0),
     /** Accuracy under time pressure vs untimed — exposes exam-speed collapse. */
     timedObservations: integer('timed_observations').notNull().default(0),
     timedCorrect: integer('timed_correct').notNull().default(0),
-    avgSecondsRatio: real('avg_seconds_ratio').notNull().default(1),
+    avgSecondsRatio: doublePrecision('avg_seconds_ratio').notNull().default(1),
     updatedAt: integer('updated_at').notNull().default(now),
   },
   (t) => [
@@ -690,7 +708,7 @@ export const skillEstimates = sqliteTable(
 );
 
 /** Immutable trace of level estimates so progress charts show real history. */
-export const progressSnapshots = sqliteTable(
+export const progressSnapshots = pgTable(
   'progress_snapshots',
   {
     id: text('id').primaryKey(),
@@ -701,8 +719,8 @@ export const progressSnapshots = sqliteTable(
       .notNull()
       .references(() => organizations.id, { onDelete: 'cascade' }),
     skill: text('skill').notNull(),
-    estimatedLevel: real('estimated_level').notNull(),
-    se: real('se').notNull().default(1),
+    estimatedLevel: doublePrecision('estimated_level').notNull(),
+    se: doublePrecision('se').notNull().default(1),
     observations: integer('observations').notNull().default(0),
     source: text('source').notNull().default('attempt'),
     sourceId: text('source_id'),
@@ -711,7 +729,7 @@ export const progressSnapshots = sqliteTable(
   (t) => [index('progress_snapshots_idx').on(t.userId, t.orgId, t.skill, t.createdAt)],
 );
 
-export const recommendations = sqliteTable(
+export const recommendations = pgTable(
   'recommendations',
   {
     id: text('id').primaryKey(),
@@ -730,7 +748,7 @@ export const recommendations = sqliteTable(
     /** Learner-facing justification: why this, why now. Never a black box. */
     rationale: text('rationale').notNull(),
     /** Expected level gain per minute — the ranking signal. */
-    valueScore: real('value_score').notNull().default(0),
+    valueScore: doublePrecision('value_score').notNull().default(0),
     estimatedMinutes: integer('estimated_minutes').notNull().default(10),
     href: text('href').notNull(),
     /** JSON payload consumed by the practice launcher. */
@@ -743,7 +761,7 @@ export const recommendations = sqliteTable(
   (t) => [index('recommendations_user_idx').on(t.userId, t.orgId, t.generatedAt)],
 );
 
-export const studyPlans = sqliteTable(
+export const studyPlans = pgTable(
   'study_plans',
   {
     id: text('id').primaryKey(),
@@ -766,7 +784,7 @@ export const studyPlans = sqliteTable(
   (t) => [index('study_plans_user_idx').on(t.userId, t.orgId, t.generatedAt)],
 );
 
-export const planCompletions = sqliteTable(
+export const planCompletions = pgTable(
   'plan_completions',
   {
     id: text('id').primaryKey(),
@@ -788,7 +806,7 @@ export const planCompletions = sqliteTable(
 /* Operations                                                          */
 /* ------------------------------------------------------------------ */
 
-export const auditLogs = sqliteTable(
+export const auditLogs = pgTable(
   'audit_logs',
   {
     id: text('id').primaryKey(),
@@ -804,7 +822,7 @@ export const auditLogs = sqliteTable(
   (t) => [index('audit_logs_org_idx').on(t.orgId, t.createdAt)],
 );
 
-export const rateLimits = sqliteTable('rate_limits', {
+export const rateLimits = pgTable('rate_limits', {
   key: text('key').primaryKey(),
   count: integer('count').notNull().default(0),
   windowStart: integer('window_start').notNull().default(now),

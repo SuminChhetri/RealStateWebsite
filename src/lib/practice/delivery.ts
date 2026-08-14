@@ -127,12 +127,12 @@ interface CandidateRow {
   orderInSet: number;
 }
 
-function candidatePool(skill: Skill | 'mixed', partType?: string): CandidateRow[] {
+async function candidatePool(skill: Skill | 'mixed', partType?: string): Promise<CandidateRow[]> {
   const conditions = [eq(questions.status, 'published')];
   if (skill !== 'mixed') conditions.push(eq(questions.skill, skill as 'reading' | 'listening'));
   if (partType) conditions.push(eq(questions.partType, partType));
 
-  return db
+  return (await db
     .select({
       id: questions.id,
       slug: questions.slug,
@@ -149,8 +149,7 @@ function candidatePool(skill: Skill | 'mixed', partType?: string): CandidateRow[
       orderInSet: questions.orderInSet,
     })
     .from(questions)
-    .where(and(...conditions))
-    .all() as CandidateRow[];
+    .where(and(...conditions))) as CandidateRow[];
 }
 
 /**
@@ -158,8 +157,8 @@ function candidatePool(skill: Skill | 'mixed', partType?: string): CandidateRow[
  * items from the same stimulus together so a passage is never delivered with
  * only one of its questions.
  */
-export function selectQuestions(request: SelectionRequest): CandidateRow[] {
-  const pool = candidatePool(request.skill, request.partType);
+export async function selectQuestions(request: SelectionRequest): Promise<CandidateRow[]> {
+  const pool = await candidatePool(request.skill, request.partType);
   if (!pool.length) return [];
 
   const excluded = new Set(request.excludeQuestionIds ?? []);
@@ -214,8 +213,10 @@ export function selectQuestions(request: SelectionRequest): CandidateRow[] {
 /* Attempt creation                                                    */
 /* ------------------------------------------------------------------ */
 
-export function createAttempt(input: SelectionRequest & { blueprint?: Record<string, unknown> }): DeliveredSet | null {
-  const selected = selectQuestions(input);
+export async function createAttempt(
+  input: SelectionRequest & { blueprint?: Record<string, unknown> },
+): Promise<DeliveredSet | null> {
+  const selected = await selectQuestions(input);
   if (!selected.length) return null;
 
   const attemptId = newId('att');
@@ -223,9 +224,8 @@ export function createAttempt(input: SelectionRequest & { blueprint?: Record<str
     ? selected.reduce((a, q) => a + q.targetSeconds, 0)
     : null;
 
-  db.transaction((tx) => {
-    tx.insert(attempts)
-      .values({
+  await db.transaction(async (tx) => {
+    await tx.insert(attempts).values({
         id: attemptId,
         userId: input.userId,
         orgId: input.orgId,
@@ -237,37 +237,40 @@ export function createAttempt(input: SelectionRequest & { blueprint?: Record<str
           targetAbility: input.defaultAbility,
           count: selected.length,
         }),
-        timed: input.timed,
-        timeLimitSeconds: timeLimit,
-        maxScore: selected.length,
-      })
-      .run();
-
-    selected.forEach((question, index) => {
-      tx.insert(attemptItems)
-        .values({
-          id: newId('ati'),
-          attemptId,
-          questionId: question.id,
-          questionVersion: 1,
-          orderIndex: index,
-        })
-        .run();
+      timed: input.timed,
+      timeLimitSeconds: timeLimit,
+      maxScore: selected.length,
     });
+
+    // One multi-row insert rather than one statement per item: the round trips
+    // are the cost here, not the rows.
+    await tx.insert(attemptItems).values(
+      selected.map((question, index) => ({
+        id: newId('ati'),
+        attemptId,
+        questionId: question.id,
+        questionVersion: 1,
+        orderIndex: index,
+      })),
+    );
   });
 
-  return hydrateAttempt(attemptId, input.userId, input.orgId)!;
+  return hydrateAttempt(attemptId, input.userId, input.orgId);
 }
 
-export function hydrateAttempt(attemptId: string, userId: string, orgId: string): DeliveredSet | null {
-  const attempt = db
+export async function hydrateAttempt(
+  attemptId: string,
+  userId: string,
+  orgId: string,
+): Promise<DeliveredSet | null> {
+  const [attempt] = await db
     .select()
     .from(attempts)
     .where(and(eq(attempts.id, attemptId), eq(attempts.userId, userId), eq(attempts.orgId, orgId)))
-    .get();
+    .limit(1);
   if (!attempt) return null;
 
-  const rows = db
+  const rows = await db
     .select({
       orderIndex: attemptItems.orderIndex,
       response: attemptItems.response,
@@ -286,12 +289,11 @@ export function hydrateAttempt(attemptId: string, userId: string, orgId: string)
     .from(attemptItems)
     .innerJoin(questions, eq(questions.id, attemptItems.questionId))
     .where(eq(attemptItems.attemptId, attemptId))
-    .orderBy(attemptItems.orderIndex)
-    .all();
+    .orderBy(attemptItems.orderIndex);
 
   const stimulusIds = [...new Set(rows.map((r) => r.stimulusId).filter((x): x is string => !!x))];
   const stimulusRows = stimulusIds.length
-    ? db.select().from(stimuli).where(inArray(stimuli.id, stimulusIds)).all()
+    ? await db.select().from(stimuli).where(inArray(stimuli.id, stimulusIds))
     : [];
 
   return {
@@ -333,15 +335,14 @@ export function hydrateAttempt(attemptId: string, userId: string, orgId: string)
 }
 
 /** Questions the learner has seen in the last `days` days. */
-export function recentlySeen(userId: string, orgId: string, days = 10): string[] {
+export async function recentlySeen(userId: string, orgId: string, days = 10): Promise<string[]> {
   const cutoff = Math.floor(Date.now() / 1000) - days * 86400;
-  return db
+  const rows = await db
     .select({ questionId: attemptItems.questionId })
     .from(attemptItems)
     .innerJoin(attempts, eq(attempts.id, attemptItems.attemptId))
-    .where(and(eq(attempts.userId, userId), eq(attempts.orgId, orgId), sql`${attempts.startedAt} > ${cutoff}`))
-    .all()
-    .map((r) => r.questionId);
+    .where(and(eq(attempts.userId, userId), eq(attempts.orgId, orgId), sql`${attempts.startedAt} > ${cutoff}`));
+  return rows.map((r) => r.questionId);
 }
 
 /**

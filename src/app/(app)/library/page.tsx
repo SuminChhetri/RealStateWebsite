@@ -15,9 +15,9 @@ const SKILL_ORDER = ['strategy', 'reading', 'listening', 'writing', 'speaking', 
 export default async function LibraryPage({ searchParams }: { searchParams: Promise<{ micro?: string }> }) {
   const query = await searchParams;
   const session = await requireSession();
-  const profile = getProfile(session.userId, session.orgId);
+  const profile = await getProfile(session.userId, session.orgId);
 
-  const all = db.select().from(lessons).where(eq(lessons.status, 'published')).all();
+  const all = (await db.select().from(lessons).where(eq(lessons.status, 'published')));
 
   // Which lessons remediate a micro-skill this learner is actually behind on.
   const weakSlugs = new Set(

@@ -14,7 +14,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   if (!session) return new Response('Not signed in.', { status: 401 });
 
   const { id } = await params;
-  const submission = db
+  const submission = (await db
     .select()
     .from(speakingSubmissions)
     .where(
@@ -24,7 +24,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
         eq(speakingSubmissions.orgId, session.orgId),
       ),
     )
-    .get();
+    .limit(1))[0];
 
   if (!submission?.audioKey) return new Response('Not found.', { status: 404 });
 

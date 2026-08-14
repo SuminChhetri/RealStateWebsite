@@ -24,7 +24,7 @@ const CONFIDENCE = [
  */
 export default async function OnboardingPage() {
   const session = await requireSession();
-  const profile = getProfile(session.userId, session.orgId);
+  const profile = await getProfile(session.userId, session.orgId);
   if (profile.onboarded) redirect('/home');
 
   const today = new Date().toISOString().slice(0, 10);

@@ -28,7 +28,7 @@ const schema = z.object({
 
 export async function completeOnboarding(formData: FormData) {
   const session = await requireSession();
-  ensureProfile(session.userId, session.orgId);
+  await ensureProfile(session.userId, session.orgId);
 
   const parsed = schema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect('/onboarding?error=1');
@@ -36,7 +36,7 @@ export async function completeOnboarding(formData: FormData) {
   const data = parsed.data;
   const now = Math.floor(Date.now() / 1000);
 
-  db.update(learnerProfiles)
+  await db.update(learnerProfiles)
     .set({
       targetLevel: data.targetLevel,
       examDate: data.examDate ? data.examDate : null,
@@ -58,9 +58,9 @@ export async function completeOnboarding(formData: FormData) {
       updatedAt: now,
     })
     .where(and(eq(learnerProfiles.userId, session.userId), eq(learnerProfiles.orgId, session.orgId)))
-    .run();
+    ;
 
-  audit({
+  await audit({
     orgId: session.orgId,
     actorId: session.userId,
     action: 'onboarding.complete',

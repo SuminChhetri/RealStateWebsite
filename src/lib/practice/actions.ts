@@ -41,10 +41,10 @@ export async function startPractice(formData: FormData) {
   });
   if (!parsed.success) redirect('/home');
 
-  const limit = rateLimit(`practice:${session.userId}`, 60, 3600);
+  const limit = await rateLimit(`practice:${session.userId}`, 60, 3600);
   if (!limit.ok) redirect('/home?error=rate-limited');
 
-  const profile = getProfile(session.userId, session.orgId);
+  const profile = await getProfile(session.userId, session.orgId);
   const abilityByMicroSkill: Record<string, number> = {};
   for (const m of profile.microEstimates) abilityByMicroSkill[m.microSkill] = m.theta;
 
@@ -52,7 +52,7 @@ export async function startPractice(formData: FormData) {
   const defaultAbility =
     skillEstimate && skillEstimate.observations > 0 ? skillEstimate.level : profile.targetLevel - 2;
 
-  const set = createAttempt({
+  const set = await createAttempt({
     userId: session.userId,
     orgId: session.orgId,
     skill: parsed.data.skill as Skill | 'mixed',
@@ -63,7 +63,7 @@ export async function startPractice(formData: FormData) {
     defaultAbility,
     focusMicroSkills: parsed.data.microSkill ? [parsed.data.microSkill] : [],
     partType: parsed.data.partType,
-    excludeQuestionIds: recentlySeen(session.userId, session.orgId),
+    excludeQuestionIds: await recentlySeen(session.userId, session.orgId),
     blueprint: {
       requestedBy: 'learner',
       targetDifficulty: Math.round(targetDifficulty(defaultAbility) * 100) / 100,
@@ -72,7 +72,7 @@ export async function startPractice(formData: FormData) {
 
   if (!set) redirect('/home?error=no-content');
 
-  audit({
+  await audit({
     orgId: session.orgId,
     actorId: session.userId,
     action: 'practice.start',
@@ -87,9 +87,9 @@ export async function startPractice(formData: FormData) {
 /** The diagnostic: a fixed-length mixed set that samples the profile broadly. */
 export async function startDiagnostic() {
   const session = await requireSession();
-  const profile = getProfile(session.userId, session.orgId);
+  const profile = await getProfile(session.userId, session.orgId);
 
-  const set = createAttempt({
+  const set = await createAttempt({
     userId: session.userId,
     orgId: session.orgId,
     skill: 'mixed',
@@ -106,12 +106,12 @@ export async function startDiagnostic() {
 
   if (!set) redirect('/home?error=no-content');
 
-  db.update(learnerProfiles)
+  await db.update(learnerProfiles)
     .set({ diagnosticAttemptId: set.attemptId })
     .where(and(eq(learnerProfiles.userId, session.userId), eq(learnerProfiles.orgId, session.orgId)))
-    .run();
+    ;
 
-  audit({
+  await audit({
     orgId: session.orgId,
     actorId: session.userId,
     action: 'diagnostic.start',
@@ -127,7 +127,7 @@ export async function startReview() {
   const session = await requireSession();
   const now = Math.floor(Date.now() / 1000);
 
-  const due = db
+  const due = (await db
     .select()
     .from(reviewCards)
     .where(
@@ -137,16 +137,16 @@ export async function startReview() {
         eq(reviewCards.kind, 'question'),
       ),
     )
-    .all()
+    )
     .filter((c) => c.dueAt <= now);
 
   if (!due.length) redirect('/review?empty=1');
 
-  const profile = getProfile(session.userId, session.orgId);
+  const profile = await getProfile(session.userId, session.orgId);
   const abilityByMicroSkill: Record<string, number> = {};
   for (const m of profile.microEstimates) abilityByMicroSkill[m.microSkill] = m.theta;
 
-  const set = createAttempt({
+  const set = await createAttempt({
     userId: session.userId,
     orgId: session.orgId,
     skill: 'mixed',
@@ -186,7 +186,7 @@ export async function submitPractice(payload: unknown): Promise<{ ok: boolean; e
   const parsed = submitSchema.safeParse(payload);
   if (!parsed.success) return { ok: false, error: 'Your answers could not be read. Nothing was lost — try again.' };
 
-  const attempt = db
+  const attempt = (await db
     .select()
     .from(attempts)
     .where(
@@ -196,10 +196,10 @@ export async function submitPractice(payload: unknown): Promise<{ ok: boolean; e
         eq(attempts.orgId, session.orgId),
       ),
     )
-    .get();
+    .limit(1))[0];
   if (!attempt) return { ok: false, error: 'That practice set could not be found.' };
 
-  const result = submitAttempt({
+  const result = await submitAttempt({
     attemptId: parsed.data.attemptId,
     userId: session.userId,
     orgId: session.orgId,
@@ -208,7 +208,7 @@ export async function submitPractice(payload: unknown): Promise<{ ok: boolean; e
 
   if (!result) return { ok: false, error: 'That practice set could not be graded.' };
 
-  audit({
+  await audit({
     orgId: session.orgId,
     actorId: session.userId,
     action: 'practice.submit',
@@ -222,11 +222,11 @@ export async function submitPractice(payload: unknown): Promise<{ ok: boolean; e
 
 export async function abandonAttempt(attemptId: string) {
   const session = await requireSession();
-  db.update(attempts)
+  await db.update(attempts)
     .set({ abandoned: true, completedAt: Math.floor(Date.now() / 1000) })
     .where(
       and(eq(attempts.id, attemptId), eq(attempts.userId, session.userId), eq(attempts.orgId, session.orgId)),
     )
-    .run();
+    ;
   redirect('/home');
 }

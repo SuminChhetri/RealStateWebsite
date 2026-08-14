@@ -19,27 +19,33 @@ export const dynamic = 'force-dynamic';
  */
 export default async function ProgressPage() {
   const session = await requireSession();
-  const profile = getProfile(session.userId, session.orgId);
+  const profile = await getProfile(session.userId, session.orgId);
 
+  // One round trip per skill, issued together rather than in sequence.
   const trends = Object.fromEntries(
-    SKILLS.map((skill) => [skill, skillTrend(session.userId, session.orgId, skill)]),
+    await Promise.all(
+      SKILLS.map(async (skill) => [skill, await skillTrend(session.userId, session.orgId, skill)] as const),
+    ),
   ) as Record<Skill, { level: number; se: number; createdAt: number; observations: number }[]>;
 
-  const profileRow = db
+  const profileRow = (await db
     .select()
     .from(learnerProfiles)
     .where(and(eq(learnerProfiles.userId, session.userId), eq(learnerProfiles.orgId, session.orgId)))
-    .get();
+    .limit(1))[0];
   const confidence = profileRow?.confidence ? (JSON.parse(profileRow.confidence) as Record<string, number>) : {};
 
   // Where points are actually lost: accuracy by micro-skill, weighted by how
   // often each one appears.
-  const lossRows = db
+  const lossRows = (await db
     .select({
       microSkill: questions.microSkill,
       skill: questions.skill,
-      total: sql<number>`count(*)`,
-      wrong: sql<number>`sum(case when ${attemptItems.correct} = 0 then 1 else 0 end)`,
+      // `correct` is a real boolean here, so it is compared as one — and the
+      // aggregate is cast, because Postgres returns count/sum as bigint, which
+      // the driver hands back as a string.
+      total: sql<number>`count(*)::int`,
+      wrong: sql<number>`sum(case when ${attemptItems.correct} is false then 1 else 0 end)::int`,
     })
     .from(attemptItems)
     .innerJoin(attempts, eq(attempts.id, attemptItems.attemptId))
@@ -52,12 +58,12 @@ export default async function ProgressPage() {
       ),
     )
     .groupBy(questions.microSkill, questions.skill)
-    .all()
+    )
     .filter((r) => r.total >= 3)
     .sort((a, b) => b.wrong - a.wrong)
     .slice(0, 8);
 
-  const recent = db
+  const recent = (await db
     .select({
       id: attempts.id,
       mode: attempts.mode,
@@ -77,7 +83,7 @@ export default async function ProgressPage() {
     )
     .orderBy(desc(attempts.startedAt))
     .limit(10)
-    .all();
+    );
 
   const totalWrong = lossRows.reduce((a, r) => a + Number(r.wrong), 0);
 

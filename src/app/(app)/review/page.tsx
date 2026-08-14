@@ -16,11 +16,11 @@ export default async function ReviewPage({ searchParams }: { searchParams: Promi
   const session = await requireSession();
   const now = Math.floor(Date.now() / 1000);
 
-  const cards = db
+  const cards = (await db
     .select()
     .from(reviewCards)
     .where(and(eq(reviewCards.userId, session.userId), eq(reviewCards.orgId, session.orgId)))
-    .all();
+    );
 
   const due = cards.filter((c) => c.dueAt <= now);
   const upcoming = cards
@@ -33,29 +33,29 @@ export default async function ReviewPage({ searchParams }: { searchParams: Promi
   const dueVocabulary = due.filter((c) => c.kind === 'vocabulary');
 
   const questionMeta = dueQuestions.length
-    ? db
+    ? (await db
         .select({ id: questions.id, microSkill: questions.microSkill, skill: questions.skill })
         .from(questions)
         .where(inArray(questions.id, dueQuestions.map((c) => c.refId)))
-        .all()
+        )
     : [];
 
   const grammarMeta = dueGrammar.length
-    ? db
+    ? (await db
         .select({ slug: grammarPoints.slug, title: grammarPoints.title })
         .from(grammarPoints)
         .where(inArray(grammarPoints.slug, dueGrammar.map((c) => c.refId)))
-        .all()
+        )
     : [];
 
-  const openMistakes = db
+  const openMistakes = (await db
     .select()
     .from(mistakes)
     .where(and(eq(mistakes.userId, session.userId), eq(mistakes.orgId, session.orgId)))
-    .all()
+    )
     .filter((m) => !m.resolvedAt);
 
-  const vocabularyTotal = db.select({ id: vocabularyEntries.id }).from(vocabularyEntries).all().length;
+  const vocabularyTotal = (await db.select({ id: vocabularyEntries.id }).from(vocabularyEntries)).length;
 
   const bySkill = new Map<string, number>();
   for (const meta of questionMeta) bySkill.set(meta.skill, (bySkill.get(meta.skill) ?? 0) + 1);

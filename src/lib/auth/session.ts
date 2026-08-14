@@ -31,15 +31,13 @@ export async function createSession(userId: string, orgId: string, userAgent?: s
   const token = randomBytes(32).toString('base64url');
   const expiresAt = Math.floor(Date.now() / 1000) + TTL_SECONDS;
 
-  db.insert(authSessions)
-    .values({
-      id: tokenId(token),
-      userId,
-      activeOrgId: orgId,
-      expiresAt,
-      userAgentHash: userAgent ? createHash('sha256').update(userAgent).digest('hex').slice(0, 32) : null,
-    })
-    .run();
+  await db.insert(authSessions).values({
+    id: tokenId(token),
+    userId,
+    activeOrgId: orgId,
+    expiresAt,
+    userAgentHash: userAgent ? createHash('sha256').update(userAgent).digest('hex').slice(0, 32) : null,
+  });
 
   const store = await cookies();
   store.set(COOKIE, token, {
@@ -51,13 +49,13 @@ export async function createSession(userId: string, orgId: string, userAgent?: s
   });
 
   // Opportunistic cleanup; cheap enough at login frequency to avoid a cron.
-  db.delete(authSessions).where(lt(authSessions.expiresAt, Math.floor(Date.now() / 1000))).run();
+  await db.delete(authSessions).where(lt(authSessions.expiresAt, Math.floor(Date.now() / 1000)));
 }
 
 export async function destroySession(): Promise<void> {
   const store = await cookies();
   const token = store.get(COOKIE)?.value;
-  if (token) db.delete(authSessions).where(eq(authSessions.id, tokenId(token))).run();
+  if (token) await db.delete(authSessions).where(eq(authSessions.id, tokenId(token)));
   store.delete(COOKIE);
 }
 
@@ -67,7 +65,7 @@ export async function getSession(): Promise<SessionContext | null> {
   const token = store.get(COOKIE)?.value;
   if (!token) return null;
 
-  const row = db
+  const [row] = await db
     .select({
       userId: authSessions.userId,
       orgId: authSessions.activeOrgId,
@@ -86,11 +84,11 @@ export async function getSession(): Promise<SessionContext | null> {
       and(eq(memberships.userId, authSessions.userId), eq(memberships.orgId, authSessions.activeOrgId)),
     )
     .where(eq(authSessions.id, tokenId(token)))
-    .get();
+    .limit(1);
 
   if (!row) return null;
   if (row.expiresAt < Math.floor(Date.now() / 1000)) {
-    db.delete(authSessions).where(eq(authSessions.id, tokenId(token))).run();
+    await db.delete(authSessions).where(eq(authSessions.id, tokenId(token)));
     return null;
   }
 
@@ -113,21 +111,17 @@ export async function registerUser(input: {
   const userId = newId('usr');
   const orgId = newId('org');
 
-  db.transaction((tx) => {
-    tx.insert(users)
-      .values({ id: userId, email: input.email.toLowerCase(), name: input.name, passwordHash: input.passwordHash })
-      .run();
-    tx.insert(organizations)
-      .values({
-        id: orgId,
-        slug: `personal-${orgId.slice(-8)}`,
-        name: `${input.name.split(' ')[0]}’s workspace`,
-        kind: 'personal',
-      })
-      .run();
-    tx.insert(memberships)
-      .values({ id: newId('mem'), userId, orgId, role: 'owner' })
-      .run();
+  await db.transaction(async (tx) => {
+    await tx
+      .insert(users)
+      .values({ id: userId, email: input.email.toLowerCase(), name: input.name, passwordHash: input.passwordHash });
+    await tx.insert(organizations).values({
+      id: orgId,
+      slug: `personal-${orgId.slice(-8)}`,
+      name: `${input.name.split(' ')[0]}’s workspace`,
+      kind: 'personal',
+    });
+    await tx.insert(memberships).values({ id: newId('mem'), userId, orgId, role: 'owner' });
   });
 
   return { userId, orgId };

@@ -257,9 +257,28 @@ free, local, or browser-native substitute with different characteristics.
   interface that declares its own capabilities and limitations.
 - Billing is modelled as plans and entitlements with no provider connected and
   nothing gated.
+- The database is PostgreSQL, reached through Supabase's free tier in a hosted
+  setting and through any local Postgres in development. The connection string
+  is the only difference between the two, so nothing about the schema or the
+  queries depends on the host.
 
 Each of these is an interface with one implementation, so adding a hosted
 provider later is an addition rather than a rewrite.
+
+**A finding specific to Supabase.** A Supabase project publishes every table in
+the `public` schema through PostgREST, authorised by an anon key that is
+designed to be shipped to browsers. This application does not use PostgREST or
+Supabase Auth — it connects as an ordinary Postgres role and enforces tenancy in
+a single guard — so the correct posture is to enable row-level security on every
+table and define no policy at all: the owning role bypasses RLS and the
+application is unaffected, while a leaked anon key reaches nothing.
+
+The tempting stronger setting, `FORCE ROW LEVEL SECURITY`, is wrong here and was
+verified to be wrong rather than assumed. `FORCE` subjects the table owner to
+RLS as well; with no policies defined, a non-superuser owner — which is what an
+application role is on a hosted database — is locked out of its own tables:
+reads return zero rows silently and writes fail. `ENABLE` alone already denies
+every other role, which is the whole objective.
 
 ---
 

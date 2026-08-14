@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function DiagnosticPage() {
   const session = await requireSession();
-  const profile = getProfile(session.userId, session.orgId);
+  const profile = await getProfile(session.userId, session.orgId);
   const sampled = MICRO_SKILLS.filter((m) => m.skill === 'reading' || m.skill === 'listening');
 
   return (

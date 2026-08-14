@@ -45,34 +45,38 @@ export interface LearnerProfile {
   minutesThisWeek: number;
 }
 
-export function ensureProfile(userId: string, orgId: string) {
-  const existing = db
+export async function ensureProfile(userId: string, orgId: string) {
+  const [existing] = await db
     .select()
     .from(learnerProfiles)
     .where(and(eq(learnerProfiles.userId, userId), eq(learnerProfiles.orgId, orgId)))
-    .get();
+    .limit(1);
   if (existing) return existing;
 
-  db.insert(learnerProfiles)
+  const [created] = await db
+    .insert(learnerProfiles)
     .values({ id: newId('lpr'), userId, orgId })
     .onConflictDoNothing()
-    .run();
-  return db
+    .returning();
+  if (created) return created;
+
+  // Lost the race with a concurrent request; read the row it inserted.
+  const [row] = await db
     .select()
     .from(learnerProfiles)
     .where(and(eq(learnerProfiles.userId, userId), eq(learnerProfiles.orgId, orgId)))
-    .get()!;
+    .limit(1);
+  return row;
 }
 
-export function getProfile(userId: string, orgId: string): LearnerProfile {
-  const row = ensureProfile(userId, orgId);
+export async function getProfile(userId: string, orgId: string): Promise<LearnerProfile> {
+  const row = await ensureProfile(userId, orgId);
   const now = Math.floor(Date.now() / 1000);
 
-  const estimateRows = db
+  const estimateRows = await db
     .select()
     .from(skillEstimates)
-    .where(and(eq(skillEstimates.userId, userId), eq(skillEstimates.orgId, orgId)))
-    .all();
+    .where(and(eq(skillEstimates.userId, userId), eq(skillEstimates.orgId, orgId)));
 
   const microEstimates: MicroEstimate[] = estimateRows.map((e) => {
     const days = (now - e.updatedAt) / 86400;
@@ -93,7 +97,7 @@ export function getProfile(userId: string, orgId: string): LearnerProfile {
   // Productive skills are estimated from evaluations, not from item responses.
   const productiveEstimates = new Map<Skill, { level: number; se: number; count: number }>();
   for (const skill of ['writing', 'speaking'] as const) {
-    const rows = db
+    const rows = await db
       .select({ level: evaluations.estimatedLevel, se: evaluations.levelSe, createdAt: evaluations.createdAt })
       .from(evaluations)
       .where(
@@ -104,8 +108,7 @@ export function getProfile(userId: string, orgId: string): LearnerProfile {
         ),
       )
       .orderBy(desc(evaluations.createdAt))
-      .limit(6)
-      .all();
+      .limit(6);
     if (!rows.length) continue;
     // Recency-weighted: the most recent submission says more about current
     // ability than one from six weeks ago.
@@ -150,24 +153,23 @@ export function getProfile(userId: string, orgId: string): LearnerProfile {
     return aggregateSkill(skill as Domain, microEstimates.filter((m) => m.skill === skill));
   });
 
-  const dueReviewCount = db
-    .select({ count: sql<number>`count(*)` })
+  const [dueReviews] = await db
+    .select({ count: sql<number>`count(*)::int` })
     .from(reviewCards)
-    .where(and(eq(reviewCards.userId, userId), eq(reviewCards.orgId, orgId), sql`${reviewCards.dueAt} <= ${now}`))
-    .get()?.count ?? 0;
+    .where(and(eq(reviewCards.userId, userId), eq(reviewCards.orgId, orgId), sql`${reviewCards.dueAt} <= ${now}`));
+  const dueReviewCount = dueReviews?.count ?? 0;
 
-  const openMistakes = db
-    .select({ count: sql<number>`count(*)` })
+  const [openMistakeRow] = await db
+    .select({ count: sql<number>`count(*)::int` })
     .from(mistakes)
-    .where(and(eq(mistakes.userId, userId), eq(mistakes.orgId, orgId), sql`${mistakes.resolvedAt} is null`))
-    .get()?.count ?? 0;
+    .where(and(eq(mistakes.userId, userId), eq(mistakes.orgId, orgId), sql`${mistakes.resolvedAt} is null`));
+  const openMistakes = openMistakeRow?.count ?? 0;
 
-  const attemptRows = db
+  const attemptRows = await db
     .select({ skill: attempts.skill, startedAt: attempts.startedAt, completedAt: attempts.completedAt, mode: attempts.mode })
     .from(attempts)
     .where(and(eq(attempts.userId, userId), eq(attempts.orgId, orgId)))
-    .orderBy(desc(attempts.startedAt))
-    .all();
+    .orderBy(desc(attempts.startedAt));
 
   const daysSincePractice: Record<string, number> = {};
   for (const skill of SKILLS) {
@@ -175,16 +177,16 @@ export function getProfile(userId: string, orgId: string): LearnerProfile {
     daysSincePractice[skill] = latest ? Math.floor((now - latest.startedAt) / 86400) : 999;
   }
 
-  const writingCount = db
-    .select({ count: sql<number>`count(*)` })
+  const [writingRow] = await db
+    .select({ count: sql<number>`count(*)::int` })
     .from(writingSubmissions)
-    .where(and(eq(writingSubmissions.userId, userId), eq(writingSubmissions.orgId, orgId)))
-    .get()?.count ?? 0;
-  const speakingCount = db
-    .select({ count: sql<number>`count(*)` })
+    .where(and(eq(writingSubmissions.userId, userId), eq(writingSubmissions.orgId, orgId)));
+  const [speakingRow] = await db
+    .select({ count: sql<number>`count(*)::int` })
     .from(speakingSubmissions)
-    .where(and(eq(speakingSubmissions.userId, userId), eq(speakingSubmissions.orgId, orgId)))
-    .get()?.count ?? 0;
+    .where(and(eq(speakingSubmissions.userId, userId), eq(speakingSubmissions.orgId, orgId)));
+  const writingCount = writingRow?.count ?? 0;
+  const speakingCount = speakingRow?.count ?? 0;
 
   const daysToExam = row.examDate
     ? Math.max(0, Math.ceil((Date.parse(`${row.examDate}T00:00:00Z`) / 1000 - now) / 86400))
@@ -208,7 +210,7 @@ export function getProfile(userId: string, orgId: string): LearnerProfile {
     productiveCounts: { writing: writingCount, speaking: speakingCount },
     daysSincePractice,
     streakDays: computeStreak(attemptRows.filter((a) => a.completedAt).map((a) => a.startedAt), now),
-    minutesThisWeek: estimateMinutesThisWeek(userId, orgId, now),
+    minutesThisWeek: await estimateMinutesThisWeek(userId, orgId, now),
   };
 }
 
@@ -235,27 +237,29 @@ function computeStreak(timestamps: number[], now: number): number {
   return streak;
 }
 
-function estimateMinutesThisWeek(userId: string, orgId: string, now: number): number {
+async function estimateMinutesThisWeek(userId: string, orgId: string, now: number): Promise<number> {
   const weekAgo = now - 7 * 86400;
-  const rows = db
+  const rows = await db
     .select({ startedAt: attempts.startedAt, completedAt: attempts.completedAt })
     .from(attempts)
     .where(
       and(eq(attempts.userId, userId), eq(attempts.orgId, orgId), gt(attempts.startedAt, weekAgo)),
-    )
-    .all();
+    );
   const seconds = rows.reduce((a, r) => a + (r.completedAt ? Math.min(3600, r.completedAt - r.startedAt) : 0), 0);
   return Math.round(seconds / 60);
 }
 
-export function getRecommendations(userId: string, orgId: string, profile: LearnerProfile): Recommendation[] {
-  const mistakeRows = db
+export async function getRecommendations(
+  userId: string,
+  orgId: string,
+  profile: LearnerProfile,
+): Promise<Recommendation[]> {
+  const mistakeRows = await db
     .select()
     .from(mistakes)
     .where(and(eq(mistakes.userId, userId), eq(mistakes.orgId, orgId), sql`${mistakes.resolvedAt} is null`))
     .orderBy(desc(mistakes.occurrences))
-    .limit(20)
-    .all();
+    .limit(20);
 
   return recommend({
     targetLevel: profile.targetLevel,
@@ -286,7 +290,7 @@ export function getRecommendations(userId: string, orgId: string, profile: Learn
   });
 }
 
-export function skillTrend(userId: string, orgId: string, skill: string, limit = 40) {
+export async function skillTrend(userId: string, orgId: string, skill: string, limit = 40) {
   return db
     .select({
       level: progressSnapshots.estimatedLevel,
@@ -303,8 +307,7 @@ export function skillTrend(userId: string, orgId: string, skill: string, limit =
       ),
     )
     .orderBy(progressSnapshots.createdAt)
-    .limit(limit)
-    .all();
+    .limit(limit);
 }
 
 /** Presentation helper: the honest label for a skill estimate. */

@@ -10,9 +10,9 @@ export const dynamic = 'force-dynamic';
 
 export default async function VocabularyPage() {
   const session = await requireSession();
-  const profile = getProfile(session.userId, session.orgId);
+  const profile = await getProfile(session.userId, session.orgId);
 
-  const entries = db.select().from(vocabularyEntries).all();
+  const entries = (await db.select().from(vocabularyEntries));
 
   // Introduce words at and slightly above the learner's level: below it they
   // teach nothing, far above it they are memorised and never used.

@@ -27,7 +27,7 @@ export default async function PracticePage({
   if (!SUPPORTED.includes(skill as (typeof SUPPORTED)[number])) notFound();
 
   const session = await requireSession();
-  const profile = getProfile(session.userId, session.orgId);
+  const profile = await getProfile(session.userId, session.orgId);
   const estimate = profile.skills.find((s) => s.skill === skill)!;
   const micros = microSkillsFor(skill as Skill);
   const parts = partsFor(skill as Skill);

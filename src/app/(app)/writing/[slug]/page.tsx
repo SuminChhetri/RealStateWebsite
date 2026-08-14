@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const task = db.select().from(writingTasks).where(eq(writingTasks.slug, slug)).get();
+  const task = (await db.select().from(writingTasks).where(eq(writingTasks.slug, slug)).limit(1))[0];
   return { title: task?.title ?? 'Writing task' };
 }
 
@@ -20,7 +20,7 @@ export default async function WritingTaskPage({ params }: { params: Promise<{ sl
   const { slug } = await params;
   await requireSession();
 
-  const task = db.select().from(writingTasks).where(eq(writingTasks.slug, slug)).get();
+  const task = (await db.select().from(writingTasks).where(eq(writingTasks.slug, slug)).limit(1))[0];
   if (!task || task.status !== 'published') notFound();
 
   const requirements = JSON.parse(task.requirements) as string[];

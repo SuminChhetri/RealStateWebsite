@@ -13,17 +13,17 @@ export const dynamic = 'force-dynamic';
 
 export default async function WritingPage() {
   const session = await requireSession();
-  const profile = getProfile(session.userId, session.orgId);
+  const profile = await getProfile(session.userId, session.orgId);
   const estimate = profile.skills.find((s) => s.skill === 'writing')!;
 
-  const tasks = db
+  const tasks = (await db
     .select()
     .from(writingTasks)
     .where(eq(writingTasks.status, 'published'))
     .orderBy(writingTasks.taskType, writingTasks.level)
-    .all();
+    );
 
-  const history = db
+  const history = (await db
     .select({
       id: writingSubmissions.id,
       submittedAt: writingSubmissions.submittedAt,
@@ -41,7 +41,7 @@ export default async function WritingPage() {
     .where(and(eq(writingSubmissions.userId, session.userId), eq(writingSubmissions.orgId, session.orgId)))
     .orderBy(desc(writingSubmissions.submittedAt))
     .limit(8)
-    .all();
+    );
 
   const emails = tasks.filter((t) => t.taskType === 'writing.email');
   const surveys = tasks.filter((t) => t.taskType === 'writing.survey');

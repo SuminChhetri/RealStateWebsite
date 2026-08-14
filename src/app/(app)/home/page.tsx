@@ -21,8 +21,8 @@ const KIND_LABEL: Record<string, string> = {
 
 export default async function TodayPage() {
   const session = await requireSession();
-  const profile = getProfile(session.userId, session.orgId);
-  const recommendations = getRecommendations(session.userId, session.orgId, profile);
+  const profile = await getProfile(session.userId, session.orgId);
+  const recommendations = await getRecommendations(session.userId, session.orgId, profile);
 
   const first = recommendations[0];
   const rest = recommendations.slice(1);

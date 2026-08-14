@@ -12,17 +12,17 @@ export const dynamic = 'force-dynamic';
 
 export default async function SpeakingPage() {
   const session = await requireSession();
-  const profile = getProfile(session.userId, session.orgId);
+  const profile = await getProfile(session.userId, session.orgId);
   const estimate = profile.skills.find((s) => s.skill === 'speaking')!;
 
-  const tasks = db
+  const tasks = (await db
     .select()
     .from(speakingTasks)
     .where(eq(speakingTasks.status, 'published'))
     .orderBy(speakingTasks.taskNumber, speakingTasks.level)
-    .all();
+    );
 
-  const history = db
+  const history = (await db
     .select({
       id: speakingSubmissions.id,
       submittedAt: speakingSubmissions.submittedAt,
@@ -41,7 +41,7 @@ export default async function SpeakingPage() {
     .where(and(eq(speakingSubmissions.userId, session.userId), eq(speakingSubmissions.orgId, session.orgId)))
     .orderBy(desc(speakingSubmissions.submittedAt))
     .limit(8)
-    .all();
+    );
 
   const grouped = new Map<number, typeof tasks>();
   for (const task of tasks) {

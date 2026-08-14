@@ -25,7 +25,7 @@ export async function updateSettings(formData: FormData) {
   const parsed = schema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect('/settings?error=1');
 
-  db.update(learnerProfiles)
+  await db.update(learnerProfiles)
     .set({
       targetLevel: parsed.data.targetLevel,
       examDate: parsed.data.examDate ? parsed.data.examDate : null,
@@ -34,9 +34,9 @@ export async function updateSettings(formData: FormData) {
       updatedAt: Math.floor(Date.now() / 1000),
     })
     .where(and(eq(learnerProfiles.userId, session.userId), eq(learnerProfiles.orgId, session.orgId)))
-    .run();
+    ;
 
-  audit({
+  await audit({
     orgId: session.orgId,
     actorId: session.userId,
     action: 'settings.update',

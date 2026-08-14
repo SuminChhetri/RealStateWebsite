@@ -20,10 +20,10 @@ export const dynamic = 'force-dynamic';
  */
 export default async function MockTestsPage() {
   const session = await requireSession();
-  const profile = getProfile(session.userId, session.orgId);
+  const profile = await getProfile(session.userId, session.orgId);
   const dayAgo = Math.floor(Date.now() / 1000) - 86400;
 
-  const recentSections = db
+  const recentSections = (await db
     .select({ skill: attempts.skill, completedAt: attempts.completedAt, id: attempts.id, rawScore: attempts.rawScore, maxScore: attempts.maxScore })
     .from(attempts)
     .where(
@@ -36,10 +36,10 @@ export default async function MockTestsPage() {
       ),
     )
     .orderBy(desc(attempts.startedAt))
-    .all();
+    );
 
-  const recentWriting = db
-    .select({ count: sql<number>`count(*)` })
+  const recentWriting = (await db
+    .select({ count: sql<number>`count(*)::int` })
     .from(writingSubmissions)
     .where(
       and(
@@ -48,10 +48,10 @@ export default async function MockTestsPage() {
         sql`${writingSubmissions.submittedAt} > ${dayAgo}`,
       ),
     )
-    .get()?.count ?? 0;
+    .limit(1))[0]?.count ?? 0;
 
-  const recentSpeaking = db
-    .select({ count: sql<number>`count(*)` })
+  const recentSpeaking = (await db
+    .select({ count: sql<number>`count(*)::int` })
     .from(speakingSubmissions)
     .where(
       and(
@@ -60,7 +60,7 @@ export default async function MockTestsPage() {
         sql`${speakingSubmissions.submittedAt} > ${dayAgo}`,
       ),
     )
-    .get()?.count ?? 0;
+    .limit(1))[0]?.count ?? 0;
 
   const done = {
     listening: recentSections.some((s) => s.skill === 'listening'),

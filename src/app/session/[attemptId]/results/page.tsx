@@ -19,34 +19,34 @@ export default async function ResultsPage({ params }: { params: Promise<{ attemp
   const { attemptId } = await params;
   const session = await requireSession();
 
-  const result = buildResultFromStored(attemptId, session.userId, session.orgId);
+  const result = await buildResultFromStored(attemptId, session.userId, session.orgId);
   if (!result) notFound();
 
-  const attempt = db
+  const attempt = (await db
     .select()
     .from(attempts)
     .where(and(eq(attempts.id, attemptId), eq(attempts.userId, session.userId)))
-    .get()!;
+    .limit(1))[0]!;
 
-  const profile = getProfile(session.userId, session.orgId);
+  const profile = await getProfile(session.userId, session.orgId);
 
   // Listening transcripts are released only now — withholding them during the
   // set is what makes it a listening test rather than a reading one.
-  const stimulusIds = db
+  const stimulusIds = (await db
     .select({ stimulusId: questions.stimulusId })
     .from(attemptItems)
     .innerJoin(questions, eq(questions.id, attemptItems.questionId))
     .where(eq(attemptItems.attemptId, attemptId))
-    .all()
+    )
     .map((r) => r.stimulusId)
     .filter((x): x is string => !!x);
 
   const transcripts = stimulusIds.length
-    ? db
+    ? (await db
         .select({ id: stimuli.id, title: stimuli.title, script: stimuli.script })
         .from(stimuli)
         .where(and(inArray(stimuli.id, [...new Set(stimulusIds)]), eq(stimuli.skill, 'listening')))
-        .all()
+        )
     : [];
 
   const wrong = result.items.filter((i) => !i.correct);

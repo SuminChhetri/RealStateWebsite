@@ -33,10 +33,10 @@ export async function submitWriting(formData: FormData) {
 
   // Evaluation is the expensive path in this product, so it is the one that
   // carries a limit.
-  const limit = rateLimit(`writing:${session.userId}`, 40, 3600);
+  const limit = await rateLimit(`writing:${session.userId}`, 40, 3600);
   if (!limit.ok) redirect('/writing?error=rate-limited');
 
-  const task = db.select().from(writingTasks).where(eq(writingTasks.slug, parsed.data.taskSlug)).get();
+  const task = (await db.select().from(writingTasks).where(eq(writingTasks.slug, parsed.data.taskSlug)).limit(1))[0];
   if (!task) redirect('/writing?error=not-found');
 
   const text = parsed.data.text.replace(/\r\n/g, '\n').trim();
@@ -64,7 +64,7 @@ export async function submitWriting(formData: FormData) {
   const evaluationId = newId('evl');
   const now = nowSeconds();
 
-  db.transaction((tx) => {
+  await db.transaction(async (tx) => {
     tx.insert(writingSubmissions)
       .values({
         id: submissionId,
@@ -78,9 +78,9 @@ export async function submitWriting(formData: FormData) {
         timed: !!parsed.data.timed,
         revisionCount: parsed.data.revisionCount,
       })
-      .run();
+      ;
 
-    tx.insert(evaluations)
+    await tx.insert(evaluations)
       .values({
         id: evaluationId,
         userId: session.userId,
@@ -100,7 +100,7 @@ export async function submitWriting(formData: FormData) {
         coaching: JSON.stringify(evaluation.coaching),
         limitations: JSON.stringify(evaluation.limitations),
       })
-      .run();
+      ;
 
     // Usage patterns found here become mistakes and scheduled retrieval, which
     // is what makes writing feedback change future behaviour rather than being
@@ -117,7 +117,7 @@ export async function submitWriting(formData: FormData) {
     }
 
     for (const [errorCode, info] of byCode) {
-      const existing = tx
+      const existing = (await tx
         .select()
         .from(mistakes)
         .where(
@@ -128,10 +128,10 @@ export async function submitWriting(formData: FormData) {
             eq(mistakes.microSkill, info.microSkill),
           ),
         )
-        .get();
+        .limit(1))[0];
 
       if (existing) {
-        tx.update(mistakes)
+        await tx.update(mistakes)
           .set({
             occurrences: existing.occurrences + info.count,
             lastSeenAt: now,
@@ -139,9 +139,9 @@ export async function submitWriting(formData: FormData) {
             resolvedAt: null,
           })
           .where(eq(mistakes.id, existing.id))
-          .run();
+          ;
       } else {
-        tx.insert(mistakes)
+        await tx.insert(mistakes)
           .values({
             id: newId('mis'),
             userId: session.userId,
@@ -155,11 +155,11 @@ export async function submitWriting(formData: FormData) {
             detail: `Found ${info.count} time${info.count === 1 ? '' : 's'} in “${task.title}”.`,
             occurrences: info.count,
           })
-          .run();
+          ;
       }
 
       if (info.grammarPoint) {
-        const card = tx
+        const card = (await tx
           .select()
           .from(reviewCards)
           .where(
@@ -170,7 +170,7 @@ export async function submitWriting(formData: FormData) {
               eq(reviewCards.refId, info.grammarPoint),
             ),
           )
-          .get();
+          .limit(1))[0];
 
         const state = card
           ? {
@@ -186,7 +186,7 @@ export async function submitWriting(formData: FormData) {
         const next = review(state, 'again', now);
 
         if (card) {
-          tx.update(reviewCards)
+          await tx.update(reviewCards)
             .set({
               stability: next.stability,
               difficulty: next.difficulty,
@@ -197,9 +197,9 @@ export async function submitWriting(formData: FormData) {
               dueAt: next.dueAt,
             })
             .where(eq(reviewCards.id, card.id))
-            .run();
+            ;
         } else {
-          tx.insert(reviewCards)
+          await tx.insert(reviewCards)
             .values({
               id: newId('rvc'),
               userId: session.userId,
@@ -214,13 +214,13 @@ export async function submitWriting(formData: FormData) {
               lastReviewedAt: next.lastReviewedAt,
               dueAt: next.dueAt,
             })
-            .run();
+            ;
         }
       }
     }
   });
 
-  audit({
+  await audit({
     orgId: session.orgId,
     actorId: session.userId,
     action: 'writing.submit',

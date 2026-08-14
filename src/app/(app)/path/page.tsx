@@ -11,8 +11,8 @@ export const dynamic = 'force-dynamic';
 
 export default async function PathPage() {
   const session = await requireSession();
-  const profile = getProfile(session.userId, session.orgId);
-  const recommendations = getRecommendations(session.userId, session.orgId, profile);
+  const profile = await getProfile(session.userId, session.orgId);
+  const recommendations = await getRecommendations(session.userId, session.orgId, profile);
 
   const measured = profile.skills.filter((s) => s.observations > 0);
   const overall = profile.readiness.overall;

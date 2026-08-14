@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const lesson = db.select().from(lessons).where(eq(lessons.slug, slug)).get();
+  const lesson = (await db.select().from(lessons).where(eq(lessons.slug, slug)).limit(1))[0];
   return { title: lesson?.title ?? 'Lesson' };
 }
 
@@ -21,7 +21,7 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
   const { slug } = await params;
   await requireSession();
 
-  const lesson = db.select().from(lessons).where(eq(lessons.slug, slug)).get();
+  const lesson = (await db.select().from(lessons).where(eq(lessons.slug, slug)).limit(1))[0];
   if (!lesson || lesson.status !== 'published') notFound();
 
   const blocks = JSON.parse(lesson.blocks) as LessonBlock[];

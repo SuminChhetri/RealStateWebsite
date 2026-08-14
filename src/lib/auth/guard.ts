@@ -1,6 +1,6 @@
 import 'server-only';
 import { redirect } from 'next/navigation';
-import { eq, and, gte } from 'drizzle-orm';
+import { and, eq, gte, sql } from 'drizzle-orm';
 import { db } from '../db/client';
 import { auditLogs, rateLimits } from '../db/schema';
 import { newId } from '../ids';
@@ -14,6 +14,11 @@ import { getSession, type SessionContext } from './session';
  * `userId`. No caller ever accepts a tenant identifier from the client, so a
  * forged request cannot reach another organisation's rows: the identifier is
  * derived from the session cookie server-side or the request is rejected.
+ *
+ * This is the only tenancy boundary the application relies on. The database
+ * additionally denies everything through row-level security, but that policy
+ * protects against a leaked Supabase anon key rather than against a bug here —
+ * the application's own role bypasses it.
  */
 export async function requireSession(): Promise<SessionContext> {
   const session = await getSession();
@@ -46,48 +51,57 @@ export function can(session: SessionContext, min: SessionContext['role']): boole
 
 /**
  * Fixed-window rate limiter backed by the database so limits survive a restart
- * and apply across processes. Used on authentication and on the evaluation
- * endpoints, which are the expensive ones.
+ * and apply across every instance. Used on authentication and on the
+ * evaluation endpoints, which are the expensive ones.
+ *
+ * The whole check is one statement: an upsert that either starts a new window
+ * or increments the current one, returning the resulting count. Doing it in a
+ * single round trip means two concurrent requests cannot both read a stale
+ * count and both decide they are under the limit.
  */
-export function rateLimit(key: string, limit: number, windowSeconds: number): { ok: boolean; retryAfter: number } {
+export async function rateLimit(
+  key: string,
+  limit: number,
+  windowSeconds: number,
+): Promise<{ ok: boolean; retryAfter: number }> {
   const now = Math.floor(Date.now() / 1000);
-  const row = db.select().from(rateLimits).where(eq(rateLimits.key, key)).get();
 
-  if (!row || now - row.windowStart >= windowSeconds) {
-    db.insert(rateLimits)
-      .values({ key, count: 1, windowStart: now })
-      .onConflictDoUpdate({ target: rateLimits.key, set: { count: 1, windowStart: now } })
-      .run();
-    return { ok: true, retryAfter: 0 };
+  const [row] = await db
+    .insert(rateLimits)
+    .values({ key, count: 1, windowStart: now })
+    .onConflictDoUpdate({
+      target: rateLimits.key,
+      set: {
+        count: sql`case when ${rateLimits.windowStart} <= ${now - windowSeconds} then 1 else ${rateLimits.count} + 1 end`,
+        windowStart: sql`case when ${rateLimits.windowStart} <= ${now - windowSeconds} then ${now} else ${rateLimits.windowStart} end`,
+      },
+    })
+    .returning({ count: rateLimits.count, windowStart: rateLimits.windowStart });
+
+  if (!row) return { ok: true, retryAfter: 0 };
+  if (row.count > limit) {
+    return { ok: false, retryAfter: Math.max(1, windowSeconds - (now - row.windowStart)) };
   }
-
-  if (row.count >= limit) {
-    return { ok: false, retryAfter: windowSeconds - (now - row.windowStart) };
-  }
-
-  db.update(rateLimits).set({ count: row.count + 1 }).where(eq(rateLimits.key, key)).run();
   return { ok: true, retryAfter: 0 };
 }
 
-export function audit(entry: {
+export async function audit(entry: {
   orgId?: string | null;
   actorId?: string | null;
   action: string;
   entityType?: string;
   entityId?: string;
   metadata?: Record<string, unknown>;
-}): void {
-  db.insert(auditLogs)
-    .values({
-      id: newId('aud'),
-      orgId: entry.orgId ?? null,
-      actorId: entry.actorId ?? null,
-      action: entry.action,
-      entityType: entry.entityType ?? null,
-      entityId: entry.entityId ?? null,
-      metadata: JSON.stringify(entry.metadata ?? {}),
-    })
-    .run();
+}): Promise<void> {
+  await db.insert(auditLogs).values({
+    id: newId('aud'),
+    orgId: entry.orgId ?? null,
+    actorId: entry.actorId ?? null,
+    action: entry.action,
+    entityType: entry.entityType ?? null,
+    entityId: entry.entityId ?? null,
+    metadata: JSON.stringify(entry.metadata ?? {}),
+  });
 }
 
 /**

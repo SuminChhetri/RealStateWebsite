@@ -29,7 +29,7 @@ export default async function SpeakingFeedbackPage({ params }: { params: Promise
   const { id } = await params;
   const session = await requireSession();
 
-  const row = db
+  const row = (await db
     .select({ submission: speakingSubmissions, task: speakingTasks, evaluation: evaluations })
     .from(speakingSubmissions)
     .innerJoin(speakingTasks, eq(speakingTasks.id, speakingSubmissions.taskId))
@@ -44,7 +44,7 @@ export default async function SpeakingFeedbackPage({ params }: { params: Promise
         eq(speakingSubmissions.orgId, session.orgId),
       ),
     )
-    .get();
+    .limit(1))[0];
 
   if (!row || !row.evaluation) notFound();
 

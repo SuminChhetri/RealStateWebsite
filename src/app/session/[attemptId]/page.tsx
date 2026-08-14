@@ -16,15 +16,15 @@ export default async function SessionPage({ params }: { params: Promise<{ attemp
   const { attemptId } = await params;
   const session = await requireSession();
 
-  const attempt = db
+  const attempt = (await db
     .select()
     .from(attempts)
     .where(and(eq(attempts.id, attemptId), eq(attempts.userId, session.userId), eq(attempts.orgId, session.orgId)))
-    .get();
+    .limit(1))[0];
   if (!attempt) notFound();
   if (attempt.completedAt) redirect(`/session/${attemptId}/results`);
 
-  const set = hydrateAttempt(attemptId, session.userId, session.orgId);
+  const set = await hydrateAttempt(attemptId, session.userId, session.orgId);
   if (!set) notFound();
 
   return (

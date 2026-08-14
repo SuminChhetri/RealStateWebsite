@@ -83,21 +83,21 @@ export interface AttemptResult {
   reviewsScheduled: number;
 }
 
-export function submitAttempt(input: {
+export async function submitAttempt(input: {
   attemptId: string;
   userId: string;
   orgId: string;
   responses: SubmittedResponse[];
-}): AttemptResult | null {
-  const attempt = db
+}): Promise<AttemptResult | null> {
+  const [attempt] = await db
     .select()
     .from(attempts)
     .where(and(eq(attempts.id, input.attemptId), eq(attempts.userId, input.userId), eq(attempts.orgId, input.orgId)))
-    .get();
+    .limit(1);
   if (!attempt) return null;
   if (attempt.completedAt) return buildResultFromStored(attempt.id, input.userId, input.orgId);
 
-  const rows = db
+  const rows = await db
     .select({
       itemId: attemptItems.id,
       orderIndex: attemptItems.orderIndex,
@@ -119,8 +119,7 @@ export function submitAttempt(input: {
     .innerJoin(questions, eq(questions.id, attemptItems.questionId))
     .leftJoin(stimuli, eq(stimuli.id, questions.stimulusId))
     .where(eq(attemptItems.attemptId, input.attemptId))
-    .orderBy(attemptItems.orderIndex)
-    .all();
+    .orderBy(attemptItems.orderIndex);
 
   const responseMap = new Map(input.responses.map((r) => [r.questionId, r]));
   const now = nowSeconds();
@@ -133,7 +132,7 @@ export function submitAttempt(input: {
   let reviewsScheduled = 0;
   const ratios: number[] = [];
 
-  db.transaction((tx) => {
+  await db.transaction(async (tx) => {
     for (const row of rows) {
       const submitted = responseMap.get(row.questionId);
       const response = submitted?.response ?? null;
@@ -143,7 +142,8 @@ export function submitAttempt(input: {
       if (elapsedMs > 0) ratios.push(ratio);
       if (correct) rawScore++;
 
-      tx.update(attemptItems)
+      await tx
+        .update(attemptItems)
         .set({
           response,
           correct,
@@ -152,11 +152,10 @@ export function submitAttempt(input: {
           flaggedForReview: submitted?.flagged ?? false,
           answeredAt: now,
         })
-        .where(eq(attemptItems.id, row.itemId))
-        .run();
+        .where(eq(attemptItems.id, row.itemId));
 
       /* ---- 2. ability belief ---- */
-      const existing = tx
+      const [existing] = await tx
         .select()
         .from(skillEstimates)
         .where(
@@ -166,7 +165,7 @@ export function submitAttempt(input: {
             eq(skillEstimates.microSkill, row.microSkill),
           ),
         )
-        .get();
+        .limit(1);
 
       const prior = existing
         ? { theta: existing.theta, se: existing.se }
@@ -184,7 +183,8 @@ export function submitAttempt(input: {
           : previousRatio;
 
       if (existing) {
-        tx.update(skillEstimates)
+        await tx
+          .update(skillEstimates)
           .set({
             theta: posterior.theta,
             se: posterior.se,
@@ -195,11 +195,9 @@ export function submitAttempt(input: {
             avgSecondsRatio: avgRatio,
             updatedAt: now,
           })
-          .where(eq(skillEstimates.id, existing.id))
-          .run();
+          .where(eq(skillEstimates.id, existing.id));
       } else {
-        tx.insert(skillEstimates)
-          .values({
+        await tx.insert(skillEstimates).values({
             id: newId('ske'),
             userId: input.userId,
             orgId: input.orgId,
@@ -211,10 +209,9 @@ export function submitAttempt(input: {
             correct: correctCount,
             timedObservations,
             timedCorrect,
-            avgSecondsRatio: avgRatio,
-            updatedAt: now,
-          })
-          .run();
+          avgSecondsRatio: avgRatio,
+          updatedAt: now,
+        });
       }
 
       const bucket = touchedMicro.get(row.microSkill) ?? {
@@ -229,7 +226,7 @@ export function submitAttempt(input: {
 
       /* ---- 3. mistakes ---- */
       const errorCode = `${row.microSkill}.item`;
-      const existingMistake = tx
+      const [existingMistake] = await tx
         .select()
         .from(mistakes)
         .where(
@@ -240,12 +237,13 @@ export function submitAttempt(input: {
             eq(mistakes.microSkill, row.microSkill),
           ),
         )
-        .get();
+        .limit(1);
 
       const meta = tryMicroSkill(row.microSkill);
       if (!correct) {
         if (existingMistake) {
-          tx.update(mistakes)
+          await tx
+            .update(mistakes)
             .set({
               occurrences: existingMistake.occurrences + 1,
               lastSeenAt: now,
@@ -253,12 +251,10 @@ export function submitAttempt(input: {
               resolvedAt: null,
               detail: buildMistakeDetail(row, response),
             })
-            .where(eq(mistakes.id, existingMistake.id))
-            .run();
+            .where(eq(mistakes.id, existingMistake.id));
         } else {
           newMistakes++;
-          tx.insert(mistakes)
-            .values({
+          await tx.insert(mistakes).values({
               id: newId('mis'),
               userId: input.userId,
               orgId: input.orgId,
@@ -268,9 +264,8 @@ export function submitAttempt(input: {
               microSkill: row.microSkill,
               errorCode,
               summary: meta ? `${meta.label}: ${meta.description}` : row.microSkill,
-              detail: buildMistakeDetail(row, response),
-            })
-            .run();
+            detail: buildMistakeDetail(row, response),
+          });
         }
       } else if (existingMistake && !existingMistake.resolvedAt) {
         const streak = existingMistake.provedStreak + 1;
@@ -278,15 +273,15 @@ export function submitAttempt(input: {
         // bar for calling an error closed. Anything less is a lucky guess.
         const resolved = streak >= 3;
         if (resolved) provedMistakes++;
-        tx.update(mistakes)
+        await tx
+          .update(mistakes)
           .set({ provedStreak: streak, resolvedAt: resolved ? now : null })
-          .where(eq(mistakes.id, existingMistake.id))
-          .run();
+          .where(eq(mistakes.id, existingMistake.id));
       }
 
       /* ---- 4. spaced retrieval ---- */
       if (!correct || ratio > 1.4) {
-        const card = tx
+        const [card] = await tx
           .select()
           .from(reviewCards)
           .where(
@@ -297,7 +292,7 @@ export function submitAttempt(input: {
               eq(reviewCards.refId, row.questionId),
             ),
           )
-          .get();
+          .limit(1);
 
         const state = card
           ? {
@@ -315,7 +310,8 @@ export function submitAttempt(input: {
         reviewsScheduled++;
 
         if (card) {
-          tx.update(reviewCards)
+          await tx
+            .update(reviewCards)
             .set({
               stability: next.stability,
               difficulty: next.difficulty,
@@ -325,11 +321,9 @@ export function submitAttempt(input: {
               lastReviewedAt: next.lastReviewedAt,
               dueAt: next.dueAt,
             })
-            .where(eq(reviewCards.id, card.id))
-            .run();
+            .where(eq(reviewCards.id, card.id));
         } else {
-          tx.insert(reviewCards)
-            .values({
+          await tx.insert(reviewCards).values({
               id: newId('rvc'),
               userId: input.userId,
               orgId: input.orgId,
@@ -341,14 +335,17 @@ export function submitAttempt(input: {
               lapses: next.lapses,
               state: next.state,
               lastReviewedAt: next.lastReviewedAt,
-              dueAt: next.dueAt,
-            })
-            .run();
+            dueAt: next.dueAt,
+          });
         }
       }
 
       /* ---- 6. item psychometrics ---- */
-      const stat = tx.select().from(itemStats).where(eq(itemStats.questionId, row.questionId)).get();
+      const [stat] = await tx
+        .select()
+        .from(itemStats)
+        .where(eq(itemStats.questionId, row.questionId))
+        .limit(1);
       const optionCounts = stat ? (JSON.parse(stat.optionCounts) as Record<string, number>) : {};
       if (response) optionCounts[response] = (optionCounts[response] ?? 0) + 1;
       const exposures = (stat?.exposures ?? 0) + 1;
@@ -380,10 +377,10 @@ export function submitAttempt(input: {
           : null,
         updatedAt: now,
       };
-      tx.insert(itemStats)
+      await tx
+        .insert(itemStats)
         .values(values)
-        .onConflictDoUpdate({ target: itemStats.questionId, set: values })
-        .run();
+        .onConflictDoUpdate({ target: itemStats.questionId, set: values });
 
       items.push({
         questionId: row.questionId,
@@ -406,7 +403,7 @@ export function submitAttempt(input: {
 
     /* ---- 5. attempt-level estimate and snapshot ---- */
     const skill = attempt.skill as Domain | 'mixed';
-    const estimatesForSkill = tx
+    const estimatesForSkill = await tx
       .select()
       .from(skillEstimates)
       .where(
@@ -415,8 +412,7 @@ export function submitAttempt(input: {
           eq(skillEstimates.orgId, input.orgId),
           skill === 'mixed' ? sql`1 = 1` : eq(skillEstimates.skill, skill),
         ),
-      )
-      .all();
+      );
 
     const micro: MicroEstimate[] = estimatesForSkill.map((e) => ({
       microSkill: e.microSkill,
@@ -443,8 +439,7 @@ export function submitAttempt(input: {
       );
       if (!aggregate.observations) continue;
       if (!headline || (s as string) === (skill as string)) headline = { level: aggregate.level, se: aggregate.se };
-      tx.insert(progressSnapshots)
-        .values({
+      await tx.insert(progressSnapshots).values({
           id: newId('snp'),
           userId: input.userId,
           orgId: input.orgId,
@@ -452,13 +447,13 @@ export function submitAttempt(input: {
           estimatedLevel: aggregate.level,
           se: aggregate.se,
           observations: aggregate.observations,
-          source: attempt.mode,
-          sourceId: attempt.id,
-        })
-        .run();
+        source: attempt.mode,
+        sourceId: attempt.id,
+      });
     }
 
-    tx.update(attempts)
+    await tx
+      .update(attempts)
       .set({
         completedAt: now,
         rawScore,
@@ -466,15 +461,13 @@ export function submitAttempt(input: {
         estimatedLevel: headline?.level ?? null,
         levelSe: headline?.se ?? null,
       })
-      .where(eq(attempts.id, attempt.id))
-      .run();
+      .where(eq(attempts.id, attempt.id));
   });
 
-  const finalEstimates = db
+  const finalEstimates = await db
     .select()
     .from(skillEstimates)
-    .where(and(eq(skillEstimates.userId, input.userId), eq(skillEstimates.orgId, input.orgId)))
-    .all();
+    .where(and(eq(skillEstimates.userId, input.userId), eq(skillEstimates.orgId, input.orgId)));
 
   const microBreakdown = [...touchedMicro.entries()].map(([microSkill, bucket]) => {
     const row = finalEstimates.find((e) => e.microSkill === microSkill);
@@ -492,7 +485,7 @@ export function submitAttempt(input: {
 
   const sortedRatios = [...ratios].sort((a, b) => a - b);
   const median = sortedRatios.length ? sortedRatios[Math.floor(sortedRatios.length / 2)] : 1;
-  const updated = db.select().from(attempts).where(eq(attempts.id, attempt.id)).get()!;
+  const [updated] = await db.select().from(attempts).where(eq(attempts.id, attempt.id)).limit(1);
 
   return {
     attemptId: attempt.id,
@@ -527,15 +520,19 @@ function buildMistakeDetail(
 }
 
 /** Re-read a completed attempt without re-grading it. */
-export function buildResultFromStored(attemptId: string, userId: string, orgId: string): AttemptResult | null {
-  const attempt = db
+export async function buildResultFromStored(
+  attemptId: string,
+  userId: string,
+  orgId: string,
+): Promise<AttemptResult | null> {
+  const [attempt] = await db
     .select()
     .from(attempts)
     .where(and(eq(attempts.id, attemptId), eq(attempts.userId, userId), eq(attempts.orgId, orgId)))
-    .get();
+    .limit(1);
   if (!attempt) return null;
 
-  const rows = db
+  const rows = await db
     .select({
       response: attemptItems.response,
       correct: attemptItems.correct,
@@ -557,14 +554,12 @@ export function buildResultFromStored(attemptId: string, userId: string, orgId: 
     .innerJoin(questions, eq(questions.id, attemptItems.questionId))
     .leftJoin(stimuli, eq(stimuli.id, questions.stimulusId))
     .where(eq(attemptItems.attemptId, attemptId))
-    .orderBy(attemptItems.orderIndex)
-    .all();
+    .orderBy(attemptItems.orderIndex);
 
-  const estimates = db
+  const estimates = await db
     .select()
     .from(skillEstimates)
-    .where(and(eq(skillEstimates.userId, userId), eq(skillEstimates.orgId, orgId)))
-    .all();
+    .where(and(eq(skillEstimates.userId, userId), eq(skillEstimates.orgId, orgId)));
 
   const grouped = new Map<string, { correct: number; total: number }>();
   for (const r of rows) {

@@ -17,12 +17,32 @@ each.
 
 ## Running it
 
-Requires Node 20.11 or newer. Nothing else: no database server, no API keys, no
-paid service.
+Requires Node 20.11 or newer and a PostgreSQL database. Supabase's free tier is
+what this is built and documented against; any Postgres 14+ works.
+
+**1. Create a Supabase project**, then open *Project settings → Database →
+Connection string* and copy both strings.
+
+**2. Configure the connection.**
+
+```bash
+cp .env.example .env
+# paste your two connection strings into .env
+```
+
+Both are needed and they are not interchangeable:
+
+| Variable | Which string | Why |
+| --- | --- | --- |
+| `DATABASE_URL` | Transaction pooler, port **6543** | What the app uses. Pooling is what stops a serverless deployment exhausting the project's connection limit. |
+| `DIRECT_URL` | Direct connection, port **5432** | Migrations only. Transaction pooling cannot carry the session state that DDL and advisory locks need. |
+
+**3. Create the schema and load the content.**
 
 ```bash
 npm install
-npm run setup      # creates the SQLite database and seeds the content corpus
+npm run db:push    # applies the schema, then enables row-level security
+npm run db:seed    # loads the content corpus
 npm run dev        # http://localhost:3000
 ```
 
@@ -35,7 +55,10 @@ diagnostic. Everything after that is built from what it finds.
 | `npm run build` / `npm start` | Production build and server |
 | `npm test` | Engine, content and taxonomy tests (Node's test runner) |
 | `npm run typecheck` | `tsc --noEmit` |
-| `npm run db:reset` | Drop, recreate and reseed the database |
+| `npm run db:push` | Apply the schema and re-assert row-level security |
+| `npm run db:seed` | Load or refresh the content corpus |
+| `npm run db:studio` | Browse the data with Drizzle Studio |
+| `npm run db:reset` | Drop every table, then push and seed. Requires `MERIDIAN_CONFIRM_RESET=yes` |
 
 ---
 
@@ -79,7 +102,7 @@ src/
     onboarding/, diagnostic/
   components/               design-system components and feature surfaces
   lib/
-    db/                     Drizzle schema, client, migrate, seed
+    db/                     Drizzle schema, Supabase client, migrate, seed, reset
     auth/                   password hashing, sessions, the authorization guard
     content/
       taxonomy.ts           52 micro-skills — the spine of the product
@@ -103,12 +126,28 @@ tests/                      engine, content and taxonomy tests
 ```
 
 **Stack.** Next.js 15 (App Router, React 19, server components), TypeScript,
-Drizzle ORM over SQLite, zod at every input boundary. No CSS framework: the
-design system is ~600 lines of tokens and primitives in `app/globals.css`.
+Drizzle ORM over PostgreSQL on Supabase, zod at every input boundary. No CSS
+framework: the design system is ~600 lines of tokens and primitives in
+`app/globals.css`.
 
-**Why SQLite.** The product must be fully usable by someone who pays for nothing
-and installs nothing. Every construct in the schema maps 1:1 onto PostgreSQL, so
-production is a dialect swap in `db/client.ts` — the models do not change.
+**Connecting to Supabase.** The application talks to Postgres directly as a
+database role over the transaction pooler. It does not use Supabase Auth or
+PostgREST — sessions, hashing and authorization are the application's own, so
+the only Supabase surface in play is the database.
+
+That has one consequence worth stating plainly: a Supabase project also
+publishes every table in `public` through PostgREST, authorised by an anon key
+that is *designed* to be shipped to browsers. `npm run db:push` therefore ends
+by enabling row-level security on every table and defining no policy, and by
+revoking the `anon` and `authenticated` grants. The application connects as the
+table owner, which bypasses RLS, so it is unaffected; a leaked anon key reaches
+nothing.
+
+RLS is enabled but deliberately **not** forced. `FORCE ROW LEVEL SECURITY`
+subjects the owner too, and with no policies a non-superuser owner — which is
+what a hosted app role is — gets locked out of its own tables, with reads
+silently returning zero rows. That failure mode was reproduced against a
+non-superuser owner before settling on `ENABLE`.
 
 **Multi-tenancy.** Every tenant-scoped row carries `orgId`. Authorization runs
 through one choke point (`lib/auth/guard.ts`); no caller accepts a tenant
@@ -117,10 +156,11 @@ first migration, and the entitlement model is wired with no billing provider
 connected and nothing gated.
 
 **Security.** scrypt password hashing with per-user salts, opaque session tokens
-stored only as SHA-256, database-backed rate limiting on authentication and
-evaluation, zod validation on every action and route, size and MIME checks
-before a byte of audio is written, storage keys derived server-side, and an
-audit log on every state-changing action.
+stored only as SHA-256, rate limiting applied in a single atomic upsert so
+concurrent requests cannot both pass a stale count, zod validation on every
+action and route, size and MIME checks before a byte of audio is written,
+storage keys derived server-side, row-level security denying every role but the
+application's own, and an audit log on every state-changing action.
 
 ---
 

@@ -41,7 +41,7 @@ type Status = 'draft' | 'in_review' | 'approved' | 'published' | 'retired';
 let errorCount = 0;
 let warningCount = 0;
 
-function recordReview(entityType: string, entityId: string, findings: Finding[], status: Status) {
+async function recordReview(entityType: string, entityId: string, findings: Finding[], status: Status) {
   errorCount += findings.filter((f) => f.severity === 'error').length;
   warningCount += findings.filter((f) => f.severity === 'warning').length;
 
@@ -61,7 +61,7 @@ function recordReview(entityType: string, entityId: string, findings: Finding[],
   }
 
   for (const [index, s] of stages.entries()) {
-    db.insert(contentReviews)
+    await db.insert(contentReviews)
       .values({
         id: contentId('rev', `${entityId}-${index}`),
         entityType,
@@ -70,13 +70,12 @@ function recordReview(entityType: string, entityId: string, findings: Finding[],
         findings: JSON.stringify(s.stage === 'automated_checks' ? findings : []),
         note: s.note,
       })
-      .onConflictDoNothing()
-      .run();
+      .onConflictDoNothing();
   }
 }
 
-function recordVersion(entityType: string, entityId: string, snapshot: unknown) {
-  db.insert(contentVersions)
+async function recordVersion(entityType: string, entityId: string, snapshot: unknown) {
+  await db.insert(contentVersions)
     .values({
       id: contentId('ver', `${entityType}-${entityId}-1`),
       entityType,
@@ -86,11 +85,10 @@ function recordVersion(entityType: string, entityId: string, snapshot: unknown) 
       changedBy: 'seed',
       changeReason: 'Initial authoring of the Meridian corpus.',
     })
-    .onConflictDoNothing()
-    .run();
+    .onConflictDoNothing();
 }
 
-function seedStimuli() {
+async function seedStimuli() {
   const all = [...readingStimuli, ...listeningStimuli];
   for (const stimulus of all) {
     const result = validateStimulus(stimulus);
@@ -98,7 +96,7 @@ function seedStimuli() {
     const id = contentId('stm', stimulus.slug);
     const text = stimulus.body ?? (stimulus.script ?? []).map((t) => t.text).join(' ');
 
-    db.insert(stimuliTable)
+    await db.insert(stimuliTable)
       .values({
         id,
         slug: stimulus.slug,
@@ -117,14 +115,14 @@ function seedStimuli() {
       .onConflictDoUpdate({
         target: stimuliTable.slug,
         set: { title: stimulus.title, body: stimulus.body ?? null, status },
-      })
-      .run();
+      });
 
-    recordVersion('stimulus', stimulus.slug, stimulus);
-    recordReview('stimulus', stimulus.slug, result.findings, status);
+    await recordVersion('stimulus', stimulus.slug, stimulus);
+    await recordReview('stimulus', stimulus.slug, result.findings, status);
 
-    stimulus.questions.forEach((question, index) => {
-      db.insert(questionsTable)
+    for (const [index, question] of stimulus.questions.entries()) {
+      await db
+        .insert(questionsTable)
         .values({
           id: contentId('qst', question.slug),
           slug: question.slug,
@@ -147,10 +145,9 @@ function seedStimuli() {
         .onConflictDoUpdate({
           target: questionsTable.slug,
           set: { prompt: question.prompt, options: JSON.stringify(question.options), status },
-        })
-        .run();
-      recordVersion('question', question.slug, question);
-    });
+        });
+      await recordVersion('question', question.slug, question);
+    }
   }
   console.log(`  stimuli: ${all.length}, questions: ${all.reduce((a, s) => a + s.questions.length, 0)}`);
 }
@@ -159,11 +156,11 @@ function defaultSeconds(skill: 'reading' | 'listening'): number {
   return skill === 'reading' ? 55 : 30;
 }
 
-function seedWriting() {
+async function seedWriting() {
   for (const task of writingTasks) {
     const result = validateWritingTask(task);
     const status: Status = result.passed ? 'published' : 'in_review';
-    db.insert(writingTable)
+    await db.insert(writingTable)
       .values({
         id: contentId('wtk', task.slug),
         slug: task.slug,
@@ -182,19 +179,18 @@ function seedWriting() {
         modelNotes: task.modelNotes,
         status,
       })
-      .onConflictDoUpdate({ target: writingTable.slug, set: { title: task.title, status } })
-      .run();
-    recordVersion('writing_task', task.slug, task);
-    recordReview('writing_task', task.slug, result.findings, status);
+      .onConflictDoUpdate({ target: writingTable.slug, set: { title: task.title, status } });
+    await recordVersion('writing_task', task.slug, task);
+    await recordReview('writing_task', task.slug, result.findings, status);
   }
   console.log(`  writing tasks: ${writingTasks.length}`);
 }
 
-function seedSpeaking() {
+async function seedSpeaking() {
   for (const task of speakingTasks) {
     const result = validateSpeakingTask(task);
     const status: Status = result.passed ? 'published' : 'in_review';
-    db.insert(speakingTable)
+    await db.insert(speakingTable)
       .values({
         id: contentId('stk', task.slug),
         slug: task.slug,
@@ -211,19 +207,18 @@ function seedSpeaking() {
         modelNotes: task.modelNotes,
         status,
       })
-      .onConflictDoUpdate({ target: speakingTable.slug, set: { title: task.title, status } })
-      .run();
-    recordVersion('speaking_task', task.slug, task);
-    recordReview('speaking_task', task.slug, result.findings, status);
+      .onConflictDoUpdate({ target: speakingTable.slug, set: { title: task.title, status } });
+    await recordVersion('speaking_task', task.slug, task);
+    await recordReview('speaking_task', task.slug, result.findings, status);
   }
   console.log(`  speaking tasks: ${speakingTasks.length}`);
 }
 
-function seedLessons() {
+async function seedLessons() {
   for (const lesson of lessons) {
     const result = validateLesson(lesson);
     const status: Status = result.passed ? 'published' : 'in_review';
-    db.insert(lessonsTable)
+    await db.insert(lessonsTable)
       .values({
         id: contentId('lsn', lesson.slug),
         slug: lesson.slug,
@@ -236,17 +231,16 @@ function seedLessons() {
         blocks: JSON.stringify(lesson.blocks),
         status,
       })
-      .onConflictDoUpdate({ target: lessonsTable.slug, set: { title: lesson.title, blocks: JSON.stringify(lesson.blocks), status } })
-      .run();
-    recordVersion('lesson', lesson.slug, lesson);
-    recordReview('lesson', lesson.slug, result.findings, status);
+      .onConflictDoUpdate({ target: lessonsTable.slug, set: { title: lesson.title, blocks: JSON.stringify(lesson.blocks), status } });
+    await recordVersion('lesson', lesson.slug, lesson);
+    await recordReview('lesson', lesson.slug, result.findings, status);
   }
   console.log(`  lessons: ${lessons.length}`);
 }
 
-function seedVocabulary() {
+async function seedVocabulary() {
   for (const entry of vocabulary) {
-    db.insert(vocabTable)
+    await db.insert(vocabTable)
       .values({
         id: contentId('voc', `${entry.headword}-${entry.pos}`),
         headword: entry.headword,
@@ -263,15 +257,14 @@ function seedVocabulary() {
       .onConflictDoUpdate({
         target: [vocabTable.headword, vocabTable.pos],
         set: { definition: entry.definition, example: entry.example },
-      })
-      .run();
+      });
   }
   console.log(`  vocabulary: ${vocabulary.length}`);
 }
 
-function seedGrammar() {
+async function seedGrammar() {
   for (const point of grammarPoints) {
-    db.insert(grammarTable)
+    await db.insert(grammarTable)
       .values({
         id: contentId('grm', point.slug),
         slug: point.slug,
@@ -282,25 +275,29 @@ function seedGrammar() {
         level: point.level,
         drills: JSON.stringify(point.drills),
       })
-      .onConflictDoUpdate({ target: grammarTable.slug, set: { title: point.title, explanation: point.explanation } })
-      .run();
-    recordVersion('grammar_point', point.slug, point);
+      .onConflictDoUpdate({ target: grammarTable.slug, set: { title: point.title, explanation: point.explanation } });
+    await recordVersion('grammar_point', point.slug, point);
   }
   console.log(`  grammar points: ${grammarPoints.length}`);
 }
 
-function main() {
+async function main() {
   console.log('Seeding Meridian content…');
-  seedStimuli();
-  seedWriting();
-  seedSpeaking();
-  seedLessons();
-  seedVocabulary();
-  seedGrammar();
+  await seedStimuli();
+  await seedWriting();
+  await seedSpeaking();
+  await seedLessons();
+  await seedVocabulary();
+  await seedGrammar();
   console.log(
     `\nValidation: ${errorCount} error(s), ${warningCount} warning(s).` +
       (errorCount ? ' Items with errors were held at in_review and are not delivered to learners.' : ''),
   );
 }
 
-main();
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error instanceof Error ? error.message : error);
+    process.exit(1);
+  });

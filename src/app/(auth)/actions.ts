@@ -32,13 +32,13 @@ async function clientKey(prefix: string, identifier: string): Promise<string> {
   return `${prefix}:${createHash('sha256').update(`${ip}:${identifier}`).digest('hex').slice(0, 24)}`;
 }
 
-function primaryOrgId(userId: string): string | null {
-  const membership = db
+async function primaryOrgId(userId: string): Promise<string | null> {
+  const [membership] = await db
     .select({ orgId: memberships.orgId })
     .from(memberships)
     .where(eq(memberships.userId, userId))
     .orderBy(memberships.createdAt)
-    .get();
+    .limit(1);
   return membership?.orgId ?? null;
 }
 
@@ -60,28 +60,28 @@ export async function signIn(_state: AuthState, formData: FormData): Promise<Aut
 
   // Limited per (address, email) so an attack on one account cannot be spread
   // across addresses, and a shared address cannot lock out everyone behind it.
-  const limit = rateLimit(await clientKey('signin', parsed.data.email), 8, 300);
+  const limit = await rateLimit(await clientKey('signin', parsed.data.email), 8, 300);
   if (!limit.ok) {
     return { error: `Too many attempts. Try again in ${Math.ceil(limit.retryAfter / 60)} minute(s).` };
   }
 
-  const user = db.select().from(users).where(eq(users.email, parsed.data.email)).get();
+  const user = (await db.select().from(users).where(eq(users.email, parsed.data.email)).limit(1))[0];
   // Verify against a decoy when the address is unknown, so both paths do the
   // same work and the response time does not disclose whether an account exists.
   const ok = await verifyPassword(parsed.data.password, user?.passwordHash ?? (await decoyHash()));
 
   if (!user || !ok) {
-    audit({ action: 'auth.sign_in.failed', metadata: { email: parsed.data.email } });
+    await audit({ action: 'auth.sign_in.failed', metadata: { email: parsed.data.email } });
     return { error: 'That email and password do not match an account.' };
   }
 
-  const orgId = primaryOrgId(user.id);
+  const orgId = await primaryOrgId(user.id);
   if (!orgId) return { error: 'This account has no workspace attached.' };
 
-  db.update(users).set({ lastSeenAt: Math.floor(Date.now() / 1000) }).where(eq(users.id, user.id)).run();
+  await db.update(users).set({ lastSeenAt: Math.floor(Date.now() / 1000) }).where(eq(users.id, user.id));
   await createSession(user.id, orgId, (await headers()).get('user-agent'));
-  ensureProfile(user.id, orgId);
-  audit({ orgId, actorId: user.id, action: 'auth.sign_in' });
+  await ensureProfile(user.id, orgId);
+  await audit({ orgId, actorId: user.id, action: 'auth.sign_in' });
 
   redirect('/home');
 }
@@ -97,12 +97,12 @@ export async function signUp(_state: AuthState, formData: FormData): Promise<Aut
   const problems = passwordProblems(parsed.data.password);
   if (problems.length) return { fieldErrors: { password: problems.join(' ') } };
 
-  const limit = rateLimit(await clientKey('signup', parsed.data.email), 5, 900);
+  const limit = await rateLimit(await clientKey('signup', parsed.data.email), 5, 900);
   if (!limit.ok) {
     return { error: `Too many attempts. Try again in ${Math.ceil(limit.retryAfter / 60)} minute(s).` };
   }
 
-  if (db.select().from(users).where(eq(users.email, parsed.data.email)).get()) {
+  if ((await db.select().from(users).where(eq(users.email, parsed.data.email)).limit(1))[0]) {
     return { fieldErrors: { email: 'An account already exists for this address.' } };
   }
 
@@ -114,8 +114,8 @@ export async function signUp(_state: AuthState, formData: FormData): Promise<Aut
   });
 
   await createSession(userId, orgId, (await headers()).get('user-agent'));
-  ensureProfile(userId, orgId);
-  audit({ orgId, actorId: userId, action: 'auth.sign_up' });
+  await ensureProfile(userId, orgId);
+  await audit({ orgId, actorId: userId, action: 'auth.sign_up' });
 
   redirect('/onboarding');
 }

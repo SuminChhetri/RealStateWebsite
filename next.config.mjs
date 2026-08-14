@@ -1,7 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  serverExternalPackages: ['better-sqlite3'],
+  // `postgres` opens real sockets and must not be bundled into the server
+  // build's module graph.
+  serverExternalPackages: ['postgres'],
   experimental: {
     // Server Actions handle every mutation in this app; keep the payload cap
     // modest since audio is uploaded through a dedicated route handler.

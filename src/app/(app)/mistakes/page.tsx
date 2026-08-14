@@ -13,18 +13,18 @@ export default async function MistakesPage({ searchParams }: { searchParams: Pro
   const query = await searchParams;
   const session = await requireSession();
 
-  const rows = db
+  const rows = (await db
     .select()
     .from(mistakes)
     .where(and(eq(mistakes.userId, session.userId), eq(mistakes.orgId, session.orgId)))
     .orderBy(desc(mistakes.occurrences), desc(mistakes.lastSeenAt))
-    .all();
+    );
 
   const open = rows.filter((r) => !r.resolvedAt);
   const resolved = rows.filter((r) => r.resolvedAt);
   const recurring = open.filter((r) => r.occurrences >= 2);
 
-  const grammar = db.select().from(grammarPoints).all();
+  const grammar = (await db.select().from(grammarPoints));
 
   const bySkill = new Map<string, typeof open>();
   for (const row of open) {
