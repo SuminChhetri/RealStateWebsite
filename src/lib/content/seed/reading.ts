@@ -1268,4 +1268,791 @@ That, incidentally, is why the nineteen per cent matters more than the losses fi
       },
     ],
   },
+
+  /* ================================================================ */
+  /* Set two — added to widen coverage of the part types a generator   */
+  /* cannot write: correspondence, argument, and applied diagrams.     */
+  /* ================================================================ */
+
+  {
+    slug: 'read-corr-shift-swap-refused',
+    skill: 'reading',
+    partType: 'reading.correspondence',
+    title: 'A message about a refused shift swap',
+    level: 9,
+    topic: 'workplace',
+    body: `Dev,
+
+I am writing this down because I think we are talking past each other on the phone.
+
+You are right that I turned down your swap request on the 14th. What I did not explain at the time, and should have, is that I had already agreed to cover Marisol that week and the schedule would have left me on for nine days without a break. I said no to the shift, not to you, and I can see how it looked from where you were standing given that I had asked you for two swaps in October.
+
+On the wider point about the group chat: I did not think the message was about me until three people replied to it, and by then saying anything would have made it a bigger thing than it was. I let it sit. That was the wrong call, and it is the part of this I would take back.
+
+What I would like to propose is that we stop arranging swaps in the chat entirely. When it is in there, whoever answers first gets it, and the person who needed it has no idea who saw the message and chose not to. If we message each other directly and give a yes or no the same day, at least the no comes with a name attached and can be explained.
+
+I am on days Monday to Wednesday. Come and find me at the end of any of them and we can sort this out properly, or reply here if you would rather have it in writing.
+
+Nadia`,
+    questions: [
+      {
+        slug: 'read-corr-swap-q1',
+        microSkill: 'reading.writer_purpose',
+        prompt: 'What is Nadia’s main purpose in writing?',
+        options: [
+          { key: 'A', text: 'To repair the working relationship and change how swaps are arranged', rationale: 'Correct: she explains the refusal, admits one fault, and proposes a new arrangement — repair plus a concrete change.' },
+          { key: 'B', text: 'To defend her decision to refuse the shift on the 14th', rationale: 'She does explain it, but the explanation occupies one paragraph and leads to a proposal rather than standing as the point.' },
+          { key: 'C', text: 'To complain about the way the group chat is used', rationale: 'The chat is a problem she raises, but she raises it in order to propose replacing it, not to object.' },
+          { key: 'D', text: 'To apologise for the two swaps she requested in October', rationale: 'October is mentioned to acknowledge how her refusal looked, not as something she apologises for.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'Purpose questions are decided by where the letter ends up, not by which topic takes the most lines. Nadia spends paragraphs on the past and then turns to "What I would like to propose", followed by an offer to meet. A message that explains, concedes and then proposes is doing repair work; the explanation is in service of that, not the point of it.',
+        takeaway: 'To find purpose, read the last third. Correspondence usually states the reason for writing where it says what happens next.',
+        level: 9,
+        difficulty: 8.4,
+      },
+      {
+        slug: 'read-corr-swap-q2',
+        microSkill: 'reading.inference',
+        prompt: 'What can be inferred about why Nadia says nothing in the group chat at the time?',
+        options: [
+          { key: 'A', text: 'She did not realise it concerned her until responding would have drawn more attention', rationale: 'Correct: she says she did not think it was about her until three people replied, by which point speaking would have escalated it.' },
+          { key: 'B', text: 'She did not see the message until several days had passed', rationale: 'Nothing suggests a delay in seeing it; the delay was in recognising what it meant.' },
+          { key: 'C', text: 'She thought Dev would raise it with her privately instead', rationale: 'She never mentions any expectation of what Dev would do.' },
+          { key: 'D', text: 'She believed the other replies had already settled the matter', rationale: 'The replies are what made her hesitate, not what resolved anything.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'The sentence carries two stages: not recognising the message was aimed at her, and then judging that a reply would enlarge the incident. Weak readings collapse these into one. Watch for "until" and "by then" — they mark a change of state, and the reason often sits on either side of them rather than in a single clause.',
+        takeaway: 'When a sentence contains "until" or "by then", it is describing two moments. Establish both before choosing.',
+        level: 10,
+        difficulty: 9.5,
+      },
+      {
+        slug: 'read-corr-swap-q3',
+        microSkill: 'reading.tone_attitude',
+        prompt: 'How would you best describe Nadia’s attitude toward her own conduct?',
+        options: [
+          { key: 'A', text: 'She admits one specific failing and does not extend it further', rationale: 'Correct: she calls the silence "the wrong call" and "the part of this I would take back" — bounded to that one thing.' },
+          { key: 'B', text: 'She accepts responsibility for the whole disagreement', rationale: 'She holds her position on the refusal itself; the concession is limited to the chat.' },
+          { key: 'C', text: 'She is unwilling to accept that she has done anything wrong', rationale: 'She names a mistake explicitly, which rules this out.' },
+          { key: 'D', text: 'She regrets the refusal but not the way she handled the chat', rationale: 'This reverses the letter: she stands by the refusal and regrets the silence.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'A precise concession is a distinct move from a general apology, and the options here are built to separate them. "That was the wrong call, and it is the part of this I would take back" both admits and limits — the word "part" does the limiting. Reading only the admission produces B; reading only the defence produces C.',
+        takeaway: 'Look for the words that bound a concession — "the part", "on that point", "at the time". They tell you how far the writer is conceding.',
+        level: 10,
+        difficulty: 9.8,
+      },
+      {
+        slug: 'read-corr-swap-q4',
+        microSkill: 'reading.literal_detail',
+        prompt: 'Why did Nadia refuse the swap on the 14th?',
+        options: [
+          { key: 'A', text: 'Taking it would have meant working nine consecutive days', rationale: 'Correct: she had already agreed to cover Marisol, and the swap would have produced nine days without a break.' },
+          { key: 'B', text: 'She was owed swaps by Dev from October', rationale: 'October is when she asked Dev for swaps, not when he owed her any.' },
+          { key: 'C', text: 'She was not scheduled to work that week at all', rationale: 'She was scheduled, and had additionally agreed to cover a colleague.' },
+          { key: 'D', text: 'The request arrived through the group chat rather than directly', rationale: 'That is her objection to the process, and it is not given as the reason for this refusal.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'The reason is a chain: she had already committed to Marisol, so adding Dev’s shift would have run to nine days. Distractor D is drawn from a real complaint elsewhere in the letter, which is exactly the trap — a true statement in the text is not automatically the answer to the question asked.',
+        takeaway: 'A distractor can be entirely true and still wrong. Check it answers this question, not another one the passage also raises.',
+        level: 8,
+        difficulty: 7.2,
+      },
+      {
+        slug: 'read-corr-swap-q5',
+        microSkill: 'reading.main_idea',
+        prompt: 'What is the central argument for arranging swaps directly rather than in the group chat?',
+        options: [
+          { key: 'A', text: 'A refusal made privately can be explained; one made by silence cannot', rationale: 'Correct: she argues the no comes "with a name attached and can be explained", which silence never allows.' },
+          { key: 'B', text: 'The group chat is read by too many people to be private', rationale: 'Privacy is not the objection she makes; accountability is.' },
+          { key: 'C', text: 'Direct messages produce faster responses than group messages', rationale: 'She asks for a same-day answer, but speed is a condition of her proposal rather than its justification.' },
+          { key: 'D', text: 'The first person to reply in the chat is rarely the best fit', rationale: 'She notes whoever answers first gets it, but her complaint is about the ones who do not answer.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'The argument turns on what a group refusal actually is: not a "no" but an absence, which cannot carry a reason. Distractor D repeats a true observation from the same sentence while missing its point. When a paragraph contains an observation and a conclusion, the main idea is the conclusion.',
+        takeaway: 'When an option quotes the passage accurately but sits one step short of its conclusion, it is a distractor.',
+        level: 10,
+        difficulty: 9.6,
+      },
+      {
+        slug: 'read-corr-swap-q6',
+        microSkill: 'reading.cohesion',
+        prompt: 'In the phrase “I said no to the shift, not to you”, what distinction is being drawn?',
+        options: [
+          { key: 'A', text: 'Between refusing a request and rejecting the person making it', rationale: 'Correct: she separates the practical decision from what Dev appears to have read into it.' },
+          { key: 'B', text: 'Between a formal refusal and an informal one', rationale: 'Formality is not at issue anywhere in the letter.' },
+          { key: 'C', text: 'Between refusing that shift and refusing all future shifts', rationale: 'Scope over time is not what the sentence contrasts; the contrast is shift against person.' },
+          { key: 'D', text: 'Between her decision and the scheduler’s decision', rationale: 'She takes the decision as hers throughout; no one else is credited with it.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'A "not X, but Y" or "X, not Y" construction always signals a distinction the writer thinks the reader has missed — which tells you what they believe was misread. Here the parallel objects, "the shift" and "you", locate the distinction precisely: a decision about a rota versus a judgement about a colleague.',
+        takeaway: 'The two things placed either side of "not" are the distinction. Read them as a pair rather than reading the sentence straight through.',
+        level: 9,
+        difficulty: 8.8,
+      },
+    ],
+  },
+
+  {
+    slug: 'read-corr-course-withdrawal',
+    skill: 'reading',
+    partType: 'reading.correspondence',
+    title: 'A reply about withdrawing from a programme',
+    level: 10,
+    topic: 'education',
+    body: `Dear Ms Okonjo,
+
+Thank you for your message of 3 February. I want to answer the question you actually asked before I address the policy, because I think the policy has been getting in the way of the answer.
+
+You asked whether withdrawing now would prevent you from being readmitted later. It would not. Readmission after a voluntary withdrawal is treated as a fresh application, and a completed withdrawal carries no academic penalty of any kind. The two-year currency limit you were told about applies to transferring credits into a new programme, which is a different question and only becomes relevant if you return after that point. Nobody has been evasive with you; you have been asking one question and receiving the answer to another.
+
+On the fee refund, I am afraid the news is less good. The deadline for a partial refund passed on 21 January. I have looked at whether the change of instructor mid-term constitutes a material change to the programme, since that would open a discretionary route, and in my view it does not — the syllabus, the assessment structure and the contact hours are unchanged. I would rather tell you that plainly now than encourage an appeal I do not expect to succeed.
+
+There is a third option that you have not raised and that I would encourage you to consider. A leave of absence holds your place for up to twelve months, requires no new application, and preserves your existing credits regardless of the currency limit. It does not refund the fees for this term either, but it does not spend them: a return within the year resumes the programme where you left it.
+
+If you would like to talk any of this through, I hold open hours on Thursday afternoons and I do not need you to book.
+
+Kind regards,
+Simon Weatherall
+Programme Director`,
+    questions: [
+      {
+        slug: 'read-corr-withdrawal-q1',
+        microSkill: 'reading.main_idea',
+        prompt: 'What is the most accurate summary of this reply?',
+        options: [
+          { key: 'A', text: 'It corrects a misunderstanding, refuses one request, and proposes an option she had not considered', rationale: 'Correct: the three movements are readmission (corrected), the refund (refused), and the leave of absence (proposed).' },
+          { key: 'B', text: 'It explains why the fee refund deadline cannot be extended', rationale: 'That is one paragraph of four, and the reply does not end there.' },
+          { key: 'C', text: 'It encourages her to remain in the programme rather than withdraw', rationale: 'He never argues she should stay; he sets out what each route costs.' },
+          { key: 'D', text: 'It apologises for the confusion caused by the two-year currency limit', rationale: 'He explicitly says nobody has been evasive, which is the opposite of an apology for it.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'Longer correspondence usually has a shape rather than a single topic, and options that name one paragraph are the standard trap. Track what the writer does in each: corrects, refuses, offers. A summary that omits any of the three is describing part of the letter.',
+        takeaway: 'Summarise a long message by what it does in each part, not by which part is longest.',
+        level: 10,
+        difficulty: 9.4,
+      },
+      {
+        slug: 'read-corr-withdrawal-q2',
+        microSkill: 'reading.paraphrase',
+        prompt: 'What does “you have been asking one question and receiving the answer to another” mean here?',
+        options: [
+          { key: 'A', text: 'Her question about readmission was being answered with information about credit transfer', rationale: 'Correct: readmission carries no penalty, while the two-year limit she was quoted governs transferring credits.' },
+          { key: 'B', text: 'Staff have been avoiding her question because the answer is unfavourable', rationale: 'He states directly that nobody has been evasive.' },
+          { key: 'C', text: 'She has been asking the wrong department about her situation', rationale: 'No department is mentioned as being the wrong one to ask.' },
+          { key: 'D', text: 'Her question was too vague for anyone to answer usefully', rationale: 'He treats her question as clear; it is the answers that missed it.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'The paraphrase is anchored by the sentence immediately before it, which names both questions: readmission after withdrawal, and the currency limit for transferring credits. When a general remark follows a specific explanation, the explanation is what the remark refers to — read backwards, not forwards.',
+        takeaway: 'A summarising sentence points back at what it summarises. Its evidence is above it, not below.',
+        level: 10,
+        difficulty: 9.7,
+      },
+      {
+        slug: 'read-corr-withdrawal-q3',
+        microSkill: 'reading.writer_purpose',
+        prompt: 'Why does Weatherall explain that he considered the change of instructor as grounds for a discretionary refund?',
+        options: [
+          { key: 'A', text: 'To show that the refusal follows from an examination rather than from the deadline alone', rationale: 'Correct: reporting the route he tested establishes that the answer is considered, not merely administrative.' },
+          { key: 'B', text: 'To suggest she could still appeal on those grounds if she wished', rationale: 'He says the opposite — he would rather not encourage an appeal he expects to fail.' },
+          { key: 'C', text: 'To explain why the refund deadline is set at 21 January', rationale: 'The deadline’s rationale is never discussed.' },
+          { key: 'D', text: 'To indicate that a different instructor may be assigned next term', rationale: 'Nothing about future teaching arrangements appears in the letter.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'Showing your working in a refusal is a purposeful act: it converts "no, the deadline passed" into "no, and here is the exception I looked for on your behalf". The three specifics he lists — syllabus, assessment, contact hours — are the evidence that the examination was real. Ask what a paragraph achieves that its absence would not.',
+        takeaway: 'When a writer describes an option they rejected, they are usually establishing that their answer was considered rather than automatic.',
+        level: 11,
+        difficulty: 10.4,
+      },
+      {
+        slug: 'read-corr-withdrawal-q4',
+        microSkill: 'reading.literal_detail',
+        prompt: 'What does a leave of absence preserve that a withdrawal does not?',
+        options: [
+          { key: 'A', text: 'Her existing credits and her place, without a new application', rationale: 'Correct: the paragraph states it holds her place for twelve months, needs no new application, and preserves credits regardless of the currency limit.' },
+          { key: 'B', text: 'Her entitlement to a partial refund of this term’s fees', rationale: 'He says explicitly that it does not refund the fees either.' },
+          { key: 'C', text: 'Her right to be readmitted without academic penalty', rationale: 'Withdrawal already carries no academic penalty, so this is not a difference between them.' },
+          { key: 'D', text: 'Her access to open hours with the programme director', rationale: 'Open hours are offered to her regardless of what she decides.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'Comparison questions need both sides. C is true of a leave of absence but equally true of a withdrawal, so it is not something one preserves and the other does not. Before choosing, check the option against the other member of the comparison.',
+        takeaway: 'In a comparison question, test each option against both things being compared. A shared feature is never the difference.',
+        level: 9,
+        difficulty: 8.6,
+      },
+      {
+        slug: 'read-corr-withdrawal-q5',
+        microSkill: 'reading.tone_attitude',
+        prompt: 'Which phrase best characterises the writer’s handling of the unwelcome part of his answer?',
+        options: [
+          { key: 'A', text: 'Direct, and explicit about preferring plainness to false encouragement', rationale: 'Correct: "I would rather tell you that plainly now than encourage an appeal I do not expect to succeed" states the principle he is applying.' },
+          { key: 'B', text: 'Apologetic, softening the refusal as much as the rules allow', rationale: 'He uses one mild phrase, "I am afraid", and then states the position without softening it.' },
+          { key: 'C', text: 'Detached, treating the outcome as purely procedural', rationale: 'He investigated a discretionary route and offers an alternative, which is not detachment.' },
+          { key: 'D', text: 'Cautious, leaving room to revisit the decision later', rationale: 'He forecloses the appeal rather than leaving it open.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'Tone is carried by the sentence in which a writer describes their own choice of approach, and that sentence is present here. "I am afraid" is a courtesy marker and not the tone of the paragraph; the tone is set by the refusal to encourage an appeal he thinks will fail.',
+        takeaway: 'Politeness formulas are not tone. Find the sentence where the writer says why they are putting it this way.',
+        level: 11,
+        difficulty: 10.2,
+      },
+      {
+        slug: 'read-corr-withdrawal-q6',
+        microSkill: 'reading.inference',
+        prompt: 'What does the closing line suggest about how the writer expects the conversation to continue?',
+        options: [
+          { key: 'A', text: 'He expects she may need to talk it through and wants to remove obstacles to that', rationale: 'Correct: naming a fixed time and waiving the booking requirement lowers the cost of coming to see him.' },
+          { key: 'B', text: 'He expects a written reply setting out her decision', rationale: 'He offers conversation rather than asking for a decision in writing.' },
+          { key: 'C', text: 'He considers the matter closed unless she appeals', rationale: 'An open invitation is inconsistent with treating the matter as closed.' },
+          { key: 'D', text: 'He is directing her to a colleague who handles withdrawals', rationale: 'The open hours are his own; no one else is named.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          '"I do not need you to book" is doing work beyond politeness: it removes a step, and steps are what stop people from following up on difficult news. Small procedural details in a closing often carry the writer’s expectation of what happens next.',
+        takeaway: 'Read the closing for what it makes easier. Removing a requirement is a signal about what the writer anticipates.',
+        level: 10,
+        difficulty: 9.9,
+      },
+    ],
+  },
+
+  {
+    slug: 'read-view-credential-recognition',
+    skill: 'reading',
+    partType: 'reading.viewpoints',
+    title: 'Opinion: recognising qualifications earned elsewhere',
+    level: 11,
+    topic: 'work',
+    body: `The standard account of foreign credential recognition is a story about paperwork. On this telling, a qualified engineer arrives, encounters an assessment body, waits eighteen months, pays several thousand dollars, and eventually receives a licence — and the problem is the eighteen months and the several thousand dollars. Shorten the queue, subsidise the fee, and the waste disappears.
+
+I have come to think this account is not so much wrong as beside the point, and that acting on it produces reforms that measurably improve the process without changing very much about the outcome.
+
+Consider what the assessment is actually doing. Almost every regulated profession assesses two different things under one heading: whether the applicant knows the subject, and whether they know how the subject is practised here. The first is largely portable — structural engineering does not change at a border — and it is also the part the existing process handles best, because credentials, transcripts and examinations are built for it. The second is not portable at all, and the existing process barely tests it, because there is no document that certifies familiarity with local codes, liability conventions, or the informal expectations of an inspector.
+
+What fills the gap is the requirement for local experience. And here the reform agenda collides with something it cannot legislate: the experience requirement is satisfied by employers, not by regulators. A shorter assessment queue delivers a licensed engineer to a labour market that has not changed its mind about hiring someone whose references are all from another country. The bottleneck moves; it does not clear.
+
+I want to be careful not to overstate this. Faster and cheaper assessment is a real gain, and dismissing it because it is insufficient would be the familiar mistake of treating the perfect as the enemy of the useful. Someone waiting eighteen months is losing eighteen months of earnings, and that loss is not made hypothetical by the existence of a further obstacle.
+
+But if the object is to stop wasting the skills of people who already have them, the interventions that would matter most are the least discussed: paid bridging placements that generate the local references the market actually wants, employer-side incentives that are structured as risk-sharing rather than exhortation, and assessment bodies that separate the two judgements they currently blend, so that "not yet familiar with local practice" is recorded as what it is — a gap that six months of supervised work would close — rather than as a failure to qualify.
+
+None of this is cheap, and none of it produces a press release as clean as a shorter queue. That is, I suspect, most of the explanation for which reforms get attempted.`,
+    questions: [
+      {
+        slug: 'read-view-credential-q1',
+        microSkill: 'reading.main_idea',
+        prompt: 'What is the writer’s central claim?',
+        options: [
+          { key: 'A', text: 'Reforms aimed at the assessment process leave the real obstacle, employer hiring, untouched', rationale: 'Correct: the argument is that the bottleneck moves to employers rather than clearing.' },
+          { key: 'B', text: 'Credential assessment takes too long and costs too much', rationale: 'That is the account the writer sets up in order to argue past it.' },
+          { key: 'C', text: 'Foreign qualifications should be recognised automatically', rationale: 'The writer never proposes automatic recognition and treats local-practice knowledge as a real gap.' },
+          { key: 'D', text: 'Regulated professions apply inconsistent standards across provinces', rationale: 'Inconsistency between jurisdictions is not discussed anywhere in the piece.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'The structure gives the answer: the first paragraph states a common view, the second rejects it as "beside the point", and the rest explains what it misses. B is the view being argued against, and mistaking the set-up for the thesis is the commonest error on opinion passages.',
+        takeaway: 'A first paragraph that summarises a widely held view is usually the target of the argument, not the argument.',
+        level: 11,
+        difficulty: 10.6,
+      },
+      {
+        slug: 'read-view-credential-q2',
+        microSkill: 'reading.text_organisation',
+        prompt: 'What is the function of the fifth paragraph, beginning “I want to be careful not to overstate this”?',
+        options: [
+          { key: 'A', text: 'It concedes real value in the reforms he has just criticised', rationale: 'Correct: he grants that faster, cheaper assessment is a genuine gain before returning to his case.' },
+          { key: 'B', text: 'It introduces a second, unrelated argument', rationale: 'It returns to the same reforms rather than opening a new line.' },
+          { key: 'C', text: 'It summarises the argument before the conclusion', rationale: 'Nothing is restated; something new is granted.' },
+          { key: 'D', text: 'It anticipates an objection in order to dismiss it', rationale: 'The objection is accepted, not dismissed — the eighteen-month loss is called real.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'Concession and rebuttal look alike from a distance, and the difference is whether the point survives. Here it does: the loss "is not made hypothetical by the existence of a further obstacle". A rebuttal would have explained the point away.',
+        takeaway: 'To tell a concession from a rebuttal, check whether the conceded point is still standing at the end of the paragraph.',
+        level: 11,
+        difficulty: 10.9,
+      },
+      {
+        slug: 'read-view-credential-q3',
+        microSkill: 'reading.inference',
+        prompt: 'Why does the writer say “structural engineering does not change at a border”?',
+        options: [
+          { key: 'A', text: 'To establish that one of the two judgements being made is genuinely portable', rationale: 'Correct: it supports the claim that subject knowledge transfers, unlike knowledge of local practice.' },
+          { key: 'B', text: 'To argue that engineering licences should be recognised internationally', rationale: 'He is separating two components of the assessment, not proposing mutual recognition.' },
+          { key: 'C', text: 'To criticise assessment bodies for testing knowledge unnecessarily', rationale: 'He says the existing process handles that part best, which is praise rather than criticism.' },
+          { key: 'D', text: 'To show that local codes are less important than technical knowledge', rationale: 'The rest of the argument insists local practice matters a great deal.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'The line sits inside a two-part contrast: portable subject knowledge against non-portable local practice. Its job is to make the first half undeniable so the second half carries the weight. An example placed inside a contrast almost always exists to fix one side of it.',
+        takeaway: 'When an example appears mid-contrast, ask which side it is nailing down. That is its purpose.',
+        level: 11,
+        difficulty: 10.5,
+      },
+      {
+        slug: 'read-view-credential-q4',
+        microSkill: 'reading.vocabulary_in_context',
+        prompt: 'In “The bottleneck moves; it does not clear”, what does the writer mean?',
+        options: [
+          { key: 'A', text: 'The constraint relocates from the regulator to the employer and continues to bind', rationale: 'Correct: a faster assessment delivers a licensed applicant into a market that still will not hire them.' },
+          { key: 'B', text: 'The delay is transferred from one regulator to another', rationale: 'The second obstacle is the labour market, not a different regulator.' },
+          { key: 'C', text: 'The problem becomes harder to see but smaller in scale', rationale: 'Nothing suggests the obstacle shrinks; the argument is that it persists at full strength.' },
+          { key: 'D', text: 'Applicants abandon the process at a later stage than before', rationale: 'Where people give up is not discussed.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'The metaphor is precise and the preceding sentence names both ends of it: a queue that shortens at the regulator, and an employer who has not changed their mind. "Moves" and "clears" are opposed deliberately — relocation versus resolution.',
+        takeaway: 'A metaphor in an argument is usually cashed out in the sentence beside it. Read that sentence rather than interpreting the image.',
+        level: 11,
+        difficulty: 10.7,
+      },
+      {
+        slug: 'read-view-credential-q5',
+        microSkill: 'reading.writer_purpose',
+        prompt: 'What is the writer suggesting in the final sentence?',
+        options: [
+          { key: 'A', text: 'That reforms are chosen partly for how well they can be announced', rationale: 'Correct: the useful interventions lack "a press release as clean as a shorter queue", and he offers that as most of the explanation.' },
+          { key: 'B', text: 'That the better interventions are too expensive to attempt', rationale: 'Cost is mentioned, but he identifies presentability as most of the explanation.' },
+          { key: 'C', text: 'That policymakers are unaware of the alternatives he describes', rationale: 'He calls them least discussed rather than unknown, and blames incentives rather than ignorance.' },
+          { key: 'D', text: 'That press coverage of the issue has been inaccurate', rationale: 'The press is invoked as a political incentive, not criticised for accuracy.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          '"That is, I suspect, most of the explanation" attaches to the clause immediately before it — the press-release comparison — and the hedge marks it as the writer’s inference rather than an established fact. Both details matter: what the claim attaches to, and how strongly it is being made.',
+        takeaway: 'A hedged final claim still has a definite referent. Identify what "that" points at before deciding what is being asserted.',
+        level: 12,
+        difficulty: 11.2,
+      },
+      {
+        slug: 'read-view-credential-q6',
+        microSkill: 'reading.tone_attitude',
+        prompt: 'How does the writer treat the reforms he considers insufficient?',
+        options: [
+          { key: 'A', text: 'As real improvements that are wrongly treated as solutions', rationale: 'Correct: he calls faster assessment a real gain while arguing it does not reach the binding constraint.' },
+          { key: 'B', text: 'As distractions that do more harm than good', rationale: 'He warns explicitly against dismissing them, which rules out treating them as harmful.' },
+          { key: 'C', text: 'As sensible measures that simply need more funding', rationale: 'His argument is about what the measures reach, not about their scale.' },
+          { key: 'D', text: 'As politically motivated gestures with no practical effect', rationale: 'He credits them with a measurable effect on the process; his objection is to what that effect leaves untouched.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'The piece is careful to hold two positions at once, and the options are built so that only one keeps both. The sentence about "the perfect as the enemy of the useful" exists precisely to block the reading in B and D. When a writer pre-empts a misreading, the misreading is usually a distractor.',
+        takeaway: 'When a writer explicitly guards against an interpretation, expect that interpretation among the options.',
+        level: 11,
+        difficulty: 10.8,
+      },
+    ],
+  },
+
+  {
+    slug: 'read-view-open-data-cameras',
+    skill: 'reading',
+    partType: 'reading.viewpoints',
+    title: 'Opinion: publishing the speed camera data',
+    level: 10,
+    topic: 'community',
+    body: `Our city publishes the location of every automated speed camera, updated weekly, on an open data portal. Every year or so somebody proposes stopping, and the argument is always the same: a driver who knows where the cameras are will slow down for them and speed up afterwards, so publication converts a safety programme into a revenue-neutral inconvenience.
+
+I used to find this persuasive. I no longer do, and the reason is that the objection assumes the point of a camera is to catch people.
+
+If the object is enforcement, then yes, concealment is more efficient. A hidden camera catches more drivers per week than a published one, and if the number of tickets issued is the measure, hiding them is obviously correct. But the number of tickets is a measure of failure, not of success. Nobody sets out to collect fines from a road where everyone is already driving at the limit; the fines exist to change the driving. A camera that everybody knows about, and that everybody slows down for, has achieved on that stretch of road exactly what it was installed to do.
+
+The serious version of the objection is not about revenue but about the gaps — the acceleration after the camera, and the roads with no camera at all. That is a real effect and it is measurable. It is also an argument for more cameras and better placement, not for hiding the ones we have, and it is worth noticing that the same data that lets a driver plan around a camera lets a resident ask why their street does not have one. In the four years since publication began, three of the six new installations in this city started as neighbourhood requests citing the map. That is not a side benefit. That is the programme working through a route that concealment would close.
+
+There is a further argument I hold more tentatively. Publication makes the enforcement legible, and legibility is what separates a rule from a trap. A driver who is ticketed by a camera they could have known about has been enforced against; a driver ticketed by one they could not have known about has been caught out. The behavioural difference may be small. The difference in whether people regard the system as legitimate is not, and a road safety programme that the public regards as a revenue exercise loses the political support it needs to be extended.
+
+I would still concede the strongest counter-case. On a small number of roads — long, straight, and historically dangerous — the deterrent value of not knowing may genuinely exceed the value of legibility, and I would not fight a limited exception for them. What I would resist is the reverse presumption: that concealment is the default and publication the thing requiring justification. Where a rule is enforced automatically and at scale, the burden should sit with whoever wants it kept quiet.`,
+    questions: [
+      {
+        slug: 'read-view-cameras-q1',
+        microSkill: 'reading.main_idea',
+        prompt: 'What is the writer’s position?',
+        options: [
+          { key: 'A', text: 'Camera locations should be published by default, with narrow exceptions', rationale: 'Correct: he defends publication, concedes a limited exception, and rejects concealment as the default.' },
+          { key: 'B', text: 'Speed cameras are more effective when their locations are concealed', rationale: 'That is the objection he opens with and then argues against.' },
+          { key: 'C', text: 'The city should install more cameras before deciding on publication', rationale: 'More cameras is a response to one objection, not his position on publication.' },
+          { key: 'D', text: 'Fines from speed cameras should not be treated as revenue', rationale: 'He uses the revenue framing to make a point about measurement; it is not his conclusion.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'The final paragraph is where the position is stated most precisely: a limited exception is acceptable, but the presumption must favour publication. An answer that captures only the defence and not the qualification is a weaker summary than one that holds both.',
+        takeaway: 'When a writer concedes an exception at the end, the exception belongs in your summary of their position.',
+        level: 10,
+        difficulty: 9.5,
+      },
+      {
+        slug: 'read-view-cameras-q2',
+        microSkill: 'reading.inference',
+        prompt: 'Why does the writer describe the number of tickets as “a measure of failure”?',
+        options: [
+          { key: 'A', text: 'Because a ticket means the speeding it was meant to prevent still happened', rationale: 'Correct: the fines exist to change driving, so issuing one records that the change did not occur.' },
+          { key: 'B', text: 'Because ticket revenue is unreliable as a source of funding', rationale: 'Funding reliability is never discussed.' },
+          { key: 'C', text: 'Because many tickets are successfully appealed', rationale: 'Appeals do not appear in the passage.' },
+          { key: 'D', text: 'Because tickets are issued disproportionately on a few roads', rationale: 'Distribution across roads is raised in a different argument, about gaps.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'The inference turns on the stated purpose: "the fines exist to change the driving". If prevention is the goal, each ticket records an instance where prevention did not happen. Inference questions on argument passages are usually solved by locating the stated purpose and reasoning from it.',
+        takeaway: 'When a writer redefines a measure, find the goal they are measuring against. The redefinition follows from it.',
+        level: 10,
+        difficulty: 9.8,
+      },
+      {
+        slug: 'read-view-cameras-q3',
+        microSkill: 'reading.literal_detail',
+        prompt: 'What does the writer report about the six new camera installations?',
+        options: [
+          { key: 'A', text: 'Three began as neighbourhood requests that cited the published map', rationale: 'Correct: three of the six are attributed to residents using the open data.' },
+          { key: 'B', text: 'All six were placed on roads with a history of collisions', rationale: 'Collision history is mentioned only for the exception in the final paragraph.' },
+          { key: 'C', text: 'Three were removed after residents objected to their placement', rationale: 'No removals are described anywhere.' },
+          { key: 'D', text: 'Six were requested but only three were approved', rationale: 'All six were installed; three of them originated as requests.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'Distractor D reuses both numbers in a plausible but different relation. Numeric detail in an argument is worth re-reading in the source rather than reconstructing from memory, because a distractor only has to reorder the figures to look right.',
+        takeaway: 'With two numbers in one sentence, confirm the relation between them, not just the values.',
+        level: 8,
+        difficulty: 7.8,
+      },
+      {
+        slug: 'read-view-cameras-q4',
+        microSkill: 'reading.text_organisation',
+        prompt: 'What does the writer do with the objection about drivers speeding up after a camera?',
+        options: [
+          { key: 'A', text: 'He accepts it as real and argues it points to a different remedy', rationale: 'Correct: he calls it real and measurable, then treats it as an argument for more and better-placed cameras.' },
+          { key: 'B', text: 'He dismisses it as unsupported by evidence', rationale: 'He explicitly calls the effect measurable.' },
+          { key: 'C', text: 'He argues it applies equally to hidden cameras', rationale: 'That comparison is never made.' },
+          { key: 'D', text: 'He treats it as the strongest argument against his position', rationale: 'He calls it the serious version of the objection but reserves the strongest counter-case for the final paragraph.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'Redirecting an objection — accepting the fact and disputing what follows from it — is a distinct move from rejecting it, and D is the subtle distractor here because "the serious version" sounds superlative without being one. Read on: the phrase "the strongest counter-case" appears later and attaches to something else.',
+        takeaway: 'Superlatives are anchors. If an option claims something is the strongest point, find where the passage actually says so.',
+        level: 11,
+        difficulty: 10.3,
+      },
+      {
+        slug: 'read-view-cameras-q5',
+        microSkill: 'reading.paraphrase',
+        prompt: 'What distinction is drawn between being “enforced against” and being “caught out”?',
+        options: [
+          { key: 'A', text: 'Whether the driver could have known the rule was being enforced there', rationale: 'Correct: the difference is knowability, which is what publication supplies.' },
+          { key: 'B', text: 'Whether the penalty issued is proportionate to the offence', rationale: 'Proportionality of penalties is not discussed.' },
+          { key: 'C', text: 'Whether the driver was speeding deliberately or inadvertently', rationale: 'Intent is not the basis of the distinction; foreknowledge is.' },
+          { key: 'D', text: 'Whether the camera was operating within its legal authority', rationale: 'Legality of the cameras is never questioned.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'The two clauses are built in parallel and differ in exactly one element: "could have known about" versus "could not have known about". Where a writer constructs a minimal pair, the single varying element is the distinction they are drawing.',
+        takeaway: 'Find the one thing that differs between two parallel clauses. That difference is the point being made.',
+        level: 10,
+        difficulty: 9.9,
+      },
+      {
+        slug: 'read-view-cameras-q6',
+        microSkill: 'reading.writer_purpose',
+        prompt: 'What is the purpose of the final sentence about where the burden should sit?',
+        options: [
+          { key: 'A', text: 'To shift what needs justifying, rather than to rule concealment out entirely', rationale: 'Correct: having allowed an exception, he insists the presumption favours publication and concealment must be argued for.' },
+          { key: 'B', text: 'To argue that automatic enforcement should be reduced in scale', rationale: 'He treats scale as a reason for transparency, not as something to reduce.' },
+          { key: 'C', text: 'To propose that the public vote on camera placement', rationale: 'No voting mechanism is suggested.' },
+          { key: 'D', text: 'To withdraw the exception he made in the preceding sentence', rationale: 'The exception stands; he says he would not fight it.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'The move is about presumption rather than prohibition, and the passage marks it: "What I would resist is the reverse presumption". A writer who concedes and then restates the default is defining how much ground the concession costs them.',
+        takeaway: 'Watch for arguments about where the burden of proof sits. They allow a writer to concede a case without conceding the principle.',
+        level: 11,
+        difficulty: 10.6,
+      },
+    ],
+  },
+
+  {
+    slug: 'read-diag-clinic-eligibility',
+    skill: 'reading',
+    partType: 'reading.diagram',
+    title: 'Applying a clinic eligibility table',
+    level: 9,
+    topic: 'health',
+    figure: {
+      kind: 'table',
+      caption: 'Northline Community Clinic — walk-in eligibility and fees',
+      columns: ['Service', 'Referral needed', 'Provincial card', 'Fee without card', 'Same-day slots', 'Notes'],
+      rows: [
+        ['General walk-in', 'No', 'Accepted', '$70', 'Yes', 'Closes to new arrivals at 4:00 p.m.'],
+        ['Minor injury', 'No', 'Accepted', '$110', 'Yes', 'X-ray on site Tue and Thu only'],
+        ['Travel advice', 'No', 'Not covered', '$95', 'No', 'Book at least 3 weeks before travel'],
+        ['Physiotherapy', 'Yes', 'Partially', '$130', 'No', 'Referral valid for 6 months'],
+        ['Prenatal check', 'No', 'Accepted', 'Not offered', 'Yes', 'Card required; no private option'],
+        ['Mental health drop-in', 'No', 'Accepted', 'Free', 'Yes', 'Ages 16+, 1:00–7:00 p.m. Wed only'],
+      ],
+      note: 'A provincial card must be presented at the desk; a photograph of a card is not accepted. Fees without a card are payable on the day.',
+    },
+    body: `Hi Amara,
+
+I have pasted the clinic table below because I keep giving people the wrong information about it and I would rather you read it yourself than take my summary of it.
+
+Your situation, as I understand it: you arrive on the 14th, which is a Wednesday, and your provincial card has been applied for but not yet issued. You mentioned the ankle, which has been bothering you since the move, and you also wanted to ask someone about the travel injections for the trip in August. Read the table before you go rather than after, because two of these will not work the way you expect, and one of them cannot be fixed on the day.
+
+The thing that catches everyone is the difference between a service accepting the card and a service being available without one. Those are separate columns and they do not mean the same thing. A service can accept the card and still be perfectly available to someone paying out of pocket; another can accept it and have no private option at all.
+
+I would also say — do not rely on the photograph of your application confirmation, however official it looks. I watched them turn someone away at the desk for exactly that last month, and she had travelled across the city to get there.
+
+If it turns out you need to come back on a different day, tell me and I will drive you.
+
+Kishore`,
+    questions: [
+      {
+        slug: 'read-diag-clinic-q1',
+        microSkill: 'reading.information_matching',
+        prompt: 'Amara arrives on Wednesday the 14th without her card in hand. Which service can she use at no cost?',
+        options: [
+          { key: 'A', text: 'Mental health drop-in', rationale: 'Correct: it is free regardless of card, has same-day slots, and runs on Wednesdays between 1:00 and 7:00 p.m.' },
+          { key: 'B', text: 'General walk-in', rationale: 'Available that day, but without a card presented at the desk it costs $70.' },
+          { key: 'C', text: 'Prenatal check', rationale: 'Accepts the card but has no private option, so without a card it is not available at all.' },
+          { key: 'D', text: 'Minor injury', rationale: 'Same-day slots exist, but the fee without a card is $110.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'Three conditions have to hold together: no cost without a card, available that day, and available on a Wednesday. Applying them one at a time in the order that eliminates most rows is far faster than reading each row in full. Note that "Accepted" in the card column tells you nothing about what happens when you have no card — the fee column does.',
+        takeaway: 'In an eligibility table, decide which column answers the question before you start reading rows.',
+        level: 9,
+        difficulty: 8.5,
+      },
+      {
+        slug: 'read-diag-clinic-q2',
+        microSkill: 'reading.literal_detail',
+        prompt: 'What will happen if Amara presents a photograph of her card application?',
+        options: [
+          { key: 'A', text: 'It will not be accepted; only a physical card counts', rationale: 'Correct: the note states a photograph of a card is not accepted, and Kishore confirms he saw it refused.' },
+          { key: 'B', text: 'It will be accepted for services that list the card as “Accepted”', rationale: 'The note admits no exceptions by service.' },
+          { key: 'C', text: 'It will be accepted if she also pays a deposit', rationale: 'No deposit arrangement appears anywhere.' },
+          { key: 'D', text: 'It will be accepted only for the mental health drop-in', rationale: 'That service is free regardless, so no card question arises for it.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'The governing rule is in the note under the table, not in any row. Learners who read only the grid miss conditions that apply across every row — and notes are where those conditions almost always live.',
+        takeaway: 'Read the note under a table before the rows. It usually contains the rules that override them.',
+        level: 8,
+        difficulty: 7.4,
+      },
+      {
+        slug: 'read-diag-clinic-q3',
+        microSkill: 'reading.information_matching',
+        prompt: 'Amara wants the travel advice appointment for a trip in August. What does the table require?',
+        options: [
+          { key: 'A', text: 'Booking at least three weeks ahead, and paying $95 as it is not covered', rationale: 'Correct: no same-day slots, a three-week lead time, and no provincial coverage.' },
+          { key: 'B', text: 'A referral, since travel services are not walk-in', rationale: 'The referral column reads “No” for travel advice.' },
+          { key: 'C', text: 'Attending on a Tuesday or Thursday when imaging is available', rationale: 'Those days apply to X-ray for minor injuries, not to travel advice.' },
+          { key: 'D', text: 'Nothing beyond arriving before 4:00 p.m.', rationale: 'The 4:00 p.m. cut-off belongs to the general walk-in row.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'Every distractor here is a true fact taken from the wrong row, which is the characteristic error in table questions: the eye finds a plausible constraint and stops before checking which service it belongs to. Anchor on the row first, then read across.',
+        takeaway: 'In a table, fix the row before you read any condition. Most wrong answers are right facts from the wrong line.',
+        level: 9,
+        difficulty: 8.8,
+      },
+      {
+        slug: 'read-diag-clinic-q4',
+        microSkill: 'reading.inference',
+        prompt: 'Kishore says two things “will not work the way you expect”. Which two is he most likely referring to?',
+        options: [
+          { key: 'A', text: 'The travel advice, which cannot be same-day, and the fees, because her card is not issued', rationale: 'Correct: she plans to ask about injections on the day, which is not possible, and expects coverage she cannot yet claim.' },
+          { key: 'B', text: 'The ankle, which needs a referral, and the travel advice, which needs one too', rationale: 'Neither requires a referral; minor injury and travel advice both read “No”.' },
+          { key: 'C', text: 'The Wednesday hours and the 4:00 p.m. closing time for new arrivals', rationale: 'Both are real constraints, but neither conflicts with what she has said she plans to do.' },
+          { key: 'D', text: 'The X-ray availability and the prenatal check', rationale: 'She has not mentioned a prenatal appointment at all.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'The question requires holding the message and the table together: his warning is only meaningful against what Amara said she intends. She named the ankle and the injections, and she has no card yet — so the mismatches are the same-day assumption and the coverage assumption.',
+        takeaway: 'When a message points at a table, the answer usually lies where the writer’s stated plan collides with a listed condition.',
+        level: 10,
+        difficulty: 9.6,
+      },
+      {
+        slug: 'read-diag-clinic-q5',
+        microSkill: 'reading.literal_detail',
+        prompt: 'If Amara comes for her ankle and needs an X-ray, when should she attend?',
+        options: [
+          { key: 'A', text: 'Tuesday or Thursday, when imaging is on site', rationale: 'Correct: the minor injury row restricts X-ray to those two days.' },
+          { key: 'B', text: 'Any weekday before 4:00 p.m.', rationale: 'The 4:00 p.m. limit governs the general walk-in, and it does not make imaging available.' },
+          { key: 'C', text: 'Wednesday, when the clinic runs its drop-in hours', rationale: 'Wednesday afternoon hours belong to the mental health drop-in.' },
+          { key: 'D', text: 'Any day, with a referral arranged in advance', rationale: 'Minor injury needs no referral, and a referral would not change the imaging days.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'This is deliberately in tension with the Wednesday arrival in the message: the table does not bend to the plan. Table questions frequently test whether you will report what the grid says rather than what the surrounding text makes convenient.',
+        takeaway: 'The table is the authority. When the message and the grid disagree, answer from the grid.',
+        level: 8,
+        difficulty: 7.6,
+      },
+      {
+        slug: 'read-diag-clinic-q6',
+        microSkill: 'reading.scanning_speed',
+        prompt: 'Which service is the only one that cannot be obtained without a provincial card at any price?',
+        options: [
+          { key: 'A', text: 'Prenatal check', rationale: 'Correct: its fee column reads “Not offered” and the note says there is no private option.' },
+          { key: 'B', text: 'Physiotherapy', rationale: 'Only partially covered, but available for $130 without a card.' },
+          { key: 'C', text: 'Travel advice', rationale: 'Not covered by the card at all, and available to anyone for $95.' },
+          { key: 'D', text: 'Mental health drop-in', rationale: 'Free to everyone, so no card is needed.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'One column answers this entirely: scan "Fee without card" for a value that is not a price. "Not offered" is the only entry of that kind. Choosing the column that can contain the answer, then reading it top to bottom, is far quicker than evaluating six rows.',
+        takeaway: 'For “which one cannot” questions, scan the single column where an exception would have to appear.',
+        level: 8,
+        difficulty: 7.9,
+      },
+    ],
+  },
+
+  {
+    slug: 'read-diag-tenancy-notice',
+    skill: 'reading',
+    partType: 'reading.diagram',
+    title: 'Applying a notice period table',
+    level: 10,
+    topic: 'housing',
+    figure: {
+      kind: 'table',
+      caption: 'Notice periods by reason and tenancy type',
+      columns: ['Reason for ending tenancy', 'Fixed term', 'Month to month', 'Compensation owed', 'Tenant may dispute'],
+      rows: [
+        ['Landlord’s own use', 'End of term only', '3 months', '1 month’s rent', 'Yes, within 30 days'],
+        ['Major renovation', 'End of term only', '4 months', '1 month’s rent', 'Yes, within 30 days'],
+        ['Sale to a buyer who will occupy', 'End of term only', '3 months', '1 month’s rent', 'Yes, within 15 days'],
+        ['Unpaid rent', 'Any time', '10 days', 'None', 'Yes, within 5 days'],
+        ['Tenant ends tenancy', 'End of term only', '1 full rental month', 'None', 'Not applicable'],
+        ['Agreed early end', 'By agreement', 'By agreement', 'By agreement', 'Not applicable'],
+      ],
+      note: 'Notice must be given in writing and takes effect on the last day of a rental month unless the reason is unpaid rent. A dispute filed within the stated window suspends the notice until the hearing.',
+    },
+    body: `Ola,
+
+Here is the table I mentioned on the phone. Read the whole thing rather than the row that looks like your situation, because the row you need depends on a distinction you may not have made yet.
+
+Yours is month to month. You signed the twelve-month term in 2022 and it rolled over at the end of it, so the fixed-term column does not apply to you any more, whatever the original agreement says on its front page. People get this wrong constantly and then plan around a rule that stopped applying to them years ago.
+
+Two things you asked about. First, they told you verbally on the 2nd, and you wanted to know whether that started the clock. Second, they have mentioned both renovating and possibly selling. Those are not the same thing on this table: they carry different notice periods and, more importantly for you, different windows in which you can challenge the notice. Whichever reason they eventually put in writing is the one that governs, so it is worth knowing now which of the two you are dealing with.
+
+One more thing. Do not sign anything about an agreed early end until you have worked out what you would be entitled to without agreeing. An agreement can be a perfectly good outcome, but it should be a decision made against a number, not instead of one.
+
+Femi`,
+    questions: [
+      {
+        slug: 'read-diag-tenancy-q1',
+        microSkill: 'reading.information_matching',
+        prompt: 'If Ola’s landlord proceeds on the basis of a major renovation, what notice and compensation apply?',
+        options: [
+          { key: 'A', text: 'Four months’ notice and one month’s rent', rationale: 'Correct: the renovation row gives four months for a month-to-month tenancy, with one month’s rent in compensation.' },
+          { key: 'B', text: 'Three months’ notice and one month’s rent', rationale: 'Three months applies to the landlord’s own use and to a sale, not to renovation.' },
+          { key: 'C', text: 'Notice at the end of the term only, with no compensation', rationale: 'The end-of-term rule is the fixed-term column, which Femi says no longer applies to her.' },
+          { key: 'D', text: 'Four months’ notice with no compensation', rationale: 'The notice period is right but compensation of one month’s rent is owed.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'Two coordinates are needed — the reason (renovation) and the tenancy type (month to month) — and the message supplies the second. Distractor C is the value from the wrong column, which is the standard failure when a table has one column that does not apply to the reader.',
+        takeaway: 'Establish which column applies to you before reading any row. Half the wrong answers live in the column you should be ignoring.',
+        level: 9,
+        difficulty: 8.7,
+      },
+      {
+        slug: 'read-diag-tenancy-q2',
+        microSkill: 'reading.literal_detail',
+        prompt: 'What does the table say about notice given verbally on the 2nd?',
+        options: [
+          { key: 'A', text: 'It does not count, because notice must be in writing', rationale: 'Correct: the note requires written notice, so a verbal statement starts no clock.' },
+          { key: 'B', text: 'It counts from the 2nd, since the reason determines the period', rationale: 'The reason sets the length, not whether an invalid notice counts at all.' },
+          { key: 'C', text: 'It counts from the end of that rental month', rationale: 'That rule governs when valid notice takes effect, not whether verbal notice is valid.' },
+          { key: 'D', text: 'It counts only if the tenant does not dispute it within 30 days', rationale: 'The dispute window applies to notices that exist; this one does not.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'Distractors B, C and D are all real rules from the note and the table, applied to a notice that never became valid. Check whether a rule is triggered before applying it — an invalid notice does not reach the questions about timing or disputes.',
+        takeaway: 'Rules apply in order. Validity comes first; timing and remedies only matter once something is valid.',
+        level: 10,
+        difficulty: 9.3,
+      },
+      {
+        slug: 'read-diag-tenancy-q3',
+        microSkill: 'reading.information_matching',
+        prompt: 'Which reason gives a tenant the shortest window to dispute?',
+        options: [
+          { key: 'A', text: 'Unpaid rent, at five days', rationale: 'Correct: five days is the shortest dispute window in the table.' },
+          { key: 'B', text: 'Sale to a buyer who will occupy, at fifteen days', rationale: 'Shorter than thirty, but not the shortest.' },
+          { key: 'C', text: 'Major renovation, at thirty days', rationale: 'Thirty days is the longest window listed.' },
+          { key: 'D', text: 'Agreed early end, which has no window', rationale: '“Not applicable” means the question does not arise, which is not the same as a short window.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'D tests whether "not applicable" is read as a value. An absent category cannot be the smallest member of a comparison; only rows with an actual number are candidates. Scan the dispute column, discard the non-numeric entries, then compare.',
+        takeaway: '“Not applicable” is not zero. Exclude it before comparing, or it will look like an extreme.',
+        level: 9,
+        difficulty: 8.4,
+      },
+      {
+        slug: 'read-diag-tenancy-q4',
+        microSkill: 'reading.inference',
+        prompt: 'Why does Femi warn Ola not to agree to an early end before working out her position?',
+        options: [
+          { key: 'A', text: 'Agreeing replaces entitlements the table would otherwise guarantee', rationale: 'Correct: the agreed row makes notice and compensation matters of agreement, so fixed entitlements no longer apply.' },
+          { key: 'B', text: 'An agreed end cannot be disputed once the hearing is scheduled', rationale: 'Disputes are marked not applicable because there is no imposed notice, not because a hearing bars them.' },
+          { key: 'C', text: 'An agreed end requires four months’ notice regardless of reason', rationale: 'The row specifies “By agreement” in every column, including notice.' },
+          { key: 'D', text: 'She would lose the right to give her own notice later', rationale: 'Nothing in the table removes the tenant’s own notice option.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'The whole row reads "By agreement", which means every protection in the other rows becomes negotiable. The inference is about what a row does not contain — a defined entitlement — and that absence is the point Femi is making.',
+        takeaway: 'When a row replaces fixed values with “by agreement”, read it as the removal of a guarantee, not as flexibility.',
+        level: 11,
+        difficulty: 10.4,
+      },
+      {
+        slug: 'read-diag-tenancy-q5',
+        microSkill: 'reading.literal_detail',
+        prompt: 'What effect does filing a dispute within the stated window have?',
+        options: [
+          { key: 'A', text: 'The notice is suspended until the hearing takes place', rationale: 'Correct: the note states a dispute filed in time suspends the notice until the hearing.' },
+          { key: 'B', text: 'The notice is cancelled and the landlord must start again', rationale: 'It is suspended pending a hearing, not cancelled.' },
+          { key: 'C', text: 'The compensation owed to the tenant doubles', rationale: 'Compensation is unaffected by a dispute.' },
+          { key: 'D', text: 'The notice period is extended by the length of the window', rationale: 'No extension mechanism is described.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'Suspension and cancellation are different outcomes, and B is the reading that a hurried eye produces. Precise verbs in procedural text carry precise consequences; substituting a stronger one changes the answer.',
+        takeaway: 'In procedural text, note the exact verb — suspend, cancel, extend, void. They are not interchangeable.',
+        level: 9,
+        difficulty: 8.9,
+      },
+      {
+        slug: 'read-diag-tenancy-q6',
+        microSkill: 'reading.scanning_speed',
+        prompt: 'For which reasons is compensation of one month’s rent owed?',
+        options: [
+          { key: 'A', text: 'Landlord’s own use, major renovation, and sale to an occupying buyer', rationale: 'Correct: those three rows all show one month’s rent in the compensation column.' },
+          { key: 'B', text: 'Every reason except unpaid rent', rationale: 'Tenant-ended and agreed-end tenancies also carry no fixed compensation.' },
+          { key: 'C', text: 'Only where the tenancy is month to month', rationale: 'The compensation column does not vary by tenancy type.' },
+          { key: 'D', text: 'Landlord’s own use and major renovation only', rationale: 'The sale row also shows one month’s rent.' },
+        ],
+        answerKey: 'A',
+        explanation:
+          'One column, read top to bottom, answers this completely. D is the near-miss produced by stopping one row early — the commonest scanning error, and the reason it is worth reading to the bottom of a column even after you think you have the set.',
+        takeaway: 'When collecting every row that matches, read the whole column. Stopping early is what near-miss distractors are built from.',
+        level: 8,
+        difficulty: 7.7,
+      },
+    ],
+  },
 ];

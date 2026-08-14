@@ -212,4 +212,203 @@ export const writingTasks: SeedWritingTask[] = [
     modelNotes:
       'This topic invites cliché, and cliché is what caps it. The strongest responses avoid general claims about "young people today" and argue from mechanism: what a policy actually asks a teacher to enforce, and what happens when enforcement is inconsistent. Concrete examples of enforcement cost — a teacher spending five minutes of every lesson on it — do more than assertions about concentration. Responding to the other side means engaging with its best case (emergency contact, accessibility tools), not its weakest.',
   },
+
+  /* ---- Set two: added to widen topic coverage ---- */
+  {
+    slug: 'write-email-neighbour-parking',
+    taskType: 'writing.email',
+    title: 'A parking space that is not yours',
+    scenario:
+      'Your building assigns one parking space per unit. For the past six weeks a vehicle you do not recognise has been parked in yours several nights a week. You have left two notes on the windscreen and had no reply. You pay $60 a month for the space and have twice had to park on the street overnight. The building manager handles parking complaints.',
+    instructions:
+      'Write an email to the building manager. Set out what has happened and what you want done about it.',
+    requirements: [
+      'Give the space number, the period involved and how often it has happened',
+      'Say what you have already tried',
+      'State that you pay separately for the space',
+      'Ask for a specific remedy and a date by which you expect a reply',
+    ],
+    minWords: 150,
+    maxWords: 200,
+    timeLimitSeconds: 1620,
+    register: 'formal',
+    level: 9,
+    topic: 'housing',
+    modelNotes:
+      'The trap in this prompt is tone. The situation is genuinely annoying, and a response that lets the annoyance drive the sentences reads as a complaint rather than a request — which is weaker, not stronger. What raises the band is evidence and sequence: dates, the fee, the two notes, in that order, followed by one clear ask. Naming the remedy is essential; "please do something about this" leaves the manager to invent the solution and gives them room to do nothing. Asking for a reply by a date is firm without being a threat, and threats do not belong in a first email.',
+  },
+  {
+    slug: 'write-email-employer-reference',
+    taskType: 'writing.email',
+    title: 'Asking for a reference at short notice',
+    scenario:
+      'You are applying for a position that closes in five days and needs two references. A former supervisor you worked with for two years would be ideal, but you have not been in contact for eighteen months, and you left that job on short notice for family reasons.',
+    instructions:
+      'Write an email asking the former supervisor to act as a reference. Make it easy for them to say yes.',
+    requirements: [
+      'Re-establish who you are and when you worked together',
+      'Acknowledge both the gap in contact and the way you left',
+      'State the deadline and exactly what the reference involves',
+      'Give them a straightforward way to decline',
+    ],
+    minWords: 150,
+    maxWords: 200,
+    timeLimitSeconds: 1620,
+    register: 'formal',
+    level: 10,
+    topic: 'workplace',
+    modelNotes:
+      'Two hard things have to happen in one short message: an awkward history has to be acknowledged, and a favour has to be asked, without the acknowledgement swallowing the request. One sentence on the departure is enough — more reads as an apology and makes the reader uncomfortable. The move that marks a strong response is reducing the cost of yes: the deadline, the form, the length, and an offer to send a summary of the work you did together. Offering an easy no is counter-intuitive and it works; it signals that the relationship matters more than the reference.',
+  },
+  {
+    slug: 'write-email-clinic-billing',
+    taskType: 'writing.email',
+    title: 'A bill for a service you did not receive',
+    scenario:
+      'A clinic has billed you $180 for a specialist consultation. You attended the appointment, but the specialist was unavailable and you were seen by an assistant for four minutes and told to rebook. You did rebook, attended, and were billed a second time. You have paid neither invoice.',
+    instructions:
+      'Write an email to the clinic’s billing office setting out the problem and what you believe you owe.',
+    requirements: [
+      'Distinguish clearly between the two appointments',
+      'State what actually happened at the first one',
+      'Say what you are willing to pay and why',
+      'Ask for a corrected invoice',
+    ],
+    minWords: 150,
+    maxWords: 200,
+    timeLimitSeconds: 1620,
+    register: 'formal',
+    level: 10,
+    topic: 'health',
+    modelNotes:
+      'Precision is the whole task. Two appointments, two invoices, one service actually delivered — a reader who cannot follow which is which will not act. Ordinal markers and dates do that work; adjectives do not. Stating what you will pay is the move that converts a complaint into a proposal, and a proposal is far harder to file away. Note the register risk: the situation invites sarcasm about four minutes, and sarcasm in a billing dispute costs you the reader.',
+  },
+  {
+    slug: 'write-email-school-absence',
+    taskType: 'writing.email',
+    title: 'Explaining a long absence',
+    scenario:
+      'Your child will miss eleven school days because of a family obligation overseas. The school’s policy discourages absences of more than five days and asks parents to write in advance. Your child is in a year with standardised assessments, and one assessment falls inside the absence.',
+    instructions:
+      'Write an email to the class teacher. Explain the absence and set out how the work will be managed.',
+    requirements: [
+      'Give the exact dates and the reason at the level of detail a school needs',
+      'Acknowledge the policy rather than ignoring it',
+      'Address the assessment that falls inside the period',
+      'Propose how your child will keep up',
+    ],
+    minWords: 150,
+    maxWords: 200,
+    timeLimitSeconds: 1620,
+    register: 'formal',
+    level: 9,
+    topic: 'education',
+    modelNotes:
+      'Two failure modes sit at opposite ends: over-explaining the family circumstances, which is private and not what the school is deciding on, and under-explaining, which reads as casual about eleven days. One clear sentence on the reason is the calibration. The assessment is the part most responses forget, and it is the part the teacher cares about most — raising it before they do is what makes the email land well. A concrete plan beats a promise: naming what will be done each week is stronger than "we will make sure the work is completed".',
+  },
+  {
+    slug: 'write-survey-library-hours',
+    taskType: 'writing.survey',
+    title: 'Reallocating library hours',
+    scenario:
+      'Your public library has funding to stay open the same total number of hours but has asked residents how to distribute them. Option A: open two evenings a week until 9 p.m., closing earlier on weekends. Option B: open both weekend days from 9 a.m., closing at 6 p.m. on weekdays.',
+    instructions:
+      'Write to the library board explaining which option you support and why.',
+    requirements: [
+      'State your choice clearly',
+      'Give reasons based on who uses a library and when',
+      'Acknowledge what the other option offers',
+      'Say what would change your mind',
+    ],
+    choices: [
+      'Option A: late weekday evenings, shorter weekends',
+      'Option B: full weekend days, earlier weekday closing',
+    ],
+    minWords: 150,
+    maxWords: 200,
+    timeLimitSeconds: 1560,
+    register: 'formal',
+    level: 10,
+    topic: 'community',
+    modelNotes:
+      'The strongest responses reason from users rather than from preference: shift workers, students without quiet space at home, parents with young children, and job seekers using the computers all have different availability, and naming one or two of those groups grounds the argument in something checkable. Saying what would change your mind is the highest-value move here — it demonstrates that the position is held for reasons rather than by default, and almost no CLB 8 response does it.',
+  },
+  {
+    slug: 'write-survey-remote-training',
+    taskType: 'writing.survey',
+    title: 'How new staff should be trained',
+    scenario:
+      'Your employer is redesigning training for new hires. Option A: two weeks of full-time in-person training before starting the role. Option B: a shorter orientation followed by three months of weekly sessions while doing the job.',
+    instructions:
+      'Write to the training team explaining which model you support.',
+    requirements: [
+      'Commit to one model in your first paragraph',
+      'Argue from how people actually learn a job',
+      'Concede a real advantage of the other model',
+      'Suggest one adjustment that would improve the model you chose',
+    ],
+    choices: [
+      'Option A: two weeks up front, then start the role',
+      'Option B: short orientation, then weekly sessions on the job',
+    ],
+    minWords: 150,
+    maxWords: 200,
+    timeLimitSeconds: 1560,
+    register: 'formal',
+    level: 10,
+    topic: 'workplace',
+    modelNotes:
+      'This prompt rewards a mechanism rather than a preference: front-loaded training is forgotten because it arrives before the questions do; distributed training risks never being protected against the pressure of the actual job. A response that names one of those mechanisms is doing something a generic "flexibility is important" response is not. The suggested adjustment is where the top band shows itself — a specific, small, plausible change reads as someone who has thought past the choice they were handed.',
+  },
+  {
+    slug: 'write-survey-transit-fare',
+    taskType: 'writing.survey',
+    title: 'Free transit or better frequency',
+    scenario:
+      'Your city can spend a transit grant in one of two ways. Option A: remove fares on all buses for two years. Option B: keep fares and increase service frequency on the ten busiest routes.',
+    instructions:
+      'Write to the transit authority explaining which use of the grant you support.',
+    requirements: [
+      'State your position without hedging',
+      'Argue from who benefits and how much',
+      'Deal with the strongest argument against you',
+      'Distinguish between short-term and long-term effects',
+    ],
+    choices: ['Option A: two years of free fares', 'Option B: higher frequency on the busiest routes'],
+    minWords: 150,
+    maxWords: 200,
+    timeLimitSeconds: 1560,
+    register: 'formal',
+    level: 11,
+    topic: 'community',
+    modelNotes:
+      'The short-term/long-term distinction is the discriminating move: free fares end after two years and the system returns to what it was, while frequency changes travel behaviour durably — or, argued the other way, fare removal reaches people for whom cost is the binding constraint, and frequency does not help someone who cannot afford to board. Either argument is strong; a response that does not notice the time horizon at all is not. Engaging the strongest counter-argument rather than a weak one is what separates CLB 11 from CLB 9 here.',
+  },
+  {
+    slug: 'write-survey-workplace-notice',
+    taskType: 'writing.survey',
+    title: 'Two ways to handle sick days',
+    scenario:
+      'Your workplace is changing its sick-leave policy. Option A: unlimited sick days with a doctor’s note required after two consecutive days. Option B: twelve guaranteed paid sick days a year with no note required at any point.',
+    instructions:
+      'Write to the human resources team explaining which policy you support.',
+    requirements: [
+      'Choose one policy explicitly',
+      'Give reasons that consider both employees and the organisation',
+      'Acknowledge a genuine risk in the policy you chose',
+      'Avoid arguing only from your own circumstances',
+    ],
+    choices: [
+      'Option A: unlimited days, note required after two',
+      'Option B: twelve days, no note ever required',
+    ],
+    minWords: 150,
+    maxWords: 200,
+    timeLimitSeconds: 1560,
+    register: 'formal',
+    level: 10,
+    topic: 'workplace',
+    modelNotes:
+      'The interesting argument is about what each policy costs the person it is meant to protect: a note requirement puts a sick person in a waiting room and a clinic bill on top of an illness, while an unlimited allowance with no verification shifts pressure onto colleagues and onto managers who then police it informally. Naming that hidden cost — on either side — is the mark of a response that has thought rather than recited. Acknowledging a real risk in your own choice is required here, and hedging it into nothing ("of course, some may disagree") does not count.',
+  },
 ];
