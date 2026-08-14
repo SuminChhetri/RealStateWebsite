@@ -8,7 +8,7 @@
 
 .marketing-inner {
   width: 100%;
-  max-width: 64rem;
+  max-width: 68rem;
   margin: 0 auto;
   padding-inline: var(--s5);
 }
@@ -16,29 +16,184 @@
 .marketing-bar {
   border-bottom: 1px solid var(--rule);
   padding-block: var(--s4);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter: blur(10px);
 }
 
+/* ------------------------------------------------------------------ */
+/* Hero                                                                */
+/* ------------------------------------------------------------------ */
+
+/* The claim on one side, the thing the claim is about on the other. A
+   product whose distinguishing feature is an uncertainty band should show
+   one rather than describe it. */
 .marketing-hero {
-  padding-block: var(--s9) var(--s8);
+  padding-block: var(--s8) var(--s7);
+  display: grid;
+  gap: var(--s7);
+  grid-template-columns: 1fr;
+  align-items: center;
+}
+
+@media (min-width: 62rem) {
+  .marketing-hero {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: var(--s8);
+    padding-block: var(--s9) var(--s8);
+  }
+}
+
+.marketing-hero-copy {
   display: flex;
   flex-direction: column;
   gap: var(--s5);
-  max-width: 52rem;
 }
 
 .marketing-headline {
-  font-size: clamp(2rem, 1.4rem + 3vw, 3.25rem);
-  line-height: 1.08;
-  letter-spacing: -0.02em;
-  max-width: 22ch;
+  font-size: clamp(2rem, 1.3rem + 3.1vw, 3.4rem);
+  line-height: 1.06;
+  letter-spacing: -0.022em;
+  max-width: 18ch;
+  text-wrap: balance;
 }
 
 .marketing-lede {
   font-family: var(--font-reading);
-  font-size: 1.15rem;
-  line-height: 1.65;
+  font-size: 1.125rem;
+  line-height: 1.66;
   color: var(--ink-secondary);
-  max-width: 40rem;
+  max-width: 34rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* The specimen card                                                   */
+/* ------------------------------------------------------------------ */
+
+.specimen {
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--paper-raised);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 32px -18px rgba(0, 0, 0, 0.28);
+  padding: var(--s5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+}
+
+.specimen-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding-bottom: var(--s3);
+  border-bottom: 1px solid var(--rule-faint);
+}
+
+.specimen-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.specimen-row-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s2);
+}
+
+.specimen-name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* The band itself: a track, a shaded interval, a point estimate, and the
+   target. The interval is the whole argument of the product. */
+.specimen-track {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--paper-sunken);
+  border: 1px solid var(--rule-faint);
+}
+
+.specimen-band {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  border-radius: 999px;
+  background: var(--skill, var(--accent));
+  opacity: 0.32;
+}
+
+.specimen-point {
+  position: absolute;
+  top: -4px;
+  width: 3px;
+  height: 18px;
+  border-radius: 2px;
+  background: var(--skill, var(--accent));
+}
+
+.specimen-target {
+  position: absolute;
+  top: -7px;
+  bottom: -7px;
+  width: 0;
+  border-left: 1px dashed var(--ink-tertiary);
+}
+
+.specimen-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.6875rem;
+  color: var(--ink-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.specimen-note {
+  border-top: 1px solid var(--rule-faint);
+  padding-top: var(--s3);
+}
+
+/* ------------------------------------------------------------------ */
+/* Figures strip                                                       */
+/* ------------------------------------------------------------------ */
+
+.marketing-figures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s4) var(--s5);
+  border-top: 1px solid var(--rule-faint);
+  border-bottom: 1px solid var(--rule-faint);
+  padding-block: var(--s5);
+}
+
+@media (min-width: 48rem) {
+  .marketing-figures {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.marketing-figure {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.marketing-figure b {
+  font-family: var(--font-display, var(--font-body));
+  font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
 }
 
 .marketing-section {
@@ -46,28 +201,63 @@
   border-top: 1px solid var(--rule-faint);
 }
 
+/* ------------------------------------------------------------------ */
+/* The loop                                                            */
+/* ------------------------------------------------------------------ */
+
 .marketing-loop {
   list-style: none;
   padding: 0;
   margin: 0;
   display: grid;
-  gap: var(--s5);
-  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--s5) var(--s6);
+  /* Six steps. Two rows of three reads as a cycle; a row of four followed by
+     an orphaned pair reads as an accident. */
+  grid-template-columns: 1fr;
   counter-reset: loop;
 }
 
+@media (min-width: 40rem) {
+  .marketing-loop {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 62rem) {
+  .marketing-loop {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 .marketing-loop li {
-  border-top: 2px solid var(--accent);
+  counter-increment: loop;
+  border-top: 2px solid var(--rule);
   padding-top: var(--s3);
   display: flex;
   flex-direction: column;
   gap: var(--s2);
+  transition: border-color 0.15s ease;
 }
 
-/* Four pillars, balanced two-by-two rather than left with an orphan. */
+.marketing-loop li:hover {
+  border-top-color: var(--accent);
+}
+
+/* The step number is the ordering cue; the label carries the meaning. */
+.marketing-loop li .eyebrow::before {
+  content: counter(loop, decimal-leading-zero);
+  color: var(--accent);
+  margin-right: var(--s2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------------ */
+/* Pillars                                                             */
+/* ------------------------------------------------------------------ */
+
 .marketing-pillars {
   display: grid;
-  gap: var(--s6) var(--s7);
+  gap: var(--s5);
   grid-template-columns: 1fr;
 }
 
@@ -77,12 +267,50 @@
   }
 }
 
+.marketing-pillar {
+  border: 1px solid var(--rule-faint);
+  border-radius: var(--r-md);
+  background: var(--paper-raised);
+  padding: var(--s5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.marketing-pillar:hover {
+  border-color: var(--rule);
+  transform: translateY(-1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketing-pillar:hover {
+    transform: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Close                                                               */
+/* ------------------------------------------------------------------ */
+
 .marketing-cta {
   display: flex;
   flex-direction: column;
   gap: var(--s4);
   align-items: flex-start;
   padding-block: var(--s8);
+}
+
+.marketing-cta-panel {
+  width: 100%;
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--paper-raised);
+  padding: var(--s7) var(--s6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+  align-items: flex-start;
 }
 
 .marketing-foot {

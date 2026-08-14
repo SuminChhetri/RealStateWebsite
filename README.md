@@ -190,9 +190,9 @@ addition, not a rewrite.
 ## Content
 
 Everything in `lib/content/seed/` is original, written for this product:
-14 stimuli with 103 items, 8 writing tasks, 16 speaking tasks, 16 lessons, 86
-vocabulary entries and 12 grammar points. Nothing is reproduced from a published
-question bank, course or other copyrighted source.
+20 stimuli with 139 items, 16 writing tasks, 32 speaking tasks (four per task
+type), 16 lessons, 86 vocabulary entries and 12 grammar points. Nothing is
+reproduced from a published question bank, course or other copyrighted source.
 
 Content passes through a review pipeline before it reaches a learner —
 authored → automated checks → expert review → approved → published — and the
@@ -205,6 +205,34 @@ consistent with the stated level, and micro-skill coverage across a set.
 
 Option order is shuffled per attempt from a seed derived from the attempt id, so
 position bias is removed while a reloaded attempt renders identically.
+
+### Practice that does not run out
+
+An authored corpus is finite, and a learner working seriously would exhaust it
+in a fortnight and spend the rest of their preparation answering items they
+remember. So `lib/content/generate/` builds more, for the micro-skills where
+correctness is *decidable*:
+
+| Generator | Source | Why the key is defensible |
+| --- | --- | --- |
+| Schedules and fee tables | Structured rows the generator itself produces | Each question is a query over that data — cheapest on a day, only session after a cutoff, the total of two fees. The answer is computed. |
+| Vocabulary in context | The curated lexicon | The headword is blanked from the example sentence written for it; distractors are same-part-of-speech entries, and each rationale is that entry's own authored definition. |
+| Usage | The grammar points' wrong/right/why triples | The key is decided by the rule; the feedback is the explanation already written for it. |
+
+There is no language model in this path. Generated items are marked `generated`
+in the database, marked in the interface, drawn on only after authored items,
+and weighted at 0.65 when the ability estimate updates — their difficulty is
+assigned from source data rather than measured against a population, and
+`updateBelief` takes that weight explicitly rather than hiding it.
+
+They pass the same validator as authored content and publish only if they pass.
+A generator that cannot build a defensible item from its sample returns null
+rather than lowering the standard. Standalone generated items are excluded from
+diagnostic, section and mock modes, so a simulation still follows the published
+blueprint exactly.
+
+Listening has no generator. A script assembled from templates would sound like
+one, and the honest answer there is "not yet".
 
 ---
 

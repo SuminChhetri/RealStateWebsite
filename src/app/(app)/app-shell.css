@@ -114,11 +114,12 @@
 }
 
 .app-nav-link {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--s2);
-  padding: 0.3rem var(--s2);
+  padding: 0.36rem var(--s2) 0.36rem calc(var(--s2) + 3px);
   border-radius: var(--r-sm);
   font-size: 0.875rem;
   color: var(--ink-secondary);
@@ -126,21 +127,55 @@
   transition: background 100ms ease, color 100ms ease;
 }
 
+.app-nav-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+/* The skill dot, in the same palette as every skill mark in the product. */
+.app-nav-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--skill, var(--ink-tertiary));
+  flex: none;
+}
+
 .app-nav-link:hover {
   background: var(--neutral-soft);
   color: var(--ink);
 }
 
+/* Active state is a rail plus a fill rather than a fill alone: the rail
+   survives at a glance and in high-contrast modes where a tinted background
+   may not render at all. */
 .app-nav-link[aria-current='page'] {
   color: var(--ink);
   font-weight: 600;
   background: var(--accent-soft);
 }
 
+.app-nav-link[aria-current='page']::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 15%;
+  bottom: 15%;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: var(--skill, var(--accent));
+}
+
 .app-nav-count {
   font-size: 0.6875rem;
-  color: var(--accent);
   font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 999px;
+  padding: 0.05rem 0.4rem;
+  flex: none;
 }
 
 .app-nav-foot {

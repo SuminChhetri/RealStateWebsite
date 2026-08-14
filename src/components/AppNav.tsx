@@ -9,7 +9,10 @@ import { useState } from 'react';
  * type: today's work, the skills, the record of what they got wrong, and the
  * long view. Everything else lives one level down.
  */
-const GROUPS: { label: string; items: { href: string; label: string; badge?: 'reviews' | 'mistakes' }[] }[] = [
+const GROUPS: {
+  label: string;
+  items: { href: string; label: string; badge?: 'reviews' | 'mistakes'; skill?: string }[];
+}[] = [
   {
     label: 'Today',
     items: [
@@ -21,10 +24,12 @@ const GROUPS: { label: string; items: { href: string; label: string; badge?: 're
   {
     label: 'Practice',
     items: [
-      { href: '/practice/reading', label: 'Reading' },
-      { href: '/practice/listening', label: 'Listening' },
-      { href: '/writing', label: 'Writing' },
-      { href: '/speaking', label: 'Speaking' },
+      // The four skills carry their colour here as well, so the mark beside a
+      // heading anywhere in the app means the same thing as the mark in the nav.
+      { href: '/practice/reading', label: 'Reading', skill: 'reading' },
+      { href: '/practice/listening', label: 'Listening', skill: 'listening' },
+      { href: '/writing', label: 'Writing', skill: 'writing' },
+      { href: '/speaking', label: 'Speaking', skill: 'speaking' },
       { href: '/mock-tests', label: 'Mock tests' },
     ],
   },
@@ -96,8 +101,12 @@ export function AppNav({
                         href={item.href}
                         aria-current={isActive(item.href) ? 'page' : undefined}
                         className="app-nav-link"
+                        data-skill={item.skill}
                       >
-                        <span>{item.label}</span>
+                        <span className="app-nav-label">
+                          {item.skill ? <span className="app-nav-dot" aria-hidden /> : null}
+                          {item.label}
+                        </span>
                         {item.badge && count > 0 ? <span className="app-nav-count numeric">{count}</span> : null}
                       </Link>
                     </li>
