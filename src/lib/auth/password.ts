@@ -45,6 +45,26 @@ export async function verifyPassword(password: string, stored: string): Promise<
   }
 }
 
+/**
+ * A hash to verify against when no account exists, so a sign-in attempt on an
+ * unknown address costs the same time as one on a real address.
+ *
+ * It is derived at runtime from random bytes rather than written as a literal.
+ * A hardcoded placeholder is easy to get subtly wrong — one with a shorter
+ * digest than `KEYLEN` makes the decoy verification cheaper than a real one and
+ * reintroduces exactly the timing signal it exists to remove. Deriving it here
+ * keeps the parameters identical to real hashes by construction, including if
+ * they are tuned later.
+ *
+ * Computed once, lazily, so it costs nothing until the first sign-in attempt.
+ */
+let decoy: Promise<string> | null = null;
+
+export function decoyHash(): Promise<string> {
+  decoy ??= hashPassword(randomBytes(32).toString('base64url'));
+  return decoy;
+}
+
 /** Minimum policy enforced at the API boundary, not in the browser. */
 export function passwordProblems(password: string): string[] {
   const problems: string[] = [];

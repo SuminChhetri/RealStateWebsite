@@ -479,3 +479,43 @@ test('content: the corpus covers every part type in the blueprint', () => {
     assert.ok(covered.has(partSlug), `no published content for ${partSlug}`);
   }
 });
+
+/* ------------------------------------------------------------------ */
+/* Authentication primitives                                           */
+/* ------------------------------------------------------------------ */
+
+test('password: hashes verify, wrong passwords do not, and salts differ', async () => {
+  const { hashPassword, verifyPassword } = await import('../src/lib/auth/password');
+  const hash = await hashPassword('a-real-passphrase-1');
+  assert.ok(await verifyPassword('a-real-passphrase-1', hash));
+  assert.equal(await verifyPassword('a-real-passphrase-2', hash), false);
+  assert.equal(await verifyPassword('a-real-passphrase-1', 'not-a-hash'), false);
+
+  const again = await hashPassword('a-real-passphrase-1');
+  assert.notEqual(hash, again, 'each hash must carry its own salt');
+});
+
+test('password: the decoy hash is shaped exactly like a real one', async () => {
+  const { decoyHash, hashPassword } = await import('../src/lib/auth/password');
+  // The decoy exists so an unknown address costs the same time as a real one.
+  // If its parameters or digest length drift from a real hash, verification
+  // against it becomes cheaper and the timing signal returns.
+  const decoy = (await decoyHash()).split('$');
+  const real = (await hashPassword('any-passphrase-at-all')).split('$');
+
+  assert.deepEqual(decoy.slice(0, 4), real.slice(0, 4), 'algorithm and cost parameters must match');
+  assert.equal(
+    Buffer.from(decoy[5], 'base64').length,
+    Buffer.from(real[5], 'base64').length,
+    'digest length must match, or the decoy verification is cheaper',
+  );
+  assert.equal(Buffer.from(decoy[4], 'base64').length, Buffer.from(real[4], 'base64').length);
+});
+
+test('password: the weak-password check rejects and accepts as documented', async () => {
+  const { passwordProblems } = await import('../src/lib/auth/password');
+  assert.ok(passwordProblems('short1!').length);
+  assert.ok(passwordProblems('alllettersonly').some((p) => p.includes('number')));
+  assert.ok(passwordProblems('my-password-123').some((p) => p.includes('guess')));
+  assert.equal(passwordProblems('quiet-harbour-49').length, 0);
+});

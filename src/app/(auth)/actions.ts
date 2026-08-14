@@ -7,7 +7,7 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { db } from '@/lib/db/client';
 import { memberships, users } from '@/lib/db/schema';
-import { hashPassword, passwordProblems, verifyPassword } from '@/lib/auth/password';
+import { decoyHash, hashPassword, passwordProblems, verifyPassword } from '@/lib/auth/password';
 import { createSession, destroySession, registerUser } from '@/lib/auth/session';
 import { audit, rateLimit } from '@/lib/auth/guard';
 import { ensureProfile } from '@/lib/learner/profile';
@@ -25,10 +25,6 @@ export interface AuthState {
   error?: string;
   fieldErrors?: Record<string, string>;
 }
-
-/** Placeholder hash used so a missing account costs the same time as a wrong password. */
-const DUMMY_HASH =
-  'scrypt$32768$8$1$c2FsdHNhbHRzYWx0c2FsdA==$aGFzaGhhc2hoYXNoaGFzaGhhc2hoYXNoaGFzaGhhc2g=';
 
 async function clientKey(prefix: string, identifier: string): Promise<string> {
   const store = await headers();
@@ -70,7 +66,9 @@ export async function signIn(_state: AuthState, formData: FormData): Promise<Aut
   }
 
   const user = db.select().from(users).where(eq(users.email, parsed.data.email)).get();
-  const ok = await verifyPassword(parsed.data.password, user?.passwordHash ?? DUMMY_HASH);
+  // Verify against a decoy when the address is unknown, so both paths do the
+  // same work and the response time does not disclose whether an account exists.
+  const ok = await verifyPassword(parsed.data.password, user?.passwordHash ?? (await decoyHash()));
 
   if (!user || !ok) {
     audit({ action: 'auth.sign_in.failed', metadata: { email: parsed.data.email } });

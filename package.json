@@ -2,7 +2,7 @@
   "name": "meridian-celpip",
   "version": "0.1.0",
   "private": true,
-  "description": "Meridian — a CELPIP preparation platform that trains learners systematically toward CLB 12.",
+  "description": "Meridian \u2014 a CELPIP preparation platform that trains learners systematically toward CLB 12.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -13,7 +13,7 @@
     "db:seed": "tsx src/lib/db/seed.ts",
     "db:reset": "rm -f data/meridian.db data/meridian.db-shm data/meridian.db-wal && npm run db:push && npm run db:seed",
     "setup": "npm run db:reset",
-    "test": "node --test --import tsx tests/*.test.ts"
+    "test": "node --test --conditions=react-server --import tsx tests/*.test.ts"
   },
   "dependencies": {
     "better-sqlite3": "^11.10.0",
