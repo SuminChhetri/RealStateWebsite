@@ -24,6 +24,7 @@ export interface RunnerQuestion {
   microSkill: string;
   targetSeconds: number;
   stimulusId: string | null;
+  origin: 'authored' | 'generated';
 }
 
 export interface RunnerStimulus {
@@ -358,7 +359,17 @@ export function Runner({
           <div className="stack stack-5">
             <div className="stack stack-3">
               <div className="row-between">
-                <p className="eyebrow">Question {index + 1}</p>
+                <div className="row-tight">
+                  <p className="eyebrow">Question {index + 1}</p>
+                  {question.origin === 'generated' ? (
+                    <span
+                      className="badge badge-quiet"
+                      title="Built by the item generator from structured data rather than written by an author. The key is computed, not authored — see the explanation after you submit."
+                    >
+                      Generated
+                    </span>
+                  ) : null}
+                </div>
                 <button
                   type="button"
                   className="btn btn-ghost btn-sm"

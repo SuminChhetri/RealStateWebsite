@@ -42,6 +42,8 @@ export interface DeliveredQuestion {
   targetSeconds: number;
   orderIndex: number;
   stimulusId: string | null;
+  /** Shown to the learner. Nothing about provenance is hidden from them. */
+  origin: 'authored' | 'generated';
 }
 
 export interface DeliveredStimulus {
@@ -125,12 +127,29 @@ interface CandidateRow {
   targetSeconds: number;
   stimulusId: string | null;
   orderInSet: number;
+  origin: 'authored' | 'generated';
 }
 
-async function candidatePool(skill: Skill | 'mixed', partType?: string): Promise<CandidateRow[]> {
+/**
+ * Part types that exist for drilling and are not part of any published section.
+ * A simulation has to follow the real blueprint, so these are excluded from it.
+ */
+const DRILL_ONLY_PART_TYPES = ['reading.drill'];
+
+/** Modes that must reproduce the published test structure exactly. */
+const BLUEPRINT_MODES = new Set(['section', 'mock', 'diagnostic']);
+
+async function candidatePool(
+  skill: Skill | 'mixed',
+  partType?: string,
+  mode?: string,
+): Promise<CandidateRow[]> {
   const conditions = [eq(questions.status, 'published')];
   if (skill !== 'mixed') conditions.push(eq(questions.skill, skill as 'reading' | 'listening'));
   if (partType) conditions.push(eq(questions.partType, partType));
+  if (mode && BLUEPRINT_MODES.has(mode)) {
+    conditions.push(notInArray(questions.partType, DRILL_ONLY_PART_TYPES));
+  }
 
   return (await db
     .select({
@@ -147,6 +166,7 @@ async function candidatePool(skill: Skill | 'mixed', partType?: string): Promise
       targetSeconds: questions.targetSeconds,
       stimulusId: questions.stimulusId,
       orderInSet: questions.orderInSet,
+      origin: questions.origin,
     })
     .from(questions)
     .where(and(...conditions))) as CandidateRow[];
@@ -158,7 +178,7 @@ async function candidatePool(skill: Skill | 'mixed', partType?: string): Promise
  * only one of its questions.
  */
 export async function selectQuestions(request: SelectionRequest): Promise<CandidateRow[]> {
-  const pool = await candidatePool(request.skill, request.partType);
+  const pool = await candidatePool(request.skill, request.partType, request.mode);
   if (!pool.length) return [];
 
   const excluded = new Set(request.excludeQuestionIds ?? []);
@@ -172,7 +192,12 @@ export async function selectQuestions(request: SelectionRequest): Promise<Candid
     const fit = expectedInformation(ideal, row.difficulty) / expectedInformation(ideal, ideal);
     const focusBoost = focus.size ? (focus.has(row.microSkill) ? 1.9 : 0.35) : 1;
     const freshness = excluded.has(row.id) ? 0.12 : 1;
-    return { row, score: fit * focusBoost * freshness };
+    // Authored items are preferred where both would serve equally: they are
+    // reviewed by a person and better calibrated. Generated items are not
+    // penalised out of use — they exist so the bank never runs dry — but they
+    // are drawn on after the authored ones, not instead of them.
+    const provenance = row.origin === 'generated' ? 0.82 : 1;
+    return { row, score: fit * focusBoost * freshness * provenance };
   });
 
   scored.sort((a, b) => b.score - a.score);
@@ -285,6 +310,7 @@ export async function hydrateAttempt(
       level: questions.level,
       targetSeconds: questions.targetSeconds,
       stimulusId: questions.stimulusId,
+      origin: questions.origin,
     })
     .from(attemptItems)
     .innerJoin(questions, eq(questions.id, attemptItems.questionId))
@@ -329,6 +355,7 @@ export async function hydrateAttempt(
         targetSeconds: r.targetSeconds,
         orderIndex: r.orderIndex,
         stimulusId: r.stimulusId,
+        origin: r.origin,
       };
     }),
   };

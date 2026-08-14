@@ -569,6 +569,16 @@ textarea {
 .badge-caution { background: var(--caution-soft); color: var(--caution); }
 .badge-critical { background: var(--critical-soft); color: var(--critical); }
 
+/* Provenance and other metadata the learner should be able to see but never
+   has to read. Outlined rather than filled so it recedes beside a status. */
+.badge-quiet {
+  background: transparent;
+  border: 1px solid var(--rule);
+  color: var(--ink-tertiary);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
 /* ------------------------------------------------------------------ */
 /* Reading surfaces                                                    */
 /* ------------------------------------------------------------------ */

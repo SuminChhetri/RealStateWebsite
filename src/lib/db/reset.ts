@@ -8,13 +8,16 @@
  */
 import { config } from 'dotenv';
 import postgres from 'postgres';
+import { redact, requireDatabaseUrl, sslMode, toDirectUrl } from './url';
 
 config({ path: '.env' });
 
 async function main(): Promise<void> {
-  const url = process.env.DIRECT_URL ?? process.env.DATABASE_URL;
-  if (!url) {
-    console.error('Set DATABASE_URL in .env. See .env.example.');
+  let url: string;
+  try {
+    url = toDirectUrl(requireDatabaseUrl());
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : error);
     process.exit(1);
   }
 
@@ -25,12 +28,12 @@ async function main(): Promise<void> {
 
   if (process.env.MERIDIAN_CONFIRM_RESET !== 'yes') {
     console.error('This drops every table in the public schema of:');
-    console.error(`  ${url.replace(/:\/\/[^@]*@/, '://***@')}`);
+    console.error(`  ${redact(url)}`);
     console.error('\nRe-run with MERIDIAN_CONFIRM_RESET=yes if that is what you intend.');
     process.exit(1);
   }
 
-  const sql = postgres(url, { ssl: url.includes('supabase.') ? 'require' : false, max: 1 });
+  const sql = postgres(url, { ssl: sslMode(url), max: 1 });
   try {
     const tables = await sql<{ tablename: string }[]>`
       select tablename from pg_tables where schemaname = 'public'

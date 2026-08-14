@@ -36,14 +36,30 @@ export interface AbilityBelief {
  * One Bayesian update. `difficulty` is the item's calibrated level on the CLB
  * scale; `correct` is the observation. Returns the posterior belief.
  */
-export function updateBelief(prior: AbilityBelief, difficulty: number, correct: boolean): AbilityBelief {
+/**
+ * `weight` scales how much this single observation is allowed to move the
+ * belief, and it is the statistically honest place to express "this item is
+ * real evidence, but weaker evidence".
+ *
+ * A generated item passes at less than one because its difficulty is assigned
+ * from source data rather than measured against a population of test-takers.
+ * Down-weighting both the information and the score contribution is equivalent
+ * to observing a fraction of a response — which is exactly the claim being
+ * made. At `weight = 1` this is the plain Rasch update, unchanged.
+ */
+export function updateBelief(
+  prior: AbilityBelief,
+  difficulty: number,
+  correct: boolean,
+  weight = 1,
+): AbilityBelief {
   const p = probabilityCorrect(prior.theta, difficulty);
-  const information = (p * (1 - p)) / SCALE ** 2;
+  const information = (weight * p * (1 - p)) / SCALE ** 2;
   const priorPrecision = 1 / prior.se ** 2;
   const posteriorPrecision = priorPrecision + information;
   const posteriorSe = Math.sqrt(1 / posteriorPrecision);
   // Score function of the Rasch likelihood, scaled by posterior variance.
-  const gradient = ((correct ? 1 : 0) - p) / SCALE;
+  const gradient = (weight * ((correct ? 1 : 0) - p)) / SCALE;
   const theta = prior.theta + gradient / posteriorPrecision;
   return {
     theta: clamp(theta, 3, 12.5),

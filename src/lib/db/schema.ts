@@ -176,6 +176,17 @@ export const stimuli = pgTable(
     /** Flesch-Kincaid grade computed at seed time; surfaced in the content console. */
     readability: doublePrecision('readability'),
     topic: text('topic').notNull().default('general'),
+    /**
+     * How this stimulus came to exist. `authored` is hand-written and reviewed;
+     * `generated` is composed by `lib/content/generate` from structured data.
+     * Recorded rather than hidden: a learner is told which they are looking at,
+     * and calibration treats them differently.
+     */
+    origin: text('origin', { enum: ['authored', 'generated'] })
+      .notNull()
+      .default('authored'),
+    /** For generated rows, the seed that reproduces this exactly. */
+    generatorSeed: text('generator_seed'),
     status: text('status', {
       enum: ['draft', 'in_review', 'approved', 'published', 'retired'],
     })
@@ -218,6 +229,11 @@ export const questions = pgTable(
     discrimination: doublePrecision('discrimination'),
     targetSeconds: integer('target_seconds').notNull().default(60),
     orderInSet: integer('order_in_set').notNull().default(0),
+    /** See `stimuli.origin`. Surfaced to the learner on every generated item. */
+    origin: text('origin', { enum: ['authored', 'generated'] })
+      .notNull()
+      .default('authored'),
+    generatorSeed: text('generator_seed'),
     status: text('status', {
       enum: ['draft', 'in_review', 'approved', 'published', 'retired'],
     })

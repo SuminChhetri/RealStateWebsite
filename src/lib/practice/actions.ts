@@ -8,6 +8,7 @@ import { attempts, learnerProfiles, reviewCards } from '@/lib/db/schema';
 import { requireSession, audit, rateLimit } from '@/lib/auth/guard';
 import { getProfile } from '@/lib/learner/profile';
 import { createAttempt, recentlySeen } from './delivery';
+import { replenish } from './replenish';
 import { submitAttempt, type SubmittedResponse } from './submit';
 import { targetDifficulty } from '@/lib/engines/ability';
 import type { Skill } from '@/lib/content/taxonomy';
@@ -43,6 +44,13 @@ export async function startPractice(formData: FormData) {
 
   const limit = await rateLimit(`practice:${session.userId}`, 60, 3600);
   if (!limit.ok) redirect('/home?error=rate-limited');
+
+  // Top the bank up before selecting, not after, so a learner who has worked
+  // through most of the corpus still gets a set of unseen items rather than a
+  // set of remembered ones. Normally a no-op.
+  if (parsed.data.skill !== 'mixed') {
+    await replenish(session.userId, session.orgId, parsed.data.skill);
+  }
 
   const profile = await getProfile(session.userId, session.orgId);
   const abilityByMicroSkill: Record<string, number> = {};

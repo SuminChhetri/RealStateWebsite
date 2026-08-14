@@ -6,6 +6,7 @@ import { db } from '@/lib/db/client';
 import { attempts, speakingSubmissions, writingSubmissions } from '@/lib/db/schema';
 import { getProfile } from '@/lib/learner/profile';
 import { startPractice } from '@/lib/practice/actions';
+import { poolStatus } from '@/lib/practice/replenish';
 import { SECTION_BLUEPRINT, SKILL_LABELS, TEST_SECTION_ORDER } from '@/lib/content/taxonomy';
 
 export const metadata: Metadata = { title: 'Mock tests' };
@@ -61,6 +62,11 @@ export default async function MockTestsPage() {
       ),
     )
     .limit(1))[0]?.count ?? 0;
+
+  const [readingPool, listeningPool] = await Promise.all([
+    poolStatus(session.userId, session.orgId, 'reading'),
+    poolStatus(session.userId, session.orgId, 'listening'),
+  ]);
 
   const done = {
     listening: recentSections.some((s) => s.skill === 'listening'),
@@ -153,6 +159,55 @@ export default async function MockTestsPage() {
             );
           })}
         </ol>
+      </section>
+
+      {/* --- What is actually left to take --- */}
+      <section style={{ marginBottom: 'var(--s7)' }}>
+        <div className="section-head">
+          <h2 style={{ fontSize: '1.05rem', fontFamily: 'var(--font-body)', fontWeight: 600 }}>
+            How much material is left
+          </h2>
+          <p className="tiny faint">Take as many as you like — this is what you would be taking them from</p>
+        </div>
+
+        <div className="grid grid-2">
+          {([
+            ['reading', readingPool] as const,
+            ['listening', listeningPool] as const,
+          ]).map(([skill, pool]) => (
+            <div key={skill} className="panel-quiet" data-skill={skill}>
+              <div className="stack stack-3">
+                <h3 className="row-tight" style={{ fontSize: '0.9375rem', fontFamily: 'var(--font-body)', fontWeight: 600 }}>
+                  <span className="skill-mark" aria-hidden />
+                  {SKILL_LABELS[skill]}
+                </h3>
+                <p className="small">
+                  <strong className="numeric">{pool.unseen}</strong> item
+                  {pool.unseen === 1 ? '' : 's'} you have not seen, of{' '}
+                  <span className="numeric">{pool.total}</span>.
+                </p>
+                {skill === 'reading' ? (
+                  <p className="tiny faint">
+                    {pool.authored} written by an author, {pool.generated} built by the item generator. More
+                    generated items are made automatically before you can run out, so reading practice does not
+                    end.
+                  </p>
+                ) : (
+                  <p className="tiny faint">
+                    All {pool.authored} authored. Listening has no generator: a script assembled from templates
+                    would sound like one, and a bad recording teaches the wrong thing.
+                  </p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <p className="tiny faint" style={{ marginTop: 'var(--s3)' }}>
+          Generated items are marked as such wherever they appear. They come from structured data — timetables,
+          the vocabulary corpus, the grammar rules — so their answers are computed rather than written, and they
+          count slightly less toward your estimate than a reviewed authored item does.
+        </p>
       </section>
 
       <section>

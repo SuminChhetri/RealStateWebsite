@@ -13,6 +13,7 @@ import {
 } from '../db/schema';
 import { newId } from '../ids';
 import { aggregateSkill, updateBelief, type MicroEstimate } from '../engines/ability';
+import { GENERATED_ITEM_WEIGHT } from '../content/generate';
 import { gradeFromOutcome, newCard, nowSeconds, review } from '../engines/srs';
 import { tryMicroSkill, type Domain } from '../content/taxonomy';
 
@@ -113,6 +114,7 @@ export async function submitAttempt(input: {
       difficulty: questions.difficulty,
       level: questions.level,
       targetSeconds: questions.targetSeconds,
+      origin: questions.origin,
       stimulusTitle: stimuli.title,
     })
     .from(attemptItems)
@@ -170,7 +172,15 @@ export async function submitAttempt(input: {
       const prior = existing
         ? { theta: existing.theta, se: existing.se }
         : { theta: 7, se: 2.5 };
-      const posterior = updateBelief(prior, row.difficulty, correct);
+      // A generated item is real evidence, but weaker evidence: its difficulty
+      // is assigned from source data rather than measured against a population.
+      // The weight says so explicitly instead of pretending they are equal.
+      const posterior = updateBelief(
+        prior,
+        row.difficulty,
+        correct,
+        row.origin === 'generated' ? GENERATED_ITEM_WEIGHT : 1,
+      );
 
       const observations = (existing?.observations ?? 0) + 1;
       const correctCount = (existing?.correct ?? 0) + (correct ? 1 : 0);

@@ -17,26 +17,31 @@ import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { config } from 'dotenv';
 import postgres from 'postgres';
+import { redact, requireDatabaseUrl, sslMode, toDirectUrl } from './url';
 
 config({ path: '.env' });
 
 async function main(): Promise<void> {
-  const url = process.env.DIRECT_URL ?? process.env.DATABASE_URL;
-  if (!url) {
-    console.error('Set DATABASE_URL (and ideally DIRECT_URL) in .env. See .env.example.');
+  let url: string;
+  try {
+    url = toDirectUrl(requireDatabaseUrl());
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : error);
     process.exit(1);
   }
+
+  console.log(`Applying schema to ${redact(url)}\n`);
 
   const bin = path.join(process.cwd(), 'node_modules', '.bin', 'drizzle-kit');
   try {
     execFileSync(bin, ['push', '--force'], { stdio: 'inherit' });
   } catch {
-    console.error('\nSchema push failed. If the error mentions prepared statements or advisory');
-    console.error('locks, point DIRECT_URL at the direct connection (port 5432), not the pooler.');
+    console.error('\nSchema push failed. Check that DATABASE_URL in .env is the connection string');
+    console.error('from Project settings → Database → Connection string, with your real password.');
     process.exit(1);
   }
 
-  const sql = postgres(url, { ssl: url.includes('supabase.') ? 'require' : false, max: 1 });
+  const sql = postgres(url, { ssl: sslMode(url), max: 1 });
 
   try {
     const tables = await sql<{ tablename: string }[]>`

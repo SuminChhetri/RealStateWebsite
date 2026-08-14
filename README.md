@@ -21,21 +21,21 @@ Requires Node 20.11 or newer and a PostgreSQL database. Supabase's free tier is
 what this is built and documented against; any Postgres 14+ works.
 
 **1. Create a Supabase project**, then open *Project settings → Database →
-Connection string* and copy both strings.
+Connection string* and copy it.
 
-**2. Configure the connection.**
+**2. Paste it into `.env`. That is the whole configuration.**
 
 ```bash
 cp .env.example .env
-# paste your two connection strings into .env
+# DATABASE_URL=postgresql://postgres.[REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres
 ```
 
-Both are needed and they are not interchangeable:
-
-| Variable | Which string | Why |
-| --- | --- | --- |
-| `DATABASE_URL` | Transaction pooler, port **6543** | What the app uses. Pooling is what stops a serverless deployment exhausting the project's connection limit. |
-| `DIRECT_URL` | Direct connection, port **5432** | Migrations only. Transaction pooling cannot carry the session state that DDL and advisory locks need. |
+One string, one variable. The app runs on the transaction pooler because
+multiplexing short-lived connections is what stops a serverless deployment
+exhausting the project's connection limit; migrations need session state that
+transaction pooling cannot carry, so they run on the same host and credentials
+with the port swapped to session mode. That swap is derived from your string —
+there is no second variable to set and nothing to keep in sync.
 
 **3. Create the schema and load the content.**
 

@@ -43,6 +43,7 @@ export default async function SessionPage({ params }: { params: Promise<{ attemp
           microSkill: q.microSkill,
           targetSeconds: q.targetSeconds,
           stimulusId: q.stimulusId,
+          origin: q.origin,
         }))}
         stimuli={set.stimuli.map((s) => ({
           id: s.id,
