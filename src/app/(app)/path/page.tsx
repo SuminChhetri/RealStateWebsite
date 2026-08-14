@@ -61,7 +61,17 @@ export default async function PathPage() {
                       <span className="skill-mark" aria-hidden />
                       {SKILL_LABELS[gap.skill]}
                     </h3>
-                    <span className={`badge ${gap.gap === 0 ? 'badge-positive' : gap.gap > 2 ? 'badge-critical' : 'badge-caution'} numeric`}>
+                    <span
+                      className={`badge numeric ${
+                        !estimate.observations
+                          ? ''
+                          : gap.gap === 0
+                            ? 'badge-positive'
+                            : gap.gap > 2
+                              ? 'badge-critical'
+                              : 'badge-caution'
+                      }`}
+                    >
                       {estimate.observations
                         ? gap.gap === 0
                           ? 'At target'

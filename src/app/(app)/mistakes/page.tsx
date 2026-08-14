@@ -83,7 +83,7 @@ export default async function MistakesPage({ searchParams }: { searchParams: Pro
                       </span>
                     </div>
 
-                    <p style={{ fontWeight: 500 }}>{row.summary}</p>
+                    <p style={{ fontWeight: 500 }}>{withoutLabel(row.summary, meta?.label)}</p>
                     {row.detail ? <p className="small muted measure-wide">{row.detail}</p> : null}
 
                     {meta ? (
@@ -151,7 +151,9 @@ export default async function MistakesPage({ searchParams }: { searchParams: Pro
                           <span className="small">{tryMicroSkill(row.microSkill)?.label ?? row.microSkill}</span>
                           <span className="tiny faint numeric">×{row.occurrences}</span>
                         </div>
-                        <p className="tiny muted">{truncate(row.summary, 110)}</p>
+                        <p className="tiny muted">
+                          {truncate(withoutLabel(row.summary, tryMicroSkill(row.microSkill)?.label), 110)}
+                        </p>
                       </li>
                     ))}
                   </ul>
@@ -189,6 +191,17 @@ export default async function MistakesPage({ searchParams }: { searchParams: Pro
       ) : null}
     </div>
   );
+}
+
+/**
+ * Mistake summaries are stored as "Label: description" so they read on their
+ * own elsewhere. Where the label is already a badge beside the text, showing it
+ * twice is noise.
+ */
+function withoutLabel(summary: string, label?: string): string {
+  if (!label) return summary;
+  const prefix = `${label}: `;
+  return summary.startsWith(prefix) ? summary.slice(prefix.length) : summary;
 }
 
 function truncate(text: string, n: number): string {

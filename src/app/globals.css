@@ -492,6 +492,62 @@ textarea {
 .choice:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* ------------------------------------------------------------------ */
+/* Answer options                                                      */
+/*                                                                     */
+/* Shared by the test runner and by lesson checkpoints: a learner       */
+/* choosing an answer should meet the same control in both places.      */
+/* ------------------------------------------------------------------ */
+
+.runner-options {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.runner-option {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s3);
+  width: 100%;
+  text-align: left;
+  padding: 0.7rem 0.85rem;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  cursor: pointer;
+  transition: border-color 100ms ease, background 100ms ease;
+}
+
+.runner-option:hover { border-color: var(--ink-tertiary); }
+
+.runner-option[data-selected] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.runner-option-key {
+  flex-shrink: 0;
+  width: 1.35rem;
+  height: 1.35rem;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-sm);
+  background: var(--neutral-soft);
+  font-size: 0.75rem;
+  color: var(--ink-tertiary);
+}
+
+.runner-option[data-selected] .runner-option-key {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* ------------------------------------------------------------------ */
 /* Badges and status                                                   */
 /* ------------------------------------------------------------------ */
 

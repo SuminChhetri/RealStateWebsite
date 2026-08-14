@@ -108,7 +108,7 @@ export default async function LandingPage() {
 
         {/* --- The differentiators --- */}
         <section className="marketing-inner marketing-section">
-          <div className="grid grid-2" style={{ gap: 'var(--s6)' }}>
+          <div className="marketing-pillars">
             <article className="stack stack-3">
               <h3 className="serif" style={{ fontSize: '1.25rem' }}>
                 Writing that is analysed, not rewritten

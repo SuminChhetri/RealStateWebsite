@@ -138,8 +138,25 @@ export function generatePlan(input: PlanInput): StudyPlan {
     const primaryMinutes = Math.round(remaining * 0.6);
     const secondaryMinutes = remaining - primaryMinutes;
 
-    blocks.push(buildBlock(i, 'a', primary, primaryMinutes, input));
-    if (secondaryMinutes >= 8) blocks.push(buildBlock(i, 'b', secondary, secondaryMinutes, input));
+    // `rotation` counts how many times this skill has already appeared, so
+    // successive sessions on the same skill target different micro-skills and
+    // different productive tasks instead of repeating one instruction for
+    // sixty days.
+    const rotation = new Map<Skill, number>();
+    for (const day of days) {
+      for (const block of day.blocks) {
+        if (block.skill !== 'mixed') {
+          rotation.set(block.skill as Skill, (rotation.get(block.skill as Skill) ?? 0) + 1);
+        }
+      }
+    }
+
+    blocks.push(buildBlock(i, 'a', primary, primaryMinutes, input, rotation.get(primary) ?? 0));
+    if (secondaryMinutes >= 8) {
+      blocks.push(
+        buildBlock(i, 'b', secondary, secondaryMinutes, input, rotation.get(secondary) ?? 0),
+      );
+    }
 
     for (const [skill, value] of debt) {
       const spent =
@@ -254,52 +271,102 @@ export function generatePlan(input: PlanInput): StudyPlan {
   };
 }
 
+/** Rotating writing sessions: produce, then revise, then produce again. */
+const WRITING_SESSIONS = [
+  {
+    title: 'Full writing task under time',
+    note: 'One complete task under the clock is worth more than three untimed drafts.',
+    long: true,
+  },
+  {
+    title: 'Rewrite yesterday’s weakest paragraph',
+    note: 'Take the dimension your last feedback ranked lowest and rewrite one paragraph against it. Compare the two versions.',
+    long: false,
+  },
+  {
+    title: 'Plan three prompts, write one',
+    note: 'Three minutes of planning each on three prompts, then write only the third. Planning is the part that transfers.',
+    long: false,
+  },
+  {
+    title: 'Full writing task, different task type',
+    note: 'Alternate between the message and the survey response — they reward different moves.',
+    long: true,
+  },
+];
+
+/** Rotating speaking sessions: the same task twice beats two tasks once. */
+const SPEAKING_SESSIONS = [
+  {
+    title: 'One task, recorded twice',
+    note: 'Record, listen back once, then re-record the same task applying exactly one change.',
+  },
+  {
+    title: 'Three tasks, one sitting',
+    note: 'Back-to-back with no pause between them, as in the test. Review all three afterwards.',
+  },
+  {
+    title: 'Fill the whole window',
+    note: 'One rule: keep speaking until the timer ends, even if you repeat a point in different words.',
+  },
+  {
+    title: 'A task type you avoid',
+    note: 'Pick the task number you have recorded least. Avoidance is where the estimate is weakest.',
+  },
+];
+
 function buildBlock(
   dayIndex: number,
   suffix: string,
   skill: Skill,
   minutes: number,
   input: PlanInput,
+  rotation: number,
 ): PlanBlock {
-  const weak = input.weakMicroSkills.find((w) => w.skill === skill);
+  const id = `d${dayIndex}-${suffix}`;
 
   if (skill === 'writing') {
-    return {
-      id: `d${dayIndex}-${suffix}`,
-      kind: 'writing',
-      skill,
-      title: minutes >= 25 ? 'Full writing task under time' : 'Writing: one paragraph, rewritten',
-      minutes,
-      href: '/writing',
-      note:
-        minutes >= 25
-          ? 'One complete task under the clock is worth more than three untimed drafts.'
-          : 'Short session: take one paragraph from your last response and rewrite it against the feedback.',
-    };
+    const candidates = minutes >= 25 ? WRITING_SESSIONS : WRITING_SESSIONS.filter((s) => !s.long);
+    const session = candidates[rotation % candidates.length];
+    return { id, kind: 'writing', skill, title: session.title, minutes, href: '/writing', note: session.note };
   }
+
   if (skill === 'speaking') {
+    const session = SPEAKING_SESSIONS[rotation % SPEAKING_SESSIONS.length];
+    return { id, kind: 'speaking', skill, title: session.title, minutes, href: '/speaking', note: session.note };
+  }
+
+  // Receptive skills rotate through the weak micro-skills rather than drilling
+  // the single weakest one every time: repeating one micro-skill for a fortnight
+  // stops producing information long before it stops producing effort.
+  const weakForSkill = input.weakMicroSkills.filter((w) => w.skill === skill);
+  const weak = weakForSkill.length ? weakForSkill[rotation % weakForSkill.length] : undefined;
+
+  if (weak) {
     return {
-      id: `d${dayIndex}-${suffix}`,
-      kind: 'speaking',
+      id,
+      kind: 'drill',
       skill,
-      title: minutes >= 20 ? 'Three speaking tasks, recorded' : 'One speaking task, recorded',
+      microSkill: weak.microSkill,
+      title: `${SKILL_LABELS[skill]}: ${weak.label.toLowerCase()}`,
       minutes,
-      href: '/speaking',
-      note: 'Record, listen back once, then re-record the same task applying one change.',
+      href: `/practice/${skill}?micro=${encodeURIComponent(weak.microSkill)}`,
+      note: `Currently around CLB ${weak.theta.toFixed(1)} — below your ${SKILL_LABELS[skill].toLowerCase()} average, and one of the micro-skills that keeps separating levels near your target.`,
     };
   }
+
+  // No identified weakness: alternate between mixed practice and exam pace, so
+  // both accuracy and speed keep getting evidence.
+  const examPace = rotation % 2 === 1;
   return {
-    id: `d${dayIndex}-${suffix}`,
-    kind: weak ? 'drill' : 'drill',
+    id,
+    kind: 'drill',
     skill,
-    microSkill: weak?.microSkill,
-    title: weak ? `${SKILL_LABELS[skill]}: ${weak.label.toLowerCase()}` : `${SKILL_LABELS[skill]} practice`,
+    title: examPace ? `${SKILL_LABELS[skill]} at exam pace` : `${SKILL_LABELS[skill]} practice`,
     minutes,
-    href: weak
-      ? `/practice/${skill}?micro=${encodeURIComponent(weak.microSkill)}`
-      : `/practice/${skill}`,
-    note: weak
-      ? `Targeted at the micro-skill currently dragging your ${SKILL_LABELS[skill].toLowerCase()} estimate down.`
+    href: examPace ? `/practice/${skill}?pace=exam` : `/practice/${skill}`,
+    note: examPace
+      ? 'Same material, strict clock. The gap between your timed and untimed accuracy is tracked separately.'
       : 'Mixed set at the difficulty where you are getting about two-thirds right — the range that moves the estimate fastest.',
   };
 }
