@@ -79,16 +79,11 @@ export async function replenish(
   skill: 'reading' | 'listening',
   headroom = COMFORTABLE_HEADROOM,
 ): Promise<number> {
-  // Only reading has generators today. Listening would need synthesised
-  // scripts, and a script assembled from templates would sound like one — so
-  // the honest answer for listening is "not yet" rather than a worse item.
-  if (skill !== 'reading') return 0;
-
   const status = await poolStatus(userId, orgId, skill);
   if (status.unseen >= headroom) return 0;
 
-  const seed = `${orgId}-${Date.now().toString(36)}-${status.total}`;
-  const batch = generateBatch(seed, MAX_BATCH);
+  const seed = `${orgId}-${skill}-${Date.now().toString(36)}-${status.total}`;
+  const batch = generateBatch(seed, MAX_BATCH, skill);
   return persistBatch(batch, seed);
 }
 
@@ -103,7 +98,9 @@ export async function persistBatch(
     const result = validateStimulus(stimulus);
     const status = result.passed ? 'published' : 'in_review';
     const id = contentId('stm', stimulus.slug);
-    const text = stimulus.body ?? '';
+    // Readability and word count are computed from whatever carries the words:
+    // the body for a passage, the spoken turns for an encounter.
+    const text = stimulus.body ?? (stimulus.script ?? []).map((turn) => turn.text).join(' ');
 
     await db
       .insert(stimuli)
@@ -114,7 +111,7 @@ export async function persistBatch(
         partType: stimulus.partType,
         title: stimulus.title,
         body: stimulus.body ?? null,
-        script: null,
+        script: stimulus.script ? JSON.stringify(stimulus.script) : null,
         figure: stimulus.figure ? JSON.stringify(stimulus.figure) : null,
         level: stimulus.level,
         wordCount: wordCount(text),
@@ -134,6 +131,10 @@ export async function persistBatch(
         orderInSet: index,
         seed,
         stimulusText: text,
+        // Listening items are heard once and answered under the clock; the
+        // authored corpus uses 30 seconds and generated ones must match, or a
+        // section built from both would run to two different lengths.
+        defaultSeconds: stimulus.skill === 'listening' ? 30 : 50,
       });
     }
   }
@@ -165,6 +166,7 @@ async function insertQuestion(
     orderInSet: number;
     seed: string;
     stimulusText: string;
+    defaultSeconds?: number;
   },
 ): Promise<number> {
   const result = validateQuestion(question, context.stimulusText);
@@ -187,7 +189,7 @@ async function insertQuestion(
       takeaway: question.takeaway ?? null,
       level: question.level,
       difficulty: question.difficulty,
-      targetSeconds: question.targetSeconds ?? 50,
+      targetSeconds: question.targetSeconds ?? context.defaultSeconds ?? 50,
       orderInSet: context.orderInSet,
       origin: 'generated',
       generatorSeed: context.seed,

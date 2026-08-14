@@ -216,8 +216,16 @@ correctness is *decidable*:
 | Generator | Source | Why the key is defensible |
 | --- | --- | --- |
 | Schedules and fee tables | Structured rows the generator itself produces | Each question is a query over that data — cheapest on a day, only session after a cutoff, the total of two fees. The answer is computed. |
+| Service encounters (listening) | Facts generated before anything is spoken | The reference number a speaker corrects mid-sentence, the fee, the size of the window, the document to bring. The script is built around the facts, so the key comes from the data. |
 | Vocabulary in context | The curated lexicon | The headword is blanked from the example sentence written for it; distractors are same-part-of-speech entries, and each rationale is that entry's own authored definition. |
 | Usage | The grammar points' wrong/right/why triples | The key is decided by the rule; the feedback is the explanation already written for it. |
+
+**Where the line is.** Generated items cover the micro-skills where the answer
+is a *fact* — locating it, holding it across turns, not being pulled off it by a
+self-correction. They stop before gist, tone, inference, and speaker attitude,
+which need a judgement about how something was said. Every item testing those is
+hand-written, and a test asserts that the listening generator never claims one of
+them.
 
 There is no language model in this path. Generated items are marked `generated`
 in the database, marked in the interface, drawn on only after authored items,
@@ -231,8 +239,10 @@ rather than lowering the standard. Standalone generated items are excluded from
 diagnostic, section and mock modes, so a simulation still follows the published
 blueprint exactly.
 
-Listening has no generator. A script assembled from templates would sound like
-one, and the honest answer there is "not yet".
+Generators are tested in bulk — 400 seeds per generator — because they fail
+rarely and expensively. A duplicate-option defect in the schedule generator
+survived a 60-seed run at a rate of about 1 in 70, which would have reached a
+learner inside a fortnight.
 
 ---
 

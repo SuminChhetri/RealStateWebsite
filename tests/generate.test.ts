@@ -5,6 +5,7 @@ import {
   blank,
   clozeCandidates,
   generateBatch,
+  generateDialogueStimulus,
   generateLexicalItem,
   generateScheduleStimulus,
   generateUsageItem,
@@ -21,7 +22,13 @@ import { tryMicroSkill } from '../src/lib/content/taxonomy';
  * feedback in front of a learner who trusts it.
  */
 
-const SEEDS = Array.from({ length: 60 }, (_, i) => `test-seed-${i}`);
+/**
+ * The sweep is wide on purpose. A duplicate-option defect in the schedule
+ * generator survived a 60-seed run and only appeared at around 1 in 70 — a rate
+ * that would have put a broken item in front of a learner within a fortnight.
+ * Generators fail rarely and expensively, so they are tested in bulk.
+ */
+const SEEDS = Array.from({ length: 400 }, (_, i) => `test-seed-${i}`);
 
 test('the RNG is deterministic and stays in range', () => {
   const a = new Rng('same');
@@ -67,6 +74,81 @@ test('every generated schedule set passes the content validator', () => {
     }
   }
   assert.ok(produced >= SEEDS.length * 0.6, `only ${produced}/${SEEDS.length} seeds produced a set`);
+});
+
+test('no generated set contains an item with two identical options', () => {
+  // Refusing is fine; emitting an item with no defensible key is not.
+  for (const seed of SEEDS) {
+    for (const stimulus of [generateScheduleStimulus(seed, 5), generateDialogueStimulus(seed)]) {
+      if (!stimulus) continue;
+      for (const question of stimulus.questions) {
+        const texts = question.options.map((o) => o.text.trim().toLowerCase());
+        assert.equal(
+          new Set(texts).size,
+          texts.length,
+          `${question.slug}: duplicate options — ${texts.join(' / ')}`,
+        );
+      }
+    }
+  }
+});
+
+test('every generated listening encounter passes the content validator', () => {
+  let produced = 0;
+  for (const seed of SEEDS) {
+    const stimulus = generateDialogueStimulus(seed);
+    if (!stimulus) continue;
+    produced++;
+
+    const result = validateStimulus(stimulus);
+    const errors = result.findings.filter((f) => f.severity === 'error');
+    assert.deepEqual(errors, [], `${seed}: ${errors.map((e) => e.message).join('; ')}`);
+
+    assert.ok(stimulus.script && stimulus.script.length >= 12, `${seed}: script too short`);
+    assert.equal(stimulus.skill, 'listening');
+    // Two voices plus the narrator, or the listener cannot tell who is speaking.
+    const voices = new Set(stimulus.script!.map((turn) => turn.voice));
+    assert.ok(voices.has('speaker_a') && voices.has('speaker_b'), `${seed}: missing a voice`);
+    assert.ok(stimulus.script![0].voice === 'narrator', `${seed}: no narrator instruction`);
+  }
+  assert.ok(produced >= SEEDS.length * 0.9, `only ${produced}/${SEEDS.length} seeds produced an encounter`);
+});
+
+test('the listening key is the corrected number, never the withdrawn one', () => {
+  for (const seed of SEEDS.slice(0, 120)) {
+    const stimulus = generateDialogueStimulus(seed);
+    if (!stimulus) continue;
+    const item = stimulus.questions.find((q) => q.microSkill === 'listening.distractor_resistance');
+    assert.ok(item, `${seed}: no self-correction item`);
+
+    const key = item!.options.find((o) => o.key === item!.answerKey)!.text;
+    const spoken = stimulus.script!.map((t) => t.text).join(' ');
+    const digits = key.split('').map((d) => ['zero','one','two','three','four','five','six','seven','eight','nine'][Number(d)]).join('-');
+    assert.ok(spoken.toLowerCase().includes(digits), `${seed}: key ${key} is never actually said`);
+    // And it must be the one after the correction, which is the one repeated back.
+    assert.ok(
+      spoken.toLowerCase().indexOf(digits) > spoken.toLowerCase().indexOf('sorry, that is wrong'),
+      `${seed}: key appears only before the correction`,
+    );
+  }
+});
+
+test('generated listening items only claim micro-skills a template can carry', () => {
+  // Gist, attitude and inference need a judgement about how something is said.
+  // If one of those ever appears here, the boundary has been crossed.
+  const allowed = new Set([
+    'listening.detail_recall',
+    'listening.distractor_resistance',
+    'listening.note_taking',
+  ]);
+  for (const seed of SEEDS.slice(0, 120)) {
+    const stimulus = generateDialogueStimulus(seed);
+    if (!stimulus) continue;
+    for (const question of stimulus.questions) {
+      assert.ok(allowed.has(question.microSkill), `${question.slug}: ${question.microSkill} is not generatable`);
+      assert.ok(tryMicroSkill(question.microSkill), `unknown micro-skill ${question.microSkill}`);
+    }
+  }
 });
 
 test('generated items answer to real micro-skills and have exactly one key', () => {
@@ -150,9 +232,18 @@ test('usage items validate and draw distractors from other rules', () => {
   }
 });
 
+test('a listening-only batch produces listening and nothing else', () => {
+  const batch = generateBatch('listen-seed', 3, 'listening');
+  assert.ok(batch.stimuli.length >= 2, 'no listening produced');
+  assert.deepEqual(batch.standalone, [], 'standalone drills are reading-only');
+  for (const stimulus of batch.stimuli) assert.equal(stimulus.skill, 'listening');
+});
+
 test('a batch produces material and every piece of it is publishable', () => {
   const batch = generateBatch('batch-seed', 4);
   assert.ok(batch.stimuli.length >= 2, 'batch produced almost no stimuli');
+  assert.ok(batch.stimuli.some((s) => s.skill === 'listening'), 'a mixed batch should include listening');
+  assert.ok(batch.stimuli.some((s) => s.skill === 'reading'), 'a mixed batch should include reading');
   assert.ok(batch.standalone.length >= 8, 'batch produced almost no standalone items');
 
   for (const stimulus of batch.stimuli) {

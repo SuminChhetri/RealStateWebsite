@@ -29,9 +29,31 @@ export interface ValidationResult {
 
 const OPTION_KEYS = ['A', 'B', 'C', 'D'];
 
+/**
+ * Everything in a stimulus that a learner actually reads or hears.
+ *
+ * For a passage that is the body; for an encounter it is the spoken turns; for
+ * an applied diagram it is the body *plus the table*, because the table is
+ * where most of the content lives. Counting only the framing message told us a
+ * table stimulus was too short when it was nothing of the kind — the length
+ * check was measuring the wrong thing.
+ */
+function readableText(stimulus: SeedStimulus): string {
+  const parts: string[] = [];
+  if (stimulus.body) parts.push(stimulus.body);
+  if (stimulus.script) parts.push(stimulus.script.map((turn) => turn.text).join(' '));
+  if (stimulus.figure) {
+    parts.push(stimulus.figure.caption);
+    parts.push(stimulus.figure.columns.join(' '));
+    parts.push(stimulus.figure.rows.map((row) => row.join(' ')).join(' '));
+    if (stimulus.figure.note) parts.push(stimulus.figure.note);
+  }
+  return parts.join(' ');
+}
+
 export function validateStimulus(stimulus: SeedStimulus): ValidationResult {
   const findings: Finding[] = [];
-  const text = stimulus.body ?? (stimulus.script ?? []).map((t) => t.text).join(' ');
+  const text = readableText(stimulus);
 
   if (!text.trim()) findings.push({ check: 'stimulus.body', severity: 'error', message: 'Stimulus has no body or script.' });
 
@@ -41,7 +63,11 @@ export function validateStimulus(stimulus: SeedStimulus): ValidationResult {
     if (wc > 900) findings.push({ check: 'stimulus.length', severity: 'warning', message: `Reading stimulus is long (${wc} words) for its part type.` });
     // Difficulty should track the claimed level: a CLB 11 passage written at a
     // grade-6 reading level is mislabelled, and so is the reverse.
-    const grade = fleschKincaid(text);
+    //
+    // Prose only. Flesch–Kincaid counts sentences, and a table has none — run
+    // it over a timetable and it reports whatever the framing message says,
+    // which is not what is being calibrated.
+    const grade = fleschKincaid(stimulus.figure ? (stimulus.body ?? '') : text);
     const expected = stimulus.level - 2.5;
     if (Math.abs(grade - expected) > 4.5) {
       findings.push({

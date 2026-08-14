@@ -186,18 +186,10 @@ export default async function MockTestsPage() {
                   {pool.unseen === 1 ? '' : 's'} you have not seen, of{' '}
                   <span className="numeric">{pool.total}</span>.
                 </p>
-                {skill === 'reading' ? (
-                  <p className="tiny faint">
-                    {pool.authored} written by an author, {pool.generated} built by the item generator. More
-                    generated items are made automatically before you can run out, so reading practice does not
-                    end.
-                  </p>
-                ) : (
-                  <p className="tiny faint">
-                    All {pool.authored} authored. Listening has no generator: a script assembled from templates
-                    would sound like one, and a bad recording teaches the wrong thing.
-                  </p>
-                )}
+                <p className="tiny faint">
+                  {pool.authored} written by an author, {pool.generated} built by the item generator. More are
+                  made automatically before you can run out, so this never ends.
+                </p>
               </div>
             </div>
           ))}
@@ -205,8 +197,12 @@ export default async function MockTestsPage() {
 
         <p className="tiny faint" style={{ marginTop: 'var(--s3)' }}>
           Generated items are marked as such wherever they appear. They come from structured data — timetables,
-          the vocabulary corpus, the grammar rules — so their answers are computed rather than written, and they
-          count slightly less toward your estimate than a reviewed authored item does.
+          service calls, the vocabulary corpus, the grammar rules — so their answers are computed rather than
+          written, and they count slightly less toward your estimate than a reviewed authored item does.
+        </p>
+        <p className="tiny faint" style={{ marginTop: 'var(--s2)' }}>
+          What is <em>not</em> generated: gist, tone, inference, and what a speaker&rsquo;s attitude tells you.
+          Those need a judgement about how something was said, and every item testing them is hand-written.
         </p>
       </section>
 

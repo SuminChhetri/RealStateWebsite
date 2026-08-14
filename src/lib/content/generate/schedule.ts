@@ -41,6 +41,8 @@ interface Domain {
   locations: string[];
   notes: string[];
   intro: (org: string) => string;
+  /** Why someone is reading this table today. Slots: {org}. */
+  framings: string[];
   /** Fee bounds in whole dollars. */
   feeRange: [number, number];
   freeLabel: string;
@@ -51,6 +53,10 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 const DOMAINS: Domain[] = [
   {
     slug: 'community-programs',
+    framings: [
+      `I have pasted the schedule below because I got this wrong last term and paid for a session I could not attend.\n\nBefore you sign up, note that the fee column and the conditions column are doing different jobs. A program can be free and still be closed to you, and one that charges can be open to anyone. Read both before you decide, not after.\n\nIf the one you want is full, the desk keeps a waiting list on paper — it is not online, and you have to ask.`,
+      `Here is the current listing. Two things worth knowing that the table does not spell out.\n\nFirst, the times shown are start and end, so a program that ends at nine does not let you arrive at half past eight. Second, the conditions column is where the real constraints live: age limits, whether you must register in advance, and whether equipment is supplied.\n\nI would decide on the day first and the cost second. The day removes most of the options immediately.`,
+    ],
     orgs: ['Riverbend Community Centre', 'Kilcona Recreation Centre', 'Portage Park Community Hub', 'Elm Ridge Leisure Centre'],
     unit: 'Program',
     unitPlural: 'programs',
@@ -63,6 +69,10 @@ const DOMAINS: Domain[] = [
   },
   {
     slug: 'clinic-hours',
+    framings: [
+      `This is the current list of walk-in hours. I am sending it because the front desk gives out a summary that is not quite right.\n\nThe fee column applies to anyone without a card presented in person. A service can be listed as covered and still be unavailable to you if you have not got the card itself with you — the two are separate questions and the table treats them separately.\n\nIf you are coming for more than one thing, check that both fall on the same day before you travel.`,
+      `Attached is the schedule as it stands this month.\n\nWhat catches people out is the conditions column. A referral requirement and an appointment requirement are different things, and a service can need one without the other. Read the row you want in full rather than scanning across from the service name.\n\nThe hours change at the start of each quarter, so do not rely on a copy you saved earlier.`,
+    ],
     orgs: ['Northfield Health Clinic', 'Cedar Street Medical Centre', 'Harbourview Family Practice'],
     unit: 'Service',
     unitPlural: 'services',
@@ -75,6 +85,10 @@ const DOMAINS: Domain[] = [
   },
   {
     slug: 'workshop-series',
+    framings: [
+      `Here is the workshop list for this cycle. Seats go quickly, so it is worth deciding before you open the booking page.\n\nThe conditions column tells you what you need to bring and whether the seat count is limited. A workshop that supplies laptops is a different proposition from one that expects you to bring a device, and the fee does not tell you which is which.\n\nIf two workshops you want are on the same day, check the times before assuming you can do both.`,
+      `This is the schedule I mentioned. A note before you book.\n\nThe series rotates, so a workshop that is not listed this cycle usually returns in the next one — there is no need to take a session at an awkward time simply because it is there now.\n\nFees vary more than you would expect for the same length of session, and the reason is in the conditions column rather than in the subject.`,
+    ],
     orgs: ['Lakeshore Public Library', 'Meridian Skills Centre', 'Brookline Learning Annex'],
     unit: 'Workshop',
     unitPlural: 'workshops',
@@ -86,7 +100,75 @@ const DOMAINS: Domain[] = [
     freeLabel: 'Free',
   },
   {
+    slug: 'rental-viewings',
+    framings: [
+      `Here is this week's viewing list. Read the deposit column carefully — it is not the rent, and several people have assumed it was.\n\nThe conditions column is where the deal actually differs between units. Utilities included changes the monthly cost more than the headline figure does, and parking extra can add a great deal to a unit that looks cheaper.\n\nViewings run to the time shown. Arriving at the end of the window means seeing the flat with four other people in it.`,
+      `The current listings are below. Two things to check before you travel across town for one of these.\n\nFirst, the day: viewings are not repeated, so a unit shown on one day is not available to see on another. Second, the conditions: a six-month minimum or a no-pets rule will decide the question for you faster than the deposit will.\n\nIf a unit says available immediately, expect it to be gone within the week.`,
+    ],
+    orgs: ['Fairlawn Property Management', 'Northgate Rentals', 'Cedar & Vine Lettings'],
+    unit: 'Unit',
+    unitPlural: 'units',
+    names: ['Studio, 3rd floor', 'One bedroom, garden', 'Two bedroom, corner', 'Two bedroom, top floor', 'Bachelor, basement', 'Three bedroom, semi', 'One bedroom, riverside'],
+    locations: ['Ashfield Court', 'Marlow House', 'The Granary', 'Weaver Terrace', 'Bell Lane'],
+    notes: ['Utilities included', 'No pets', 'Parking extra', 'Available immediately', 'Six-month minimum', 'Furnished'],
+    intro: (org) => `${org} publishes its viewing times weekly. The figure shown is the holding deposit, not the rent.`,
+    feeRange: [0, 350],
+    freeLabel: 'No deposit',
+  },
+  {
+    slug: 'volunteer-shifts',
+    framings: [
+      `The shift list for the next fortnight is below. Anything shown with a charge covers materials only — nobody pays to volunteer here.\n\nThe conditions column matters more than usual for this one. Some shifts need a police check that takes weeks to come through, and some involve lifting that not everyone can do. Check that before you commit to a day.\n\nIf you can only do one shift a week, take an evening one — those are the hardest to fill.`,
+      `Here is the schedule. A note on how to read it.\n\nThe shifts are not interchangeable: front desk and warehouse sorting need very different things from you, and the conditions column is the only place that says so. Training provided means exactly that, and it happens on the day.\n\nWe run short on the shifts nobody looks at, which are the ones in the middle of the week.`,
+    ],
+    orgs: ['Harbour Food Bank', 'Rivergate Shelter', 'The Community Kitchen'],
+    unit: 'Shift',
+    unitPlural: 'shifts',
+    names: ['Warehouse sorting', 'Front desk', 'Delivery driving', 'Meal preparation', 'Client intake', 'Garden crew', 'Evening distribution'],
+    locations: ['Loading bay', 'Reception', 'Kitchen', 'Annexe', 'Yard'],
+    notes: ['Training provided', 'Police check required', 'Lifting involved', 'Minimum age 18', 'Team of four'],
+    intro: (org) => `${org} posts its volunteer shifts a fortnight ahead. Any charge shown covers materials, not the shift itself.`,
+    feeRange: [0, 15],
+    freeLabel: 'No charge',
+  },
+  {
+    slug: 'testing-appointments',
+    framings: [
+      `This is the current session timetable. Read the conditions column before booking anything.\n\nThe fees are per sitting and are not refundable inside forty-eight hours, so a session booked in hope is a session paid for. Photo identification means the physical document — a photograph of it on a phone is refused at the door, every time.\n\nIf you are booking a practice sitting and a consultation, leave a day between them rather than stacking them.`,
+      `Here is the schedule as published. Two practical points.\n\nArrival times are not the session times: where the conditions column says arrive thirty minutes early, that is a requirement and not a suggestion, and people are turned away.\n\nThe cheaper sessions are not the shorter ones. What drives the fee is what is included, which is in the conditions column rather than the duration.`,
+    ],
+    orgs: ['Meridian Assessment Centre', 'Lakeside Testing Services', 'The Examination Bureau'],
+    unit: 'Session',
+    unitPlural: 'sessions',
+    names: ['Language assessment', 'Practice sitting', 'Results consultation', 'Computer familiarisation', 'Accessibility review', 'Rebooking clinic', 'Score explanation'],
+    locations: ['Suite 1', 'Suite 2', 'Quiet room', 'Main hall', 'Interview room'],
+    notes: ['Photo ID required', 'Arrive 30 minutes early', 'No devices permitted', 'Booked online only', 'Rescheduling fee applies'],
+    intro: (org) => `${org} publishes its weekly session times. Fees shown are per sitting and are not refundable within 48 hours.`,
+    feeRange: [0, 120],
+    freeLabel: 'Included',
+  },
+  {
+    slug: 'repair-services',
+    framings: [
+      `Here is the service list. The prices shown are labour only — parts are quoted separately once they have looked at it.\n\nThe conditions column tells you whether you can wait or need to leave the vehicle, and that is the difference between a morning and a day. Anything marked while you wait is under an hour in practice.\n\nIf you need two of these, ask whether they can be done in the same slot before booking two.`,
+      `This is the current bookable list. A couple of things it does not say outright.\n\nSame-day collection means before closing, not within twenty-four hours, and the closing time varies by day. Check the row rather than assuming.\n\nWhere a service needs booking, walk-ins are genuinely refused rather than squeezed in — the bays are allocated in advance.`,
+    ],
+    orgs: ['Eastway Auto Service', 'The Bike Kitchen', 'Halden Repair Centre'],
+    unit: 'Service',
+    unitPlural: 'services',
+    names: ['Safety inspection', 'Seasonal tyre change', 'Brake adjustment', 'Diagnostic scan', 'Battery test', 'Wheel truing', 'Full service'],
+    locations: ['Bay 1', 'Bay 2', 'Workshop', 'Forecourt', 'Service desk'],
+    notes: ['Booking required', 'While you wait', 'Parts extra', 'Courtesy vehicle available', 'Same-day collection'],
+    intro: (org) => `${org} lists its bookable services below. Labour is included in the price shown; parts are quoted separately.`,
+    feeRange: [0, 180],
+    freeLabel: 'Free',
+  },
+  {
     slug: 'transit-shuttle',
+    framings: [
+      `Here is the timetable. The times shown are first departures, so a route with a late first departure may still run into the evening.\n\nThe conditions column is where the real differences are: which routes take a pass, which need exact fare, and which need a reservation at all. A reservation-only route will not stop for you.\n\nIf you are relying on one of these for work, check whether it runs on statutory holidays before you need it to.`,
+      `The current routes are below. Two notes.\n\nFares are one way. People plan around the figure shown and are surprised at the end of the week.\n\nAccessibility is listed per route rather than for the service as a whole, so a route that is not marked accessible genuinely is not — it is not an omission in the table.`,
+    ],
     orgs: ['Grandview Campus Shuttle', 'Riverside Employer Shuttle', 'Airport Connector Service'],
     unit: 'Route',
     unitPlural: 'routes',
@@ -395,12 +477,23 @@ export function generateScheduleStimulus(seed: string, questionCount = 5): SeedS
   }
   if (questions.length < Math.min(3, questionCount)) return null;
 
+  // An item with the same text in two options has no defensible key. The
+  // builders avoid it by construction, but arithmetic distractors can still
+  // collide on an unlucky sample — so the set is checked rather than trusted.
+  for (const question of questions) {
+    const texts = question.options.map((o) => o.text.trim().toLowerCase());
+    if (new Set(texts).size !== texts.length) return null;
+  }
+
   return {
     slug: `gen-${domain.slug}-${seed}`,
     skill: 'reading',
     partType: 'reading.information',
     title: `${org}: ${domain.unit} schedule`,
-    body: domain.intro(org),
+    // A table on its own is a caption, not a reading task. The framing message
+    // gives the learner a reason to be reading it and something to hold the
+    // table against — which is how these appear in the test and in life.
+    body: `${domain.intro(org)}\n\n${rng.pick(domain.framings)}`,
     figure: {
       kind: 'schedule',
       caption: `${org} — current ${domain.unitPlural}`,
