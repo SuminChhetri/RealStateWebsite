@@ -89,7 +89,7 @@ export function EstimateLabel({
   const band = levelBand(level, se);
   const quality = evidenceQuality(observations, se);
   return (
-    <span className="row-tight" style={{ alignItems: 'baseline' }}>
+    <span className="row-tight wrap" style={{ alignItems: 'baseline', minWidth: 0 }}>
       <span
         className="serif numeric"
         style={{ fontSize: size === 'lg' ? '2rem' : '1.35rem', lineHeight: 1.1 }}

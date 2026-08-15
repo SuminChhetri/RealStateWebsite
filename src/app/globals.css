@@ -348,6 +348,12 @@ textarea {
   display: grid;
   gap: var(--s4);
 }
+/* A grid item defaults to `min-width: auto`, which means it refuses to shrink
+   below its content — so a long unbreakable label does not wrap, it overflows
+   into the neighbouring column. Every grid here holds prose or cards, none of
+   which should ever do that. */
+.grid > * { min-width: 0; }
+
 .grid-2 { grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); }
 .grid-3 { grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); }
 .grid-4 { grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); }
