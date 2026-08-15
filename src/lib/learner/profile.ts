@@ -71,6 +71,25 @@ export async function ensureProfile(userId: string, orgId: string) {
   return row;
 }
 
+/**
+ * Just the target, for pages that need the standard a learner is reading
+ * against and nothing else.
+ *
+ * `getProfile` below is thirteen round-trips because it assembles everything a
+ * personalised surface could want in one place. Calling it to read one column
+ * is the kind of thing that is invisible in development against ten rows and
+ * expensive against ten thousand.
+ */
+export async function getTargetLevel(userId: string, orgId: string): Promise<number> {
+  const [row] = await db
+    .select({ targetLevel: learnerProfiles.targetLevel })
+    .from(learnerProfiles)
+    .where(and(eq(learnerProfiles.userId, userId), eq(learnerProfiles.orgId, orgId)))
+    .limit(1);
+  // Matches the column default, so a missing row and a fresh row agree.
+  return row?.targetLevel ?? 12;
+}
+
 export async function getProfile(userId: string, orgId: string): Promise<LearnerProfile> {
   const row = await ensureProfile(userId, orgId);
   const now = Math.floor(Date.now() / 1000);

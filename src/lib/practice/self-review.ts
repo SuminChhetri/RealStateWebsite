@@ -38,6 +38,11 @@ export interface SelfReviewInput {
   /** The estimate, used only to set the standard the learner reads against. */
   estimatedLevel: number;
   targetLevel: number;
+  /**
+   * Speaking only. Without a transcript there is no text to point at, and
+   * "quote the sentence that satisfies this" is an impossible instruction.
+   */
+  hasTranscript?: boolean;
 }
 
 export interface SelfReviewPass {
@@ -61,6 +66,10 @@ export function buildSelfReview(input: SelfReviewInput): SelfReview {
   const isWriting = input.kind === 'writing';
   const text = isWriting ? 'text' : 'transcript';
   const wrote = isWriting ? 'wrote' : 'said';
+  const read = isWriting ? 'Read' : 'Listen';
+  // A recording with no transcript can still be reviewed — by ear. What it
+  // cannot support is any instruction that begins "quote".
+  const quotable = isWriting || input.hasTranscript !== false;
 
   /* --- 1. Requirements. The cheapest marks on the paper. --- */
   const uncovered = input.coverage.filter((item) => !item.covered);
@@ -68,26 +77,23 @@ export function buildSelfReview(input: SelfReviewInput): SelfReview {
     passes.push({
       key: 'requirements',
       title: `Find the evidence for ${uncovered.length} requirement${uncovered.length === 1 ? '' : 's'}`,
-      rationale:
-        'The analyser could not find these in what you ' +
-        wrote +
-        '. It matches wording, so it can miss a point you made in very different words — which is exactly why you are the one who should check. A requirement you meant to cover but did not state is the most common way a strong response loses marks.',
-      questions: uncovered.map(
-        (item) =>
-          `Quote the sentence that satisfies: “${item.requirement}”. If you cannot quote one, it is not there — write it now.`,
+      rationale: `The analyser could not find these in what you ${wrote}. It matches wording, so it can miss a point you made in very different words — which is exactly why you are the one who should check. A requirement you meant to cover but did not state is the most common way a strong response loses marks.`,
+      questions: uncovered.map((item) =>
+        quotable
+          ? `Quote the sentence that satisfies: “${item.requirement}”. If you cannot quote one, it is not there — say it next time.`
+          : `Listen for where you covered: “${item.requirement}”. Note the timestamp. If you cannot find one, it is not there — say it next time.`,
       ),
     });
   } else if (input.coverage.length) {
     passes.push({
       key: 'requirements',
       title: 'Check the requirements are answered, not just mentioned',
-      rationale:
-        'Every requirement was found in what you ' +
-        wrote +
-        '. Being present and being answered are different things, and the second is what is marked.',
+      rationale: `Every requirement was found in what you ${wrote}. Being present and being answered are different things, and the second is what is marked.`,
       questions: input.coverage.map(
         (item) =>
-          `For “${item.requirement}” — does your ${text} settle it, or only raise it? Point at the sentence that settles it.`,
+          `For “${item.requirement}” — does your ${text} settle it, or only raise it? Point at the ${
+            quotable ? 'sentence' : 'moment'
+          } that settles it.`,
       ),
     });
   }
@@ -97,13 +103,15 @@ export function buildSelfReview(input: SelfReviewInput): SelfReview {
   if (weakest) {
     passes.push({
       key: 'weakest',
-      title: `Read once for ${weakest.label.toLowerCase()} alone`,
-      rationale: `This scored lowest of everything measured, at CLB ${weakest.level.toFixed(
-        1,
-      )}. ${weakest.note} Reading for one thing at a time is how a marker reads; reading for everything at once is how a writer reads their own work, and it is why the same fault survives three rereads.`,
+      title: `${read} once for ${weakest.label.toLowerCase()} alone`,
+      rationale: `This scored lowest of everything measured, at CLB ${weakest.level.toFixed(1)}. ${
+        weakest.note
+      } Taking one quality at a time is how a marker works; taking everything at once is how you read your own work, and it is why the same fault survives three passes.`,
       questions: [
-        `Ignore every other quality. Where in your ${text} is ${weakest.label.toLowerCase()} weakest — which specific sentence?`,
-        'What would you change in that one sentence? Make the change before moving on.',
+        `Ignore every other quality. Where is ${weakest.label.toLowerCase()} weakest — which specific ${
+          quotable ? 'sentence' : 'moment'
+        }?`,
+        `What would you change ${quotable ? 'in that one sentence' : 'about that one moment'}? Decide it now, before moving on.`,
       ],
     });
   }
@@ -145,12 +153,11 @@ export function buildSelfReview(input: SelfReviewInput): SelfReview {
   if (input.modelNotes) {
     passes.push({
       key: 'standard',
-      title: 'Read the task’s notes again, against your own response',
-      rationale:
-        'These are the moves this task rewards. They were written before you responded, so they are a standard rather than a reaction — and comparing your own work against a standard is a different act from remembering what you were aiming at.',
+      title: 'Measure yourself against the task’s own notes',
+      rationale: `“${input.modelNotes}” — these are the moves this task rewards. They were written before you responded, so they are a standard rather than a reaction, and comparing your work against a standard is a different act from remembering what you were aiming at.`,
       questions: [
-        input.modelNotes,
-        `Which of those moves does your ${text} make? Which does it not?`,
+        `Which of those moves does your ${text} make?`,
+        'Which does it not? That one is your next attempt.',
       ],
     });
   }

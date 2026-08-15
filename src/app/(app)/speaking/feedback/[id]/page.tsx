@@ -8,11 +8,10 @@ import { evaluations, reviewRequests, speakingSubmissions, speakingTasks } from 
 import type { CoachingPriority, DimensionResult } from '@/lib/engines/writing-eval';
 import { EstimateFootnote } from '@/components/Level';
 import { PauseTimeline } from '@/components/speaking/PauseTimeline';
-import { ReviewRequest } from '@/components/ReviewRequest';
-import { SelfReview } from '@/components/SelfReview';
+import { SecondPass } from '@/components/SecondPass';
 import { hasReviewerOtherThan } from '@/lib/practice/review-access';
 import { buildSelfReview } from '@/lib/practice/self-review';
-import { getProfile } from '@/lib/learner/profile';
+import { getTargetLevel } from '@/lib/learner/profile';
 import '../../../writing/writing.css';
 
 export const metadata: Metadata = { title: 'Speaking feedback' };
@@ -89,7 +88,6 @@ export default async function SpeakingFeedbackPage({ params }: { params: Promise
         .limit(1)
     : [];
 
-  const profile = await getProfile(session.userId, session.orgId);
   const selfReview = buildSelfReview({
     kind: 'speaking',
     coverage: findings.criteriaCoverage.map((c) => ({ requirement: c.criterion, covered: c.covered })),
@@ -101,7 +99,8 @@ export default async function SpeakingFeedbackPage({ params }: { params: Promise
     priorities: coaching.priorities.map((p) => ({ title: p.title, how: p.how })),
     modelNotes: row.task.modelNotes,
     estimatedLevel: row.evaluation.estimatedLevel,
-    targetLevel: profile.targetLevel,
+    targetLevel: await getTargetLevel(session.userId, session.orgId),
+    hasTranscript: Boolean(row.submission.transcript),
   });
 
   return (
@@ -303,71 +302,18 @@ export default async function SpeakingFeedbackPage({ params }: { params: Promise
         </div>
       </section>
 
-      {/* --- Second pass: a person where there is one, a protocol where there is not --- */}
-      <section style={{ marginBottom: 'var(--s6)' }}>
-        <div className="section-head">
-          <h2 style={{ fontSize: '1.05rem', fontFamily: 'var(--font-body)', fontWeight: 600 }}>
-            {reviewGate.allowed && reviewerAvailable ? 'From a teacher' : 'The second pass'}
-          </h2>
-          <p className="tiny faint">
-            {reviewGate.allowed && reviewerAvailable
-              ? 'Someone who can hear it, not only measure it'
-              : 'What the analyser cannot hear, and you can'}
-          </p>
-        </div>
-
-        {reviewGate.allowed && (reviewerAvailable || review) ? (
-          review?.status === 'returned' ? (
-            <article className="panel" style={{ borderLeft: '3px solid var(--accent)' }}>
-              <div className="stack stack-3">
-                {review.reviewerLevel !== null ? (
-                  <p className="small">
-                    <strong>Their band: CLB {review.reviewerLevel.toFixed(1)}</strong>{' '}
-                    <span className="muted">
-                      (the analyser above said {row.evaluation.estimatedLevel.toFixed(1)} — these are shown
-                      separately on purpose; a human judgement and a rule-based estimate are different kinds of
-                      claim, and averaging them would hide both)
-                    </span>
-                  </p>
-                ) : null}
-                <p className="prose" style={{ whiteSpace: 'pre-wrap', fontSize: '0.9375rem' }}>
-                  {review.feedback}
-                </p>
-              </div>
-            </article>
-          ) : review ? (
-            <div className="stack stack-4">
-              <p className="notice notice-caution">
-                {review.status === 'claimed'
-                  ? 'A teacher has picked this up and is listening to it.'
-                  : reviewerAvailable
-                    ? 'Waiting for a teacher. The automated analysis above does not wait for it.'
-                    : 'This was sent when someone was here to hear it, and nobody is now. Rather than leave you waiting on an answer that may not come, the self-review below is the same work you would be asked to do anyway.'}
-              </p>
-              {review.status === 'requested' && !reviewerAvailable ? (
-                <SelfReview
-                  review={selfReview}
-                  retryHref={`/speaking/${row.task.slug}`}
-                  retryLabel="Record this task again"
-                />
-              ) : null}
-            </div>
-          ) : row.submission.audioKey ? (
-            <ReviewRequest submissionType="speaking" submissionId={id} />
-          ) : (
-            <p className="notice notice-caution">
-              No audio was stored for this response, so there is nothing for a teacher to listen to. Record it
-              again to ask for a human review.
-            </p>
-          )
-        ) : (
-          <SelfReview
-            review={selfReview}
-            retryHref={`/speaking/${row.task.slug}`}
-            retryLabel="Record this task again"
-          />
-        )}
-      </section>
+      <SecondPass
+        kind="speaking"
+        entitled={reviewGate.allowed}
+        reviewerAvailable={reviewerAvailable}
+        review={review}
+        analyserLevel={row.evaluation.estimatedLevel}
+        selfReview={selfReview}
+        submissionId={id}
+        retryHref={`/speaking/${row.task.slug}`}
+        retryLabel="Record this task again"
+        reviewable={Boolean(row.submission.audioKey)}
+      />
 
       <section style={{ marginBottom: 'var(--s6)' }}>
         <details className="panel-quiet">

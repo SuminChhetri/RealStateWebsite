@@ -9,11 +9,10 @@ import type { CoachingPriority, DimensionResult } from '@/lib/engines/writing-ev
 import type { UsageFinding } from '@/lib/engines/usage-rules';
 import { EstimateFootnote } from '@/components/Level';
 import { AnnotatedText } from '@/components/writing/AnnotatedText';
-import { ReviewRequest } from '@/components/ReviewRequest';
-import { SelfReview } from '@/components/SelfReview';
+import { SecondPass } from '@/components/SecondPass';
 import { hasReviewerOtherThan } from '@/lib/practice/review-access';
 import { buildSelfReview } from '@/lib/practice/self-review';
-import { getProfile } from '@/lib/learner/profile';
+import { getTargetLevel } from '@/lib/learner/profile';
 import '../../writing.css';
 
 export const metadata: Metadata = { title: 'Writing feedback' };
@@ -94,7 +93,6 @@ export default async function WritingFeedbackPage({ params }: { params: Promise<
 
   // Offered to everyone, on every plan: it is part of the learning loop, and
   // the loop is not for sale.
-  const profile = await getProfile(session.userId, session.orgId);
   const selfReview = buildSelfReview({
     kind: 'writing',
     coverage: findingsPayload.requirementCoverage.map((r) => ({
@@ -109,7 +107,7 @@ export default async function WritingFeedbackPage({ params }: { params: Promise<
     priorities: coaching.priorities.map((p) => ({ title: p.title, how: p.how })),
     modelNotes: row.task.modelNotes,
     estimatedLevel: row.evaluation.estimatedLevel,
-    targetLevel: profile.targetLevel,
+    targetLevel: await getTargetLevel(session.userId, session.orgId),
   });
 
   const uncovered = findingsPayload.requirementCoverage.filter((r) => !r.covered);
@@ -298,68 +296,17 @@ export default async function WritingFeedbackPage({ params }: { params: Promise<
         </div>
       </section>
 
-      {/* --- Second pass: a person where there is one, a protocol where there is not --- */}
-      <section style={{ marginBottom: 'var(--s6)' }}>
-        <div className="section-head">
-          <h2 style={{ fontSize: '1.05rem', fontFamily: 'var(--font-body)', fontWeight: 600 }}>
-            {reviewGate.allowed && reviewerAvailable ? 'From a teacher' : 'The second pass'}
-          </h2>
-          <p className="tiny faint">
-            {reviewGate.allowed && reviewerAvailable
-              ? 'A judgement the analyser cannot make'
-              : 'What the analyser cannot judge, and you can'}
-          </p>
-        </div>
-
-        {reviewGate.allowed && (reviewerAvailable || review) ? (
-          review?.status === 'returned' ? (
-            <article className="panel" style={{ borderLeft: '3px solid var(--accent)' }}>
-              <div className="stack stack-3">
-                {review.reviewerLevel !== null ? (
-                  <p className="small">
-                    <strong>Their band: CLB {review.reviewerLevel.toFixed(1)}</strong>{' '}
-                    <span className="muted">
-                      (the analyser above said {row.evaluation.estimatedLevel.toFixed(1)} — these are shown
-                      separately on purpose; a human judgement and a rule-based estimate are different kinds of
-                      claim, and averaging them would hide both)
-                    </span>
-                  </p>
-                ) : null}
-                <p className="prose" style={{ whiteSpace: 'pre-wrap', fontSize: '0.9375rem' }}>
-                  {review.feedback}
-                </p>
-              </div>
-            </article>
-          ) : review ? (
-            <div className="stack stack-4">
-              <p className="notice notice-caution">
-                {review.status === 'claimed'
-                  ? 'A teacher has picked this up and is reading it.'
-                  : reviewerAvailable
-                    ? 'Waiting for a teacher. The automated analysis above does not wait for it.'
-                    : 'This was sent when someone was here to read it, and nobody is now. Rather than leave you waiting on an answer that may not come, the self-review below is the same work you would be asked to do anyway.'}
-              </p>
-              {/* A request that can no longer be answered must not be the end of
-                  the page. The protocol is what the learner can act on today. */}
-              {review.status === 'requested' && !reviewerAvailable ? (
-                <SelfReview
-                  review={selfReview}
-                  retryHref={`/writing/${row.task.slug}`}
-                  retryLabel="Write this task again"
-                />
-              ) : null}
-            </div>
-          ) : (
-            <ReviewRequest submissionType="writing" submissionId={id} />
-          )
-        ) : (
-          <SelfReview
-            review={selfReview}
-            retryHref={`/writing/${row.task.slug}`}
-            retryLabel="Write this task again"
-          />
-        )}
-      </section>
+      <SecondPass
+        kind="writing"
+        entitled={reviewGate.allowed}
+        reviewerAvailable={reviewerAvailable}
+        review={review}
+        analyserLevel={row.evaluation.estimatedLevel}
+        selfReview={selfReview}
+        submissionId={id}
+        retryHref={`/writing/${row.task.slug}`}
+        retryLabel="Write this task again"
+      />
 
       {/* --- Limitations --- */}
       <section style={{ marginBottom: 'var(--s6)' }}>

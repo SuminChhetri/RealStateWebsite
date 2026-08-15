@@ -77,6 +77,46 @@ test('the reader pass differs for writing and speaking, because the act does', (
   assert.ok(!writing.questions.some((q) => q.toLowerCase().includes('pause')));
 });
 
+test('a recording with no transcript is never asked to quote itself', () => {
+  const review = buildSelfReview({ ...base, kind: 'speaking', hasTranscript: false });
+  const everything = review.passes.flatMap((p) => p.questions).join(' ');
+  // "Quote the sentence" is an impossible instruction when there is no text.
+  assert.ok(!/quote/i.test(everything));
+  assert.ok(!/sentence/i.test(everything));
+  // It is still reviewable — by ear, which is what the recording is for.
+  assert.ok(/timestamp|moment|listen/i.test(everything));
+});
+
+test('a recording with a transcript keeps the quotable instructions', () => {
+  const review = buildSelfReview({ ...base, kind: 'speaking', hasTranscript: true });
+  const everything = review.passes.flatMap((p) => p.questions).join(' ');
+  assert.ok(/quote/i.test(everything));
+});
+
+test('the weakest pass tells you to listen for speech and read for text', () => {
+  // Fluency and pacing cannot be judged from a transcript, so "read once for
+  // fluency" would be an instruction that cannot be carried out.
+  const spoken = buildSelfReview({
+    ...base,
+    kind: 'speaking',
+    dimensions: [{ label: 'Fluency', level: 6, note: 'Pauses cluster mid-clause.' }],
+  }).passes.find((p) => p.key === 'weakest');
+  assert.ok(spoken?.title.startsWith('Listen once for fluency'));
+
+  const written = buildSelfReview(base).passes.find((p) => p.key === 'weakest');
+  assert.ok(written?.title.startsWith('Read once for'));
+});
+
+test('the task’s notes are quoted as a standard, not listed as a question', () => {
+  const pass = buildSelfReview(base).passes.find((p) => p.key === 'standard');
+  assert.ok(pass);
+  // The notes are a statement. Rendering them in a list of questions read as a
+  // question the learner could not answer.
+  assert.ok(pass.rationale.includes(base.modelNotes as string));
+  assert.ok(!pass.questions.includes(base.modelNotes as string));
+  assert.ok(pass.questions.every((q) => q.includes('?') || q.includes('next attempt')));
+});
+
 test('the protocol always ends in a rewrite, never in praise', () => {
   for (const kind of ['writing', 'speaking'] as const) {
     const review = buildSelfReview({ ...base, kind });
