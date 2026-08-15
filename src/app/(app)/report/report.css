@@ -1,0 +1,186 @@
+/* The readiness report.
+ *
+ * This is the one surface designed to leave the product. It is read on screen,
+ * printed to paper, and handed to a tutor — so it is built as a semantic
+ * document (headings, tables, real text) rather than a rendered image. That
+ * makes it work with a screen reader, reflow at 200% zoom, and survive a
+ * greyscale laser printer, none of which a chart image would do.
+ */
+
+.report {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: var(--s6) var(--s5) var(--s8);
+}
+
+.report-head {
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: var(--s4);
+  margin-bottom: var(--s6);
+}
+
+.report-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s5);
+  margin-top: var(--s3);
+}
+
+.report-meta div { display: flex; flex-direction: column; gap: 0.1rem; }
+
+.report-section { margin-bottom: var(--s7); }
+
+.report-verdict {
+  border: 1px solid var(--rule-strong);
+  border-left-width: 4px;
+  border-radius: var(--r-sm);
+  padding: var(--s5);
+  background: var(--paper-raised);
+}
+
+.report-verdict[data-verdict='ready'] { border-left-color: var(--positive); }
+.report-verdict[data-verdict='borderline'] { border-left-color: var(--caution); }
+.report-verdict[data-verdict='not-ready'] { border-left-color: var(--critical); }
+.report-verdict[data-verdict='insufficient'] { border-left-color: var(--ink-tertiary); }
+
+/* Skill rows.
+ *
+ * The band is drawn AND stated numerically. A band drawn only as a tinted
+ * rectangle carries no information at all on a monochrome printer, and none for
+ * a reader who cannot distinguish the tint — so the figure beside it is the
+ * real content and the drawing is the convenience.
+ */
+.report-skill {
+  border-top: 1px solid var(--rule);
+  padding: var(--s4) 0;
+  display: grid;
+  gap: var(--s3);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 46rem) {
+  .report-skill { grid-template-columns: 12rem 1fr; align-items: start; }
+}
+
+.report-band {
+  position: relative;
+  height: 12px;
+  border: 1px solid var(--ink-tertiary);
+  border-radius: 2px;
+  background: transparent;
+}
+
+.report-band-interval {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  /* Hatching rather than a fill: it survives greyscale and it does not rely on
+     hue to separate one skill's band from another's. */
+  background-image: repeating-linear-gradient(
+    45deg,
+    var(--ink-tertiary) 0 2px,
+    transparent 2px 5px
+  );
+  border-left: 1px solid var(--ink);
+  border-right: 1px solid var(--ink);
+}
+
+.report-band-point {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  background: var(--ink);
+}
+
+.report-band-target {
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  width: 0;
+  border-left: 2px dotted var(--ink);
+}
+
+.report-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.6875rem;
+  color: var(--ink-tertiary);
+  font-variant-numeric: tabular-nums;
+  margin-top: 0.2rem;
+}
+
+.report-note {
+  border-top: 1px solid var(--rule);
+  padding-top: var(--s4);
+  margin-top: var(--s6);
+}
+
+/* Hidden on screen. Declared BEFORE the print block: with equal specificity
+   the later rule wins, and having this after `@media print` meant the footer
+   was silently dropped from every printed page — taking the non-affiliation
+   statement with it, which is the one thing that must survive onto paper. */
+.report-print-footer { display: none; }
+
+/* ------------------------------------------------------------------ */
+/* Print                                                               */
+/* ------------------------------------------------------------------ */
+
+@media print {
+  /* The disclaimer must appear on every physical page, not only the first.
+     Once this leaves the building it is read as a credential unless it says
+     otherwise on the page in front of the reader. */
+  @page {
+    margin: 16mm 14mm 20mm;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+    font-size: 10.5pt;
+  }
+
+  .no-print,
+  .app-nav,
+  .app-tabbar,
+  .skip-link {
+    display: none !important;
+  }
+
+  .report {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .report-section {
+    break-inside: avoid;
+    margin-bottom: 10mm;
+  }
+
+  /* The tutor section is handed over on its own, so it starts a page. */
+  .report-for-tutor {
+    break-before: page;
+  }
+
+  .report-verdict,
+  .report-skill {
+    break-inside: avoid;
+  }
+
+  a { text-decoration: none; color: #000; }
+
+  /* Hue is unreliable in print; weight and pattern are not. */
+  .report-verdict { border-left-width: 4px; border-left-color: #000; }
+  .report-band-interval { background-image: repeating-linear-gradient(45deg, #000 0 2px, transparent 2px 5px); }
+  .report-band, .report-band-point, .report-band-target { border-color: #000; background-color: #000; }
+  .report-band { background-color: transparent; }
+
+  .report-print-footer {
+    display: block;
+    margin-top: 6mm;
+    padding-top: 3mm;
+    border-top: 1px solid #000;
+    font-size: 8pt;
+  }
+}

@@ -100,6 +100,7 @@ export default async function ProfilePage({
   const accuracy = itemsAnswered ? Math.round(((answered?.correct ?? 0) / itemsAnswered) * 100) : null;
   const minutes = Math.round(Number(answered?.seconds ?? 0) / 60);
   const theme = isThemeKey(prefs?.theme) ? prefs.theme : DEFAULT_THEME;
+  const planKey = org?.planKey ?? 'learner_free';
 
   const initials = (user?.name ?? '?')
     .split(/\s+/)
@@ -270,6 +271,31 @@ export default async function ProfilePage({
         <p className="small muted" style={{ marginTop: 'var(--s5)' }}>
           Workspace: <strong>{org?.name}</strong>. Your target level, test date and daily availability live in{' '}
           <Link href="/settings">Settings</Link>, since those shape the study plan rather than the account.
+        </p>
+      </section>
+
+      {/* --- Take it with you --- */}
+      <section style={{ marginBottom: 'var(--s7)' }}>
+        <div className="section-head">
+          <h2 style={{ fontSize: '1.05rem', fontFamily: 'var(--font-body)', fontWeight: 600 }}>Your data</h2>
+        </div>
+        <p className="small muted measure-wide" style={{ marginBottom: 'var(--s4)' }}>
+          Export is free on every plan and always will be. Your record is yours, and a product that asks you to
+          trust its honesty should not make leaving expensive.
+        </p>
+        <div className="row-tight wrap">
+          <a className="btn" href="/api/export/data" download>
+            Download everything (JSON)
+          </a>
+          {planKey === 'learner_free' ? null : (
+            <a className="btn" href="/api/export/plan" download>
+              Study plan (.ics)
+            </a>
+          )}
+        </div>
+        <p className="tiny faint" style={{ marginTop: 'var(--s3)' }}>
+          Includes your profile, every attempt and answer, submissions and evaluations, mistakes, review
+          schedule, estimates, progress history and lesson record.
         </p>
       </section>
 

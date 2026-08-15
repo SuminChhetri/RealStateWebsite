@@ -46,6 +46,7 @@ const GROUPS: {
     items: [
       { href: '/mistakes', label: 'Mistakes', badge: 'mistakes' },
       { href: '/progress', label: 'Progress' },
+      { href: '/report', label: 'Readiness report' },
       { href: '/path', label: 'CLB path' },
     ],
   },
@@ -148,6 +149,9 @@ export function AppNav({
             <div className="app-nav-menu">
               <Link href="/profile" className="app-nav-link">
                 Profile
+              </Link>
+              <Link href="/plans" className="app-nav-link">
+                Plans
               </Link>
               <Link href="/settings" className="app-nav-link">
                 Settings

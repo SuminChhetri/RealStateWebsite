@@ -2,7 +2,14 @@ import 'server-only';
 import { redirect } from 'next/navigation';
 import { and, eq, gte, sql } from 'drizzle-orm';
 import { db } from '../db/client';
-import { auditLogs, rateLimits } from '../db/schema';
+import { auditLogs, organizations, rateLimits } from '../db/schema';
+import {
+  DEFAULT_PLAN_KEY,
+  planFor,
+  planRequiredFor,
+  type FeatureKey,
+  type Plan,
+} from '../billing/plans';
 import { newId } from '../ids';
 import { getSession, type SessionContext } from './session';
 
@@ -47,6 +54,45 @@ export async function requireRole(min: SessionContext['role']): Promise<SessionC
 
 export function can(session: SessionContext, min: SessionContext['role']): boolean {
   return ROLE_RANK[session.role] >= ROLE_RANK[min];
+}
+
+/* ------------------------------------------------------------------ */
+/* Entitlements                                                        */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The plan this session's organisation is on.
+ *
+ * Read from the organisation rather than the session, because a plan can change
+ * between a session being issued and a page being rendered, and the newer answer
+ * is the correct one.
+ */
+export async function currentPlan(session: SessionContext): Promise<Plan> {
+  const [org] = await db
+    .select({ planKey: organizations.planKey })
+    .from(organizations)
+    .where(eq(organizations.id, session.orgId))
+    .limit(1);
+  return planFor(org?.planKey ?? DEFAULT_PLAN_KEY);
+}
+
+/**
+ * The single answer to "may this account use this".
+ *
+ * Server-side and used by every gated surface. Hiding a link in the interface
+ * is presentation; this is the gate. A paywall enforced in six places leaks in
+ * at least one of them.
+ */
+export async function checkFeature(
+  session: SessionContext,
+  feature: FeatureKey,
+): Promise<{ allowed: boolean; plan: Plan; required: Plan | null }> {
+  const plan = await currentPlan(session);
+  return {
+    allowed: plan.features.includes(feature),
+    plan,
+    required: planRequiredFor(feature),
+  };
 }
 
 /**
