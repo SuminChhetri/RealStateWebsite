@@ -65,7 +65,7 @@ export async function submitWriting(formData: FormData) {
   const now = nowSeconds();
 
   await db.transaction(async (tx) => {
-    tx.insert(writingSubmissions)
+    await tx.insert(writingSubmissions)
       .values({
         id: submissionId,
         userId: session.userId,

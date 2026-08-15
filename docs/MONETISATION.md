@@ -265,11 +265,11 @@ either half can be handed over alone.
   constraints, and a scripted one presented as a tutor would violate the
   no-fake-AI rule. The correct abstraction already exists in
   `lib/providers` should that change.
-- ~~**Institute cohort dashboard.**~~ Built. See §7.
+- ~~**Institute cohort dashboard.**~~ Built. See §6.
 
 ---
 
-## 7. What shipped after the first round
+## 6. What shipped after the first round
 
 The first implementation shipped only the flagship, which left the paid tier
 thin enough to be fairly described as nothing to sell. The rest of §2 is now
@@ -314,7 +314,64 @@ does not grant.
 
 ---
 
-## 6. Billing
+## 7. The coached path
+
+The last thing added, and the only one whose value is a person's time rather
+than software.
+
+The argument for it is the same argument the rest of this document makes for not
+faking anything. The analysers are rule-based and say so on every page they
+appear on. There are judgements they cannot make — whether an argument
+persuades, whether an example is apt, whether a response *sounds* like someone
+talking rather than reciting — and the honest way to deliver those is to route
+them to a person, not to simulate them. Every alternative to a human here is
+some version of pretending.
+
+It is also the clearest thing in the product to charge for, because nobody has
+to be persuaded that a teacher's hour has a price.
+
+**How it works.** A learner asks, attaching a question — the field is offered
+before the button, because "have a look at this" gives a teacher nothing to aim
+at and "is my second paragraph answering the question or restating the first"
+produces feedback worth the wait. Requests land on an oldest-first queue. A
+teacher claims one, which is what stops two people answering the same learner
+twice, reads or listens to it, and returns written feedback with an optional
+band.
+
+**Three decisions worth defending:**
+
+*The queue is oldest first, with no exceptions.* Sorted by anything else —
+shortest, easiest, most recent — it quietly starves whoever is least able to
+chase it, and the person waiting longest is the person the queue exists for.
+
+*A teacher's band is never merged into the analyser's estimate.* They are
+different kinds of claim. Averaging a human judgement with a rule-based estimate
+produces a number that means nothing and hides both inputs. The learner sees the
+two side by side, labelled, with the disagreement visible — which is usually the
+most informative thing on the page. The band is also optional, because a
+reviewer who is not confident enough to place a response should be able to say
+something useful without inventing a number.
+
+*Claiming a review is what grants access to the recording, not holding a teacher
+role.* Reviewing speech from a transcript alone would be a pretence of review:
+stress, intonation and hesitation are most of what separates the top two bands
+and none of it survives transcription. So a reviewer must be able to hear it —
+and only the one holding that specific review, for as long as they hold it.
+Blanket access for every teacher in an organisation would not be a review queue,
+it would be a surveillance surface, and it is exactly the kind of thing that
+gets granted once for a good reason and never narrowed again.
+
+**What it does not solve.** This is a services business wearing a software
+feature's clothes. Its unit economics are a teacher's hour, it does not improve
+with scale the way the analysers do, and the quality of what a learner receives
+depends on who is in the queue rather than on anything in this repository. A
+twenty-character floor on feedback stops the empty case; it cannot make a review
+good. That trade was made deliberately and with open eyes: a real limitation
+stated plainly beats a synthetic capability presented as intelligence.
+
+---
+
+## 8. Billing
 
 **No payment provider is connected, and none will be.** This project is built
 under a constraint that nothing may cost money, so the upgrade path explains

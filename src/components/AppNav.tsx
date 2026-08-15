@@ -157,6 +157,9 @@ export function AppNav({
               <Link href="/cohort" className="app-nav-link">
                 Cohort
               </Link>
+              <Link href="/review-queue" className="app-nav-link">
+                Review queue
+              </Link>
               <Link href="/settings" className="app-nav-link">
                 Settings
               </Link>

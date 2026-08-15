@@ -110,7 +110,7 @@ export async function POST(request: Request) {
   const evaluationId = newId('evl');
 
   await db.transaction(async (tx) => {
-    tx.insert(speakingSubmissions)
+    await tx.insert(speakingSubmissions)
       .values({
         id: submissionId,
         userId: session.userId,

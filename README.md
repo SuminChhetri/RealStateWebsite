@@ -111,6 +111,45 @@ Retest.** The loop is the product; every surface is a view onto part of it.
   accident: collapsed by default, confirmed by typing your own email address,
   rate limited, and executed in one transaction so nothing is left orphaned.
 
+### What the paid tiers add
+
+Everything above is free and stays free — the whole loop, without limits. What
+is charged for is not the method but the artefacts and the people:
+
+- **Readiness report** — a printable document, built as semantic HTML rather
+  than an image so it survives a screen reader, 200% zoom and a greyscale laser
+  printer. It refuses to render a verdict at all until there is enough evidence
+  to support one (20 observations, three skills placed), and "ready" requires
+  the *lower* bound of every skill to clear the target.
+- **Sitting report** — a forensic reading of one sitting: where the marks went
+  by micro-skill, pace against the intended pace, accuracy across the first,
+  middle and last third, performance above and below the learner's own level,
+  and what happened to changed answers. Its findings describe measurement, never
+  a state of mind — "accuracy fell in the last third", not "you lost
+  concentration" — and when nothing in the data stands out it says so instead of
+  inventing a finding.
+- **Sitting comparison** — whether a change between two sittings is real. A
+  difference counts as movement only when it exceeds the combined standard error
+  of the two estimates; anything smaller is reported as noise, including when
+  the number went up.
+- **Cohort view** — for a teacher running a group.
+- **Human review (the coached path)** — the one place where the intelligence is
+  a person. A learner asks a teacher to look at a piece of writing or a
+  recording, with a specific question; the teacher claims it off an oldest-first
+  queue, reads or listens to it, and returns written feedback with an optional
+  band. A teacher's band is shown **beside** the analyser's estimate and is never
+  merged into it: a human judgement and a rule-based estimate are different kinds
+  of claim, and averaging them would hide both.
+
+The coached path has two rules in the code rather than in a policy document.
+Feedback shorter than twenty characters is rejected, because "Good job" is what
+an unenforced field fills with and a learner who paid for a person's attention
+and got four words has been sold nothing. And a reviewer can hear a recording
+only while they hold the review of it — claiming is what grants access, not
+holding a teacher role — because reviewing speech from a transcript alone would
+be a pretence of review, and blanket access would not be a review queue but a
+surveillance surface.
+
 ---
 
 ## Architecture
@@ -141,7 +180,13 @@ src/
       srs.ts                spaced retrieval scheduler
       recommend.ts          next-best-action
       plan.ts               adaptive study plans
+      sitting-report.ts     forensic analysis of one sitting, and sitting comparison
+      readiness-report.ts   the printable verdict, with its refusal-to-answer path
     practice/               item selection, delivery, submission
+      review-rules.ts       what counts as a valid review request and return
+      review-access.ts      who may read work that is not their own
+      review-actions.ts     the coached path: ask, claim, release, return
+    billing/plans.ts        tiers and features; no provider connected
     learner/                the assembled learner profile
     providers/              evaluation, speech, storage, entitlement seams
 docs/RESEARCH.md            what was researched, found, decided — and diverged from
@@ -175,8 +220,24 @@ non-superuser owner before settling on `ENABLE`.
 **Multi-tenancy.** Every tenant-scoped row carries `orgId`. Authorization runs
 through one choke point (`lib/auth/guard.ts`); no caller accepts a tenant
 identifier from the client. Organisations, memberships and roles exist from the
-first migration, and the entitlement model is wired with no billing provider
-connected and nothing gated.
+first migration.
+
+**Entitlements.** Plans are declared in `lib/billing/plans.ts` and resolved from
+the organisation, not the session, so a plan change takes effect on the next
+request rather than the next sign-in. Every gate goes through
+`checkFeature(session, feature)`, and a test asserts that the entire learning
+loop stays outside the paywall — if any of it ever needs a plan, the free tier
+has stopped being a product and become a trial.
+
+**No billing provider is connected** (`BILLING_PROVIDER_CONNECTED = false`), and
+nothing in this repository can take a payment. The tiers are an entitlement
+model with a working local implementation; wiring a provider later is an
+addition, not a rewrite. To exercise a paid surface in development, set the
+organisation's `plan_key` directly:
+
+```sql
+update organizations set plan_key = 'institute' where id = '<org id>';
+```
 
 **Security.** scrypt password hashing with per-user salts, opaque session tokens
 stored only as SHA-256, rate limiting applied in a single atomic upsert so
@@ -283,9 +344,22 @@ learner inside a fortnight.
 the writing and speaking analysers on strong and weak responses, usage rules
 against both error cases and correct English, ability estimation and readiness,
 the retrieval scheduler's interval behaviour, recommendation quality and
-diversity, plan generation including its blunt verdict, and the integrity of the
-whole content corpus.
+diversity, plan generation including its blunt verdict, the tier boundaries, the
+review lifecycle's rules, and the integrity of the whole content corpus.
 
-The end-to-end flow — sign-up, onboarding, diagnostic, submission, feedback,
-writing submission, mobile and dark rendering — was exercised in a real browser
-during development.
+The end-to-end flow was exercised in a real browser during development: sign-up,
+onboarding, diagnostic, submission, feedback, writing submission, themes, mobile
+and dark rendering — and the coached path in full, across three browser
+contexts, checking that a learner's request reaches a teacher in the same
+organisation and nobody else, that a teacher cannot hear a recording until they
+claim the review of it, and that the teacher's band arrives on the learner's page
+beside the analyser's estimate rather than folded into it.
+
+Two defects worth recording, because both were invisible to type-checking and to
+the interface. Writing and speaking submissions were being dropped silently: the
+insert inside the transaction was not awaited, and a Drizzle query builder is
+lazy, so the statement was constructed and never executed while the page
+happily rendered a feedback report. And the schedule generator produced
+duplicate options at a rate of about 1 in 70 — invisible in a 60-seed sweep,
+certain to reach a learner within a fortnight, which is why the generator sweeps
+now run to 400 seeds.

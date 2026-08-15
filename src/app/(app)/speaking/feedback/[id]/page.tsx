@@ -2,12 +2,13 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { and, eq } from 'drizzle-orm';
-import { requireSession } from '@/lib/auth/guard';
+import { checkFeature, requireSession } from '@/lib/auth/guard';
 import { db } from '@/lib/db/client';
-import { evaluations, speakingSubmissions, speakingTasks } from '@/lib/db/schema';
+import { evaluations, reviewRequests, speakingSubmissions, speakingTasks } from '@/lib/db/schema';
 import type { CoachingPriority, DimensionResult } from '@/lib/engines/writing-eval';
 import { EstimateFootnote } from '@/components/Level';
 import { PauseTimeline } from '@/components/speaking/PauseTimeline';
+import { ReviewRequest } from '@/components/ReviewRequest';
 import '../../../writing/writing.css';
 
 export const metadata: Metadata = { title: 'Speaking feedback' };
@@ -62,6 +63,24 @@ export default async function SpeakingFeedbackPage({ params }: { params: Promise
   const limitations = JSON.parse(row.evaluation.limitations) as string[];
   const envelope = row.submission.timeline
     ? (JSON.parse(row.submission.timeline) as { tMs: number; rms: number }[])
+    : [];
+
+  // Human review, where the organisation has it. Speech is where the rule-based
+  // analysis is thinnest — it can measure pace and pausing but cannot hear
+  // whether you sound natural — so the route to a person matters most here.
+  const reviewGate = await checkFeature(session, 'teacher_review');
+  const [review] = reviewGate.allowed
+    ? await db
+        .select()
+        .from(reviewRequests)
+        .where(
+          and(
+            eq(reviewRequests.submissionType, 'speaking'),
+            eq(reviewRequests.submissionId, id),
+            eq(reviewRequests.orgId, session.orgId),
+          ),
+        )
+        .limit(1)
     : [];
 
   return (
@@ -262,6 +281,51 @@ export default async function SpeakingFeedbackPage({ params }: { params: Promise
           <p className="small measure-wide">{row.task.modelNotes}</p>
         </div>
       </section>
+
+      {/* --- What a person said, where a person is available --- */}
+      {reviewGate.allowed ? (
+        <section style={{ marginBottom: 'var(--s6)' }}>
+          <div className="section-head">
+            <h2 style={{ fontSize: '1.05rem', fontFamily: 'var(--font-body)', fontWeight: 600 }}>
+              From a teacher
+            </h2>
+            <p className="tiny faint">Someone who can hear it, not only measure it</p>
+          </div>
+
+          {review?.status === 'returned' ? (
+            <article className="panel" style={{ borderLeft: '3px solid var(--accent)' }}>
+              <div className="stack stack-3">
+                {review.reviewerLevel !== null ? (
+                  <p className="small">
+                    <strong>Their band: CLB {review.reviewerLevel.toFixed(1)}</strong>{' '}
+                    <span className="muted">
+                      (the analyser above said {row.evaluation.estimatedLevel.toFixed(1)} — these are shown
+                      separately on purpose; a human judgement and a rule-based estimate are different kinds of
+                      claim, and averaging them would hide both)
+                    </span>
+                  </p>
+                ) : null}
+                <p className="prose" style={{ whiteSpace: 'pre-wrap', fontSize: '0.9375rem' }}>
+                  {review.feedback}
+                </p>
+              </div>
+            </article>
+          ) : review ? (
+            <p className="notice notice-caution">
+              {review.status === 'claimed'
+                ? 'A teacher has picked this up and is listening to it.'
+                : 'Waiting for a teacher. The automated analysis above does not wait for it.'}
+            </p>
+          ) : row.submission.audioKey ? (
+            <ReviewRequest submissionType="speaking" submissionId={id} />
+          ) : (
+            <p className="notice notice-caution">
+              No audio was stored for this response, so there is nothing for a teacher to listen to. Record it
+              again to ask for a human review.
+            </p>
+          )}
+        </section>
+      ) : null}
 
       <section style={{ marginBottom: 'var(--s6)' }}>
         <details className="panel-quiet">

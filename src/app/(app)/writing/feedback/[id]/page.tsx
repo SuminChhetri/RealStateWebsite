@@ -2,13 +2,14 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { and, eq } from 'drizzle-orm';
-import { requireSession } from '@/lib/auth/guard';
+import { checkFeature, requireSession } from '@/lib/auth/guard';
 import { db } from '@/lib/db/client';
-import { evaluations, writingSubmissions, writingTasks } from '@/lib/db/schema';
+import { evaluations, reviewRequests, writingSubmissions, writingTasks } from '@/lib/db/schema';
 import type { CoachingPriority, DimensionResult } from '@/lib/engines/writing-eval';
 import type { UsageFinding } from '@/lib/engines/usage-rules';
 import { EstimateFootnote } from '@/components/Level';
 import { AnnotatedText } from '@/components/writing/AnnotatedText';
+import { ReviewRequest } from '@/components/ReviewRequest';
 import '../../writing.css';
 
 export const metadata: Metadata = { title: 'Writing feedback' };
@@ -66,6 +67,23 @@ export default async function WritingFeedbackPage({ params }: { params: Promise<
     metrics: Record<string, number | string>;
   };
   const limitations = JSON.parse(row.evaluation.limitations) as string[];
+
+  // Human review, where the organisation has it. The analysers are explicit
+  // about what they cannot judge; this is the route to someone who can.
+  const reviewGate = await checkFeature(session, 'teacher_review');
+  const [review] = reviewGate.allowed
+    ? await db
+        .select()
+        .from(reviewRequests)
+        .where(
+          and(
+            eq(reviewRequests.submissionType, 'writing'),
+            eq(reviewRequests.submissionId, id),
+            eq(reviewRequests.orgId, session.orgId),
+          ),
+        )
+        .limit(1)
+    : [];
 
   const uncovered = findingsPayload.requirementCoverage.filter((r) => !r.covered);
 
@@ -252,6 +270,46 @@ export default async function WritingFeedbackPage({ params }: { params: Promise<
           </p>
         </div>
       </section>
+
+      {/* --- What a person said, where a person is available --- */}
+      {reviewGate.allowed ? (
+        <section style={{ marginBottom: 'var(--s6)' }}>
+          <div className="section-head">
+            <h2 style={{ fontSize: '1.05rem', fontFamily: 'var(--font-body)', fontWeight: 600 }}>
+              From a teacher
+            </h2>
+            <p className="tiny faint">A judgement the analyser cannot make</p>
+          </div>
+
+          {review?.status === 'returned' ? (
+            <article className="panel" style={{ borderLeft: '3px solid var(--accent)' }}>
+              <div className="stack stack-3">
+                {review.reviewerLevel !== null ? (
+                  <p className="small">
+                    <strong>Their band: CLB {review.reviewerLevel.toFixed(1)}</strong>{' '}
+                    <span className="muted">
+                      (the analyser above said {row.evaluation.estimatedLevel.toFixed(1)} — these are shown
+                      separately on purpose; a human judgement and a rule-based estimate are different kinds of
+                      claim, and averaging them would hide both)
+                    </span>
+                  </p>
+                ) : null}
+                <p className="prose" style={{ whiteSpace: 'pre-wrap', fontSize: '0.9375rem' }}>
+                  {review.feedback}
+                </p>
+              </div>
+            </article>
+          ) : review ? (
+            <p className="notice notice-caution">
+              {review.status === 'claimed'
+                ? 'A teacher has picked this up and is reading it.'
+                : 'Waiting for a teacher. The automated analysis above does not wait for it.'}
+            </p>
+          ) : (
+            <ReviewRequest submissionType="writing" submissionId={id} />
+          )}
+        </section>
+      ) : null}
 
       {/* --- Limitations --- */}
       <section style={{ marginBottom: 'var(--s6)' }}>

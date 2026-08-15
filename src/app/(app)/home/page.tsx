@@ -5,6 +5,7 @@ import { getProfile, getRecommendations } from '@/lib/learner/profile';
 import { descriptorFor } from '@/lib/content/clb';
 import { SKILL_LABELS, type Skill } from '@/lib/content/taxonomy';
 import { EstimateFootnote, EstimateLabel, LevelScale } from '@/components/Level';
+import { isReviewerOnlyRole } from '@/lib/practice/review-access';
 
 export const metadata: Metadata = { title: 'Today' };
 export const dynamic = 'force-dynamic';
@@ -22,6 +23,36 @@ const KIND_LABEL: Record<string, string> = {
 export default async function TodayPage() {
   const session = await requireSession();
   const profile = await getProfile(session.userId, session.orgId);
+
+  // A teacher or reviewer reaches this page without having answered the learner
+  // questionnaire, because they are not required to. Rather than show them an
+  // empty plan and leave them to guess, point them at the queue — and leave the
+  // questionnaire one click away in case they are also sitting the test.
+  if (isReviewerOnlyRole(session.role) && !profile.onboarded) {
+    return (
+      <div className="page-narrow">
+        <header className="page-header">
+          <div className="stack stack-3">
+            <p className="eyebrow">Signed in as {session.role}</p>
+            <h1>Nothing of your own here yet</h1>
+            <p className="muted measure-wide">
+              This page is a learner&rsquo;s study plan, and you have not set one up. That is not an
+              oversight — reviewing does not require it.
+            </p>
+          </div>
+        </header>
+        <div className="row wrap">
+          <Link className="btn btn-primary" href="/review-queue">
+            Go to the review queue
+          </Link>
+          <Link className="btn" href="/onboarding">
+            Set up a study plan for myself
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   const recommendations = await getRecommendations(session.userId, session.orgId, profile);
 
   const first = recommendations[0];

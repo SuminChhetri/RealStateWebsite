@@ -641,6 +641,61 @@ export const evaluations = pgTable(
 /* Learning state                                                      */
 /* ------------------------------------------------------------------ */
 
+/**
+ * A request for a human to look at a piece of work.
+ *
+ * This is the one part of the product where the intelligence is a person, and
+ * that is deliberate. The analysers here are rule-based and say so; they cannot
+ * judge whether an argument is persuasive, whether an example is apt, or
+ * whether a response would strike an examiner as natural. A teacher can. Rather
+ * than pretending the software does that, the software routes the work to
+ * someone who does — which is also why this belongs to the Institute tier,
+ * where a teacher actually exists.
+ *
+ * The lifecycle is deliberately small: requested → claimed → returned. There is
+ * no "in progress" state, because a claim already means that, and no
+ * rejection state, because a teacher who cannot take a piece releases the claim
+ * rather than refusing the learner.
+ */
+export const reviewRequests = pgTable(
+  'review_requests',
+  {
+    id: text('id').primaryKey(),
+    /** The learner who asked. */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    orgId: text('org_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    submissionType: text('submission_type', { enum: ['writing', 'speaking'] }).notNull(),
+    submissionId: text('submission_id').notNull(),
+    /** What the learner wants looked at. Optional, and often the most useful part. */
+    question: text('question'),
+    status: text('status', { enum: ['requested', 'claimed', 'returned'] })
+      .notNull()
+      .default('requested'),
+    /** The teacher who took it. Null while unclaimed. */
+    reviewerId: text('reviewer_id').references(() => users.id, { onDelete: 'set null' }),
+    claimedAt: integer('claimed_at'),
+    returnedAt: integer('returned_at'),
+    /** The teacher's written response. Plain prose, not a rubric score. */
+    feedback: text('feedback'),
+    /**
+     * Optional teacher band. Recorded separately from the analyser's estimate
+     * and never merged into it: a human judgement and a rule-based estimate are
+     * different kinds of claim, and averaging them would hide both.
+     */
+    reviewerLevel: doublePrecision('reviewer_level'),
+    createdAt: integer('created_at').notNull().default(now),
+  },
+  (t) => [
+    uniqueIndex('review_requests_submission_idx').on(t.submissionType, t.submissionId),
+    index('review_requests_queue_idx').on(t.orgId, t.status, t.createdAt),
+    index('review_requests_user_idx').on(t.userId, t.orgId, t.createdAt),
+  ],
+);
+
 export const mistakes = pgTable(
   'mistakes',
   {
