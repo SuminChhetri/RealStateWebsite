@@ -212,3 +212,26 @@
   display: flex;
   flex-direction: column;
 }
+
+/* The sidebar account button reads as a menu trigger: an avatar, the name,
+   and a caret that reflects whether the menu is open. */
+.app-nav-avatar {
+  flex: none;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.app-nav-caret {
+  margin-left: auto;
+  color: var(--ink-tertiary);
+  font-size: 0.7rem;
+  line-height: 1;
+}

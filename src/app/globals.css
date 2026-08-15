@@ -162,6 +162,147 @@
 }
 
 /* ------------------------------------------------------------------ */
+/* Additional themes                                                   */
+/*                                                                     */
+/* Each is a token swap and nothing more — no component is aware of    */
+/* which one is active. `system` sets no attribute at all and so falls */
+/* through to the two blocks above.                                    */
+/* ------------------------------------------------------------------ */
+
+/* Sepia: warm, low-contrast paper. The point is not nostalgia — it is that
+   pure white at full contrast is tiring across a fifty-minute reading section,
+   and a slightly warm ground with slightly softened ink is measurably easier
+   to stay in. Contrast is still held above 7:1 for body text. */
+:root[data-theme='sepia'] {
+  --paper: #f4ecdc;
+  --paper-raised: #fbf5e9;
+  --paper-sunken: #eae0cb;
+  --paper-inverse: #2b2419;
+
+  --ink: #2f2718;
+  --ink-secondary: #5c5140;
+  --ink-tertiary: #857964;
+  --ink-inverse: #f8f2e6;
+
+  --rule: rgba(47, 39, 24, 0.16);
+  --rule-strong: rgba(47, 39, 24, 0.28);
+  --rule-faint: rgba(47, 39, 24, 0.09);
+
+  --accent: #1f6350;
+  --accent-strong: #164c3d;
+  --accent-soft: rgba(31, 99, 80, 0.12);
+  --accent-ink: #fbf5e9;
+
+  --positive: #2f6b48;
+  --positive-soft: rgba(47, 107, 72, 0.13);
+  --caution: #8a5a12;
+  --caution-soft: rgba(138, 90, 18, 0.14);
+  --critical: #93331f;
+  --critical-soft: rgba(147, 51, 31, 0.12);
+  --neutral-soft: rgba(47, 39, 24, 0.07);
+
+  --skill-reading: #2c5a86;
+  --skill-listening: #63447e;
+  --skill-writing: #855611;
+  --skill-speaking: #1d635c;
+
+  color-scheme: light;
+}
+
+/* Nocturne: for a dark room. Blue is pulled down hard and the surfaces sit
+   near-black, so the screen is not the brightest object in the room. Text
+   stays warm, because pure white on near-black produces halation. */
+:root[data-theme='nocturne'] {
+  --paper: #0b0d10;
+  --paper-raised: #12151a;
+  --paper-sunken: #07090b;
+  --paper-inverse: #ece7dd;
+
+  --ink: #ddd6c9;
+  --ink-secondary: #9b958a;
+  --ink-tertiary: #6f6a61;
+  --ink-inverse: #0b0d10;
+
+  --rule: rgba(221, 214, 201, 0.13);
+  --rule-strong: rgba(221, 214, 201, 0.24);
+  --rule-faint: rgba(221, 214, 201, 0.07);
+
+  --accent: #d9a441;
+  --accent-strong: #e8b862;
+  --accent-soft: rgba(217, 164, 65, 0.14);
+  --accent-ink: #0b0d10;
+
+  --positive: #8faf7a;
+  --positive-soft: rgba(143, 175, 122, 0.14);
+  --caution: #d3a05a;
+  --caution-soft: rgba(211, 160, 90, 0.14);
+  --critical: #d1795f;
+  --critical-soft: rgba(209, 121, 95, 0.14);
+  --neutral-soft: rgba(221, 214, 201, 0.06);
+
+  --skill-reading: #8aa6c4;
+  --skill-listening: #b193c9;
+  --skill-writing: #d3a05a;
+  --skill-speaking: #77b3aa;
+
+  --shadow-overlay: 0 12px 32px -12px rgba(0, 0, 0, 0.8), 0 2px 6px -2px rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
+}
+
+/* High contrast: for low vision, and for reading on a poor screen in bright
+   light. Body text runs at 21:1, rules are opaque rather than translucent, and
+   focus rings are thicker — a translucent hairline is exactly what disappears
+   for the people who need this mode. */
+:root[data-theme='contrast'] {
+  --paper: #ffffff;
+  --paper-raised: #ffffff;
+  --paper-sunken: #f0f0f0;
+  --paper-inverse: #000000;
+
+  --ink: #000000;
+  --ink-secondary: #1c1c1c;
+  --ink-tertiary: #3d3d3d;
+  --ink-inverse: #ffffff;
+
+  --rule: #000000;
+  --rule-strong: #000000;
+  --rule-faint: #6b6b6b;
+
+  --accent: #00453a;
+  --accent-strong: #002f28;
+  --accent-soft: #d8e8e4;
+  --accent-ink: #ffffff;
+
+  --positive: #0f4d2b;
+  --positive-soft: #d9ecdf;
+  --caution: #5c3a00;
+  --caution-soft: #f6e6cc;
+  --critical: #8a0f00;
+  --critical-soft: #f7dcd8;
+  --neutral-soft: #e6e6e6;
+
+  --skill-reading: #123a63;
+  --skill-listening: #45215e;
+  --skill-writing: #5c3a00;
+  --skill-speaking: #06443e;
+
+  color-scheme: light;
+}
+
+:root[data-theme='contrast'] :focus-visible {
+  outline-width: 3px;
+}
+
+/* A hairline that is genuinely 1 physical pixel disappears at this setting;
+   borders are given real weight instead. */
+:root[data-theme='contrast'] .panel,
+:root[data-theme='contrast'] .panel-quiet,
+:root[data-theme='contrast'] .btn,
+:root[data-theme='contrast'] .input {
+  border-width: 2px;
+}
+
+/* ------------------------------------------------------------------ */
 /* Base                                                                */
 /* ------------------------------------------------------------------ */
 
@@ -769,3 +910,121 @@ table.data td.num { font-variant-numeric: tabular-nums; }
   .no-print { display: none !important; }
   body { background: white; color: black; }
 }
+
+/* ------------------------------------------------------------------ */
+/* Theme picker                                                        */
+/* ------------------------------------------------------------------ */
+
+.theme-grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--s3);
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+}
+
+.theme-option {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  width: 100%;
+  text-align: left;
+  padding: var(--s3);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--paper-raised);
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.theme-option:hover { border-color: var(--rule-strong); }
+
+.theme-option[aria-checked='true'] {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+/* The swatch renders in the palette it is offering, so the control shows
+   rather than describes. Values are literal because a preview cannot inherit
+   the tokens of a theme that is not currently applied. */
+.theme-swatch {
+  flex: none;
+  width: 3rem;
+  height: 2.25rem;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--rule);
+  padding: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.25rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-swatch-bar { height: 3px; border-radius: 2px; width: 100%; }
+.theme-swatch-bar-short { width: 60%; }
+.theme-swatch-dot {
+  position: absolute;
+  right: 0.3rem;
+  bottom: 0.3rem;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.theme-swatch[data-preview='light'] { background: #faf8f4; border-color: rgba(25,29,35,0.18); }
+.theme-swatch[data-preview='light'] .theme-swatch-bar { background: #191d23; }
+.theme-swatch[data-preview='light'] .theme-swatch-dot { background: #16624f; }
+
+.theme-swatch[data-preview='dark'] { background: #14181d; border-color: rgba(233,230,224,0.22); }
+.theme-swatch[data-preview='dark'] .theme-swatch-bar { background: #e9e6e0; }
+.theme-swatch[data-preview='dark'] .theme-swatch-dot { background: #4fb495; }
+
+.theme-swatch[data-preview='sepia'] { background: #f4ecdc; border-color: rgba(47,39,24,0.24); }
+.theme-swatch[data-preview='sepia'] .theme-swatch-bar { background: #2f2718; }
+.theme-swatch[data-preview='sepia'] .theme-swatch-dot { background: #1f6350; }
+
+.theme-swatch[data-preview='nocturne'] { background: #0b0d10; border-color: rgba(221,214,201,0.22); }
+.theme-swatch[data-preview='nocturne'] .theme-swatch-bar { background: #ddd6c9; }
+.theme-swatch[data-preview='nocturne'] .theme-swatch-dot { background: #d9a441; }
+
+.theme-swatch[data-preview='contrast'] { background: #ffffff; border-color: #000000; border-width: 2px; }
+.theme-swatch[data-preview='contrast'] .theme-swatch-bar { background: #000000; }
+.theme-swatch[data-preview='contrast'] .theme-swatch-dot { background: #00453a; }
+
+/* System is the only one that cannot be shown as a single palette, so it is
+   shown as both, split down the middle. */
+.theme-swatch[data-preview='system'] {
+  background: linear-gradient(105deg, #faf8f4 0%, #faf8f4 50%, #14181d 50%, #14181d 100%);
+  border-color: var(--rule-strong);
+}
+.theme-swatch[data-preview='system'] .theme-swatch-bar {
+  background: linear-gradient(105deg, #191d23 0%, #191d23 50%, #e9e6e0 50%, #e9e6e0 100%);
+}
+.theme-swatch[data-preview='system'] .theme-swatch-dot { background: #4fb495; }
+
+/* ------------------------------------------------------------------ */
+/* Notices                                                             */
+/*                                                                     */
+/* A badge was being used for save confirmations and errors, which is  */
+/* the wrong primitive: a badge labels something beside it, a notice    */
+/* addresses the reader. Notices get a full-width block, a rule on the  */
+/* leading edge, and room to hold a sentence.                           */
+/* ------------------------------------------------------------------ */
+
+.notice {
+  display: block;
+  padding: var(--s3) var(--s4);
+  border: 1px solid var(--rule);
+  border-left-width: 3px;
+  border-radius: var(--r-sm);
+  background: var(--paper-raised);
+  font-size: 0.875rem;
+  margin-bottom: var(--s5);
+}
+
+.notice-positive { border-left-color: var(--positive); background: var(--positive-soft); }
+.notice-caution  { border-left-color: var(--caution);  background: var(--caution-soft); }
+.notice-critical { border-left-color: var(--critical); background: var(--critical-soft); }

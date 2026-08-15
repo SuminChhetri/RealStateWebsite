@@ -124,17 +124,31 @@ export function AppNav({
             onClick={() => setMenuOpen((v) => !v)}
             aria-expanded={menuOpen}
           >
+            <span className="app-nav-avatar" aria-hidden>
+              {userName
+                .split(/\s+/)
+                .filter(Boolean)
+                .slice(0, 2)
+                .map((part) => part[0]?.toUpperCase() ?? '')
+                .join('') || '·'}
+            </span>
             <span className="stack" style={{ alignItems: 'flex-start', minWidth: 0 }}>
               <span className="small" style={{ fontWeight: 500 }}>
                 {userName}
               </span>
-              <span className="tiny faint" style={{ overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '10rem' }}>
+              <span className="tiny faint" style={{ overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '9rem' }}>
                 {orgName}
               </span>
+            </span>
+            <span className="app-nav-caret" aria-hidden>
+              {menuOpen ? '▴' : '▾'}
             </span>
           </button>
           {menuOpen ? (
             <div className="app-nav-menu">
+              <Link href="/profile" className="app-nav-link">
+                Profile
+              </Link>
               <Link href="/settings" className="app-nav-link">
                 Settings
               </Link>

@@ -68,7 +68,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       </header>
 
       {query.saved ? (
-        <p className="badge badge-positive" style={{ marginBottom: 'var(--s5)' }}>
+        <p className="notice notice-positive" role="status">
           Saved — your plan and recommendations have been rebuilt.
         </p>
       ) : null}

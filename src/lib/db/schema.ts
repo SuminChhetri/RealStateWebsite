@@ -142,6 +142,12 @@ export const learnerProfiles = pgTable(
     })
       .notNull()
       .default('immigration'),
+    /**
+     * Reading-comfort theme. Stored on the profile rather than only in the
+     * browser so it follows the account to a second device — someone who needs
+     * high contrast needs it everywhere, not just where they first set it.
+     */
+    theme: text('theme').notNull().default('system'),
     onboardedAt: integer('onboarded_at'),
     diagnosticAttemptId: text('diagnostic_attempt_id'),
     createdAt: integer('created_at').notNull().default(now),

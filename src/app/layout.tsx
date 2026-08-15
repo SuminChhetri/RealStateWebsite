@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, Newsreader } from 'next/font/google';
 import './globals.css';
+import { THEME_BOOTSTRAP } from '@/lib/theme';
 
 /**
  * Newsreader carries the reading surfaces — passages, headings, anything a
@@ -45,7 +46,16 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en-CA" className={`${newsreader.variable} ${inter.variable}`}>
+    <html lang="en-CA" className={`${newsreader.variable} ${inter.variable}`} suppressHydrationWarning>
+      <head>
+        {/*
+          Applies the saved theme before the first paint. Without it a dark
+          reader gets a white flash on every navigation — precisely the people
+          most bothered by one. It reads localStorage, so it cannot be delayed
+          by a slow request.
+        */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />
+      </head>
       <body
         style={
           {

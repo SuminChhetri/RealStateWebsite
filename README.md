@@ -95,6 +95,21 @@ Retest.** The loop is the product; every surface is a view onto part of it.
   noise, not progress.
 - **CLB path & study plan** — gap per skill, an honest hours projection, and an
   adaptive schedule that says so when the horizon cannot deliver the target.
+- **Profile** — what you have actually done, counted from your own rows: items
+  answered and overall accuracy, sets completed, time on task measured per item
+  rather than per page open, responses produced, lessons finished, cards
+  scheduled. No badges for signing up; a number that can be earned without
+  doing the work stops meaning anything.
+- **Themes** — six, and the choice is a reading-comfort setting rather than a
+  decoration, because people read here for fifty minutes at a stretch: System,
+  Paper, Ink, Sepia (low-contrast warm paper), Nocturne (near-black and low in
+  blue, for an unlit room) and High contrast (21:1 body text, opaque rules,
+  thicker focus rings). Applied before first paint so there is no flash, and
+  stored on the profile so it follows the account to another device — someone
+  who needs high contrast needs it everywhere.
+- **Account deletion** — real and irreversible, and built to be hard to do by
+  accident: collapsed by default, confirmed by typing your own email address,
+  rate limited, and executed in one transaction so nothing is left orphaned.
 
 ---
 
