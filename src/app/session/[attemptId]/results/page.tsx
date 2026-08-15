@@ -251,6 +251,9 @@ export default async function ResultsPage({ params }: { params: Promise<{ attemp
       <section className="panel">
         <div className="stack stack-4">
           <h2 style={{ fontSize: '1.05rem', fontFamily: 'var(--font-body)', fontWeight: 600 }}>What to do next</h2>
+          <Link className="small" href={`/sittings/${attemptId}`}>
+            Forensic report for this sitting
+          </Link>
           <p className="small muted measure-wide">
             {weakest && weakest.correct < weakest.total
               ? `${weakest.label} was the weakest micro-skill in this set. The fastest way to close it is a targeted set at the difficulty where you are getting about two-thirds right, followed by a retest in a few days.`

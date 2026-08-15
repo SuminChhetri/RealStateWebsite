@@ -9,6 +9,7 @@ import {
   upgradeIsRelevant,
 } from '../src/lib/billing/plans';
 import { buildReadinessReport } from '../src/lib/engines/readiness-report';
+import { buildSittingReport, compareEstimates } from '../src/lib/engines/sitting-report';
 
 /**
  * The tier boundaries are a product promise, not a configuration detail. These
@@ -162,5 +163,115 @@ test('no verdict ever claims to predict an official result', () => {
     assert.doesNotMatch(text, /you will (pass|score|get)/i, 'must not predict an outcome');
     assert.doesNotMatch(text, /guarantee/i, 'must not guarantee anything');
     assert.doesNotMatch(text, /official/i, 'must not imply official standing');
+  }
+});
+
+/* ------------------------------------------------------------------ */
+/* Sitting analysis                                                    */
+/* ------------------------------------------------------------------ */
+
+test('movement smaller than the combined uncertainty is reported as noise', () => {
+  // The whole honesty claim of the comparison feature. A learner pleased with
+  // a jump has to be told when the jump is measurement error.
+  const noise = compareEstimates({
+    label: 'Reading',
+    before: { level: 7.0, se: 0.8 },
+    after: { level: 7.9, se: 0.8 },
+  });
+  assert.equal(noise.kind, 'noise');
+  assert.match(noise.explanation, /noise|inside/i);
+
+  // Same delta, far tighter estimates — now it is real.
+  const real = compareEstimates({
+    label: 'Reading',
+    before: { level: 7.0, se: 0.2 },
+    after: { level: 7.9, se: 0.2 },
+  });
+  assert.equal(real.kind, 'improved');
+
+  const decline = compareEstimates({
+    label: 'Reading',
+    before: { level: 8.5, se: 0.2 },
+    after: { level: 7.2, se: 0.2 },
+  });
+  assert.equal(decline.kind, 'declined');
+});
+
+function item(over: Partial<Parameters<typeof buildSittingReport>[0]['items'][number]> = {}) {
+  return {
+    orderIndex: 0,
+    correct: true,
+    elapsedMs: 50_000,
+    targetSeconds: 50,
+    difficulty: 7,
+    microSkill: 'reading.inference',
+    partType: 'reading.information',
+    changedAnswer: false,
+    flagged: false,
+    answered: true,
+    ...over,
+  };
+}
+
+test('a sitting report never invents a finding when nothing stands out', () => {
+  const report = buildSittingReport({
+    items: Array.from({ length: 12 }, (_, i) => item({ orderIndex: i })),
+    timeLimitSeconds: 600,
+    ability: 7,
+  });
+  assert.equal(report.findings.length, 1);
+  assert.equal(report.findings[0].key, 'clean');
+});
+
+test('unanswered items are called out, because a blank is never better than a guess', () => {
+  const report = buildSittingReport({
+    items: [
+      ...Array.from({ length: 8 }, (_, i) => item({ orderIndex: i })),
+      ...Array.from({ length: 3 }, (_, i) => item({ orderIndex: 8 + i, answered: false, correct: null, elapsedMs: 0 })),
+    ],
+    timeLimitSeconds: 600,
+    ability: 7,
+  });
+  const finding = report.findings.find((f) => f.key === 'unanswered');
+  assert.ok(finding, 'unanswered items must be reported');
+  assert.equal(report.unanswered, 3);
+  assert.equal(finding!.severity, 'critical');
+});
+
+test('a fade across the sitting is detected from position, not from difficulty', () => {
+  // Identical difficulty throughout; only the position changes.
+  const items = [
+    ...Array.from({ length: 6 }, (_, i) => item({ orderIndex: i, correct: true })),
+    ...Array.from({ length: 6 }, (_, i) => item({ orderIndex: 6 + i, correct: true })),
+    ...Array.from({ length: 6 }, (_, i) => item({ orderIndex: 12 + i, correct: false })),
+  ];
+  const report = buildSittingReport({ items, timeLimitSeconds: 900, ability: 7 });
+  assert.ok(report.findings.some((f) => f.key === 'fade'), 'should notice accuracy falling across the sitting');
+});
+
+test('losses on items below the learner’s level are flagged as the cheapest marks', () => {
+  const report = buildSittingReport({
+    items: Array.from({ length: 10 }, (_, i) =>
+      // Difficulty well below ability, so probability correct is high.
+      item({ orderIndex: i, difficulty: 3, correct: i < 5 }),
+    ),
+    timeLimitSeconds: 600,
+    ability: 9,
+  });
+  assert.ok(report.findings.some((f) => f.key === 'easy-losses'));
+});
+
+test('pace findings describe the measurement, not the learner’s state of mind', () => {
+  const slow = buildSittingReport({
+    items: Array.from({ length: 10 }, (_, i) => item({ orderIndex: i, elapsedMs: 100_000 })),
+    timeLimitSeconds: 600,
+    ability: 7,
+  });
+  const finding = slow.findings.find((f) => f.key === 'slow');
+  assert.ok(finding);
+  for (const f of slow.findings) {
+    const text = `${f.title} ${f.detail}`;
+    assert.doesNotMatch(text, /you (lost|were) (concentration|tired|distracted)/i);
+    assert.doesNotMatch(text, /panic|lazy|careless/i);
   }
 });

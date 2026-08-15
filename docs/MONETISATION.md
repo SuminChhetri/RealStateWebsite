@@ -265,10 +265,52 @@ either half can be handed over alone.
   constraints, and a scripted one presented as a tutor would violate the
   no-fake-AI rule. The correct abstraction already exists in
   `lib/providers` should that change.
-- **Institute cohort dashboard.** Deferred rather than rejected — it is the
-  higher-revenue tier and the schema supports it, but it is a surface area of
-  its own and shipping it half-built would be worse than not shipping it. The
-  entitlement and seat model are in place for it.
+- ~~**Institute cohort dashboard.**~~ Built. See §7.
+
+---
+
+## 7. What shipped after the first round
+
+The first implementation shipped only the flagship, which left the paid tier
+thin enough to be fairly described as nothing to sell. The rest of §2 is now
+built, plus the Institute tier that had been deferred.
+
+**Sitting reports** (`/sittings/[id]`). The free per-item feedback answers "why
+was this one wrong". A sitting report answers a different question that per-item
+feedback structurally cannot: *how did this sitting go as a performance*. Pace
+against the intended time, accuracy across the first, middle and last thirds —
+thirds rather than halves, because fatigue in a fifty-minute section hides in an
+average — losses concentrated by micro-skill, accuracy split by difficulty
+relative to the learner's own level, and whether changing an answer helped.
+
+Two constraints held while building it. Findings are only emitted where the data
+supports one, and when nothing stands out the report says so rather than
+inventing an observation to look thorough. And every finding describes the
+measurement rather than the learner's state of mind: "accuracy fell in the last
+third", never "you lost concentration". The first is measured; the second is a
+story about it. A test asserts no finding ever uses that second register.
+
+**Sitting comparison** (`/compare`). Two sittings side by side, with the
+difference classified as real movement or as noise against the combined standard
+error of the two estimates. This is the question every repeat candidate asks and
+almost nothing answers honestly, because answering honestly means telling
+someone a jump they were pleased with is measurement error. Raw score and
+accuracy are shown but explicitly *not* classified, because only the estimate
+carries a standard error.
+
+**Cohort view** (`/cohort`, Institute). A teacher with twenty learners has ten
+minutes before class and three questions: who stopped working, who is furthest
+from target, and what does this group have in common. The third is the one worth
+paying for — a per-learner list is something any product can build, but finding
+the micro-skill that eleven of twenty share, and which is therefore worth an
+hour of class time rather than twenty conversations, is what the micro-skill
+taxonomy makes possible.
+
+Gated on the plan *and* the role: the plan says the organisation may, the role
+says whether this person may. Individual answers, submissions and recordings are
+deliberately not surfaced — a teacher can see where a learner stands and what to
+teach, and reading someone's written work is a separate permission this view
+does not grant.
 
 ---
 
