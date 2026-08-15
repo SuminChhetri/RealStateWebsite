@@ -8,3 +8,6 @@ data/uploads/
 *.tsbuildinfo
 next-env.d.ts
 .DS_Store
+
+# Local-only notes, deliberately not published
+*.local.md

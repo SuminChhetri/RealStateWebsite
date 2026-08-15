@@ -361,6 +361,27 @@ Blanket access for every teacher in an organisation would not be a review queue,
 it would be a surveillance surface, and it is exactly the kind of thing that
 gets granted once for a good reason and never narrowed again.
 
+**The default case is nobody.** This product is self-serve, and the ordinary
+workspace has exactly one person in it. A review queue is worth building
+anyway — an institution is a real customer and the schema has carried
+organisations since the first migration — but shipping it as the answer to
+"what happens after feedback" would have been building for the exception.
+
+So where no reviewer exists, the section becomes a structured self-review
+instead: passes built from the analyser's own findings and the task's stated
+requirements, each ending in a question the learner can only answer by pointing
+at their own text. It is free on every plan, because it is part of the learning
+loop and rule 2 puts the loop outside the paywall. It states at the top that it
+is neither a person nor a model. And upgrading does not conjure a teacher — the
+gate is whether someone is actually there, checked server-side as well as in the
+interface, so a paying solo customer is told the truth rather than sold a queue
+with nobody in it.
+
+That ordering matters commercially as well as ethically. The thing that makes
+human review sellable is that a teacher's hour obviously has a price; the thing
+that makes it unsellable is a queue with no teachers. Charging for the second
+and hoping the first arrives is how a feature becomes a refund.
+
 **What it does not solve.** This is a services business wearing a software
 feature's clothes. Its unit economics are a teacher's hour, it does not improve
 with scale the way the analysers do, and the quality of what a learner receives

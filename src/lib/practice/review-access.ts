@@ -1,7 +1,7 @@
 import 'server-only';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray, ne, sql } from 'drizzle-orm';
 import { db } from '@/lib/db/client';
-import { reviewRequests } from '@/lib/db/schema';
+import { memberships, reviewRequests } from '@/lib/db/schema';
 import type { SessionContext } from '@/lib/auth/session';
 
 /**
@@ -33,6 +33,35 @@ export function isReviewerRole(role: string): boolean {
  */
 export function isReviewerOnlyRole(role: string): boolean {
   return role === 'teacher' || role === 'reviewer';
+}
+
+/**
+ * Is there anyone in this workspace who could actually read this?
+ *
+ * The product is self-serve, so the ordinary case is a workspace of one, and
+ * that one person is the learner. Offering them "ask a teacher to read this"
+ * would be a button leading nowhere — the request would be filed against a
+ * queue nobody opens, and the learner would wait for an answer that is not
+ * coming. Worse than useless: it stops them doing the thing that would help.
+ *
+ * So the surface asks this question first, and it excludes the learner
+ * themselves. A learner in a personal workspace holds the `owner` role, which
+ * *can* review — they are simply the only member. Counting them would have
+ * every solo learner offered the chance to wait for themselves.
+ */
+export async function hasReviewerOtherThan(orgId: string, userId: string): Promise<boolean> {
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(memberships)
+    .where(
+      and(
+        eq(memberships.orgId, orgId),
+        ne(memberships.userId, userId),
+        inArray(memberships.role, [...REVIEWER_ROLES]),
+      ),
+    );
+
+  return (row?.count ?? 0) > 0;
 }
 
 /**

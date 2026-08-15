@@ -5,7 +5,7 @@ import { and, eq, sql } from 'drizzle-orm';
 import { db } from '@/lib/db/client';
 import { reviewRequests, speakingSubmissions, writingSubmissions } from '@/lib/db/schema';
 import { audit, checkFeature, rateLimit, requireSession } from '@/lib/auth/guard';
-import { isReviewerRole } from '@/lib/practice/review-access';
+import { hasReviewerOtherThan, isReviewerRole } from '@/lib/practice/review-access';
 import {
   REVIEW_REQUESTS_PER_DAY,
   reviewIdSchema,
@@ -49,6 +49,16 @@ export async function requestReview(payload: unknown): Promise<RequestOutcome> {
     return {
       ok: false,
       error: `Human review is part of ${gate.required?.name ?? 'a paid plan'}. Your organisation is on ${gate.plan.name}.`,
+    };
+  }
+
+  // Enforced here as well as hidden in the interface. A request filed against a
+  // workspace with nobody in it is not a request, it is a learner waiting for
+  // an answer that is not coming.
+  if (!(await hasReviewerOtherThan(session.orgId, session.userId))) {
+    return {
+      ok: false,
+      error: 'There is no one in this workspace to read it yet. Work through the self-review below instead.',
     };
   }
 

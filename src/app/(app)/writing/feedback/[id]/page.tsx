@@ -10,6 +10,10 @@ import type { UsageFinding } from '@/lib/engines/usage-rules';
 import { EstimateFootnote } from '@/components/Level';
 import { AnnotatedText } from '@/components/writing/AnnotatedText';
 import { ReviewRequest } from '@/components/ReviewRequest';
+import { SelfReview } from '@/components/SelfReview';
+import { hasReviewerOtherThan } from '@/lib/practice/review-access';
+import { buildSelfReview } from '@/lib/practice/self-review';
+import { getProfile } from '@/lib/learner/profile';
 import '../../writing.css';
 
 export const metadata: Metadata = { title: 'Writing feedback' };
@@ -68,9 +72,12 @@ export default async function WritingFeedbackPage({ params }: { params: Promise<
   };
   const limitations = JSON.parse(row.evaluation.limitations) as string[];
 
-  // Human review, where the organisation has it. The analysers are explicit
-  // about what they cannot judge; this is the route to someone who can.
+  // Human review, where there is a human. The analysers are explicit about what
+  // they cannot judge; this is the route to someone who can — but only when
+  // someone is actually there. In a self-serve workspace of one, the honest
+  // answer is a self-review protocol, not a request queued for nobody.
   const reviewGate = await checkFeature(session, 'teacher_review');
+  const reviewerAvailable = await hasReviewerOtherThan(session.orgId, session.userId);
   const [review] = reviewGate.allowed
     ? await db
         .select()
@@ -84,6 +91,26 @@ export default async function WritingFeedbackPage({ params }: { params: Promise<
         )
         .limit(1)
     : [];
+
+  // Offered to everyone, on every plan: it is part of the learning loop, and
+  // the loop is not for sale.
+  const profile = await getProfile(session.userId, session.orgId);
+  const selfReview = buildSelfReview({
+    kind: 'writing',
+    coverage: findingsPayload.requirementCoverage.map((r) => ({
+      requirement: r.requirement,
+      covered: r.covered,
+    })),
+    dimensions: dimensions.map((d) => ({
+      label: LABELS[d.microSkill] ?? d.microSkill,
+      level: d.level,
+      note: d.note,
+    })),
+    priorities: coaching.priorities.map((p) => ({ title: p.title, how: p.how })),
+    modelNotes: row.task.modelNotes,
+    estimatedLevel: row.evaluation.estimatedLevel,
+    targetLevel: profile.targetLevel,
+  });
 
   const uncovered = findingsPayload.requirementCoverage.filter((r) => !r.covered);
 
@@ -271,17 +298,21 @@ export default async function WritingFeedbackPage({ params }: { params: Promise<
         </div>
       </section>
 
-      {/* --- What a person said, where a person is available --- */}
-      {reviewGate.allowed ? (
-        <section style={{ marginBottom: 'var(--s6)' }}>
-          <div className="section-head">
-            <h2 style={{ fontSize: '1.05rem', fontFamily: 'var(--font-body)', fontWeight: 600 }}>
-              From a teacher
-            </h2>
-            <p className="tiny faint">A judgement the analyser cannot make</p>
-          </div>
+      {/* --- Second pass: a person where there is one, a protocol where there is not --- */}
+      <section style={{ marginBottom: 'var(--s6)' }}>
+        <div className="section-head">
+          <h2 style={{ fontSize: '1.05rem', fontFamily: 'var(--font-body)', fontWeight: 600 }}>
+            {reviewGate.allowed && reviewerAvailable ? 'From a teacher' : 'The second pass'}
+          </h2>
+          <p className="tiny faint">
+            {reviewGate.allowed && reviewerAvailable
+              ? 'A judgement the analyser cannot make'
+              : 'What the analyser cannot judge, and you can'}
+          </p>
+        </div>
 
-          {review?.status === 'returned' ? (
+        {reviewGate.allowed && (reviewerAvailable || review) ? (
+          review?.status === 'returned' ? (
             <article className="panel" style={{ borderLeft: '3px solid var(--accent)' }}>
               <div className="stack stack-3">
                 {review.reviewerLevel !== null ? (
@@ -300,16 +331,35 @@ export default async function WritingFeedbackPage({ params }: { params: Promise<
               </div>
             </article>
           ) : review ? (
-            <p className="notice notice-caution">
-              {review.status === 'claimed'
-                ? 'A teacher has picked this up and is reading it.'
-                : 'Waiting for a teacher. The automated analysis above does not wait for it.'}
-            </p>
+            <div className="stack stack-4">
+              <p className="notice notice-caution">
+                {review.status === 'claimed'
+                  ? 'A teacher has picked this up and is reading it.'
+                  : reviewerAvailable
+                    ? 'Waiting for a teacher. The automated analysis above does not wait for it.'
+                    : 'This was sent when someone was here to read it, and nobody is now. Rather than leave you waiting on an answer that may not come, the self-review below is the same work you would be asked to do anyway.'}
+              </p>
+              {/* A request that can no longer be answered must not be the end of
+                  the page. The protocol is what the learner can act on today. */}
+              {review.status === 'requested' && !reviewerAvailable ? (
+                <SelfReview
+                  review={selfReview}
+                  retryHref={`/writing/${row.task.slug}`}
+                  retryLabel="Write this task again"
+                />
+              ) : null}
+            </div>
           ) : (
             <ReviewRequest submissionType="writing" submissionId={id} />
-          )}
-        </section>
-      ) : null}
+          )
+        ) : (
+          <SelfReview
+            review={selfReview}
+            retryHref={`/writing/${row.task.slug}`}
+            retryLabel="Write this task again"
+          />
+        )}
+      </section>
 
       {/* --- Limitations --- */}
       <section style={{ marginBottom: 'var(--s6)' }}>

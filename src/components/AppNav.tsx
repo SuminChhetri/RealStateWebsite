@@ -65,11 +65,18 @@ export function AppNav({
   counts,
   userName,
   orgName,
+  /**
+   * Whether this workspace has other people in it. A personal workspace has no
+   * cohort and no review queue, and listing two menu items that can only lead
+   * to a locked page is clutter dressed as capability.
+   */
+  shared,
   signOutAction,
 }: {
   counts: { reviews: number; mistakes: number };
   userName: string;
   orgName: string;
+  shared: boolean;
   signOutAction: () => Promise<void>;
 }) {
   const pathname = usePathname();
@@ -154,12 +161,16 @@ export function AppNav({
               <Link href="/plans" className="app-nav-link">
                 Plans
               </Link>
-              <Link href="/cohort" className="app-nav-link">
-                Cohort
-              </Link>
-              <Link href="/review-queue" className="app-nav-link">
-                Review queue
-              </Link>
+              {shared ? (
+                <>
+                  <Link href="/cohort" className="app-nav-link">
+                    Cohort
+                  </Link>
+                  <Link href="/review-queue" className="app-nav-link">
+                    Review queue
+                  </Link>
+                </>
+              ) : null}
               <Link href="/settings" className="app-nav-link">
                 Settings
               </Link>

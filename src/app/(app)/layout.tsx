@@ -24,6 +24,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         counts={{ reviews: profile.dueReviewCount, mistakes: profile.openMistakes }}
         userName={session.name}
         orgName={session.orgName}
+        shared={session.orgKind !== 'personal'}
         signOutAction={signOut}
       />
       <main id="main" className="app-main">

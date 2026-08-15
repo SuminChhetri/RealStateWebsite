@@ -133,13 +133,40 @@ is charged for is not the method but the artefacts and the people:
   of the two estimates; anything smaller is reported as noise, including when
   the number went up.
 - **Cohort view** — for a teacher running a group.
-- **Human review (the coached path)** — the one place where the intelligence is
-  a person. A learner asks a teacher to look at a piece of writing or a
-  recording, with a specific question; the teacher claims it off an oldest-first
-  queue, reads or listens to it, and returns written feedback with an optional
-  band. A teacher's band is shown **beside** the analyser's estimate and is never
-  merged into it: a human judgement and a rule-based estimate are different kinds
-  of claim, and averaging them would hide both.
+- **Human review (the coached path)** — where a workspace has other people in
+  it. A learner asks a teacher to look at a piece of writing or a recording,
+  with a specific question; the teacher claims it off an oldest-first queue,
+  reads or listens to it, and returns written feedback with an optional band. A
+  teacher's band is shown **beside** the analyser's estimate and is never merged
+  into it: a human judgement and a rule-based estimate are different kinds of
+  claim, and averaging them would hide both.
+
+### The self-serve default
+
+The product is self-serve, so the ordinary workspace has one person in it, and
+that person is the learner. "Ask a teacher to read this" would be a button
+leading nowhere — the request filed against a queue nobody opens, the learner
+waiting on an answer that is not coming, and not doing the thing that would
+actually help.
+
+So the page asks first whether anyone else is there (excluding the learner
+themselves — a solo learner holds the `owner` role, which *can* review, and
+counting them would offer everybody the chance to wait for themselves). Where
+nobody is, the section becomes a **structured self-review** instead: a set of
+passes built from the analyser's own findings and the task's stated
+requirements, in the order a trained marker reads — the requirements it could
+not find evidence of, the dimension that scored lowest, the priority it already
+named, a read-aloud pass, and the task's notes as the standard. Each pass ends
+in a question answerable only by pointing at the learner's own text, and the
+protocol closes by sending them back to rewrite the task.
+
+It says at the top what it is not: not a person's judgement, and not a model
+reading the work. There is no model in this path and no score comes out of it.
+Self-explanation against a stated standard is well evidenced; what makes it fail
+in practice is vagueness, which is why every question names something specific.
+It is free on every plan, because it is part of the learning loop and the loop
+is not for sale — and paying does not conjure a teacher, so an upgrade changes
+nothing here until a real person joins the workspace.
 
 The coached path has two rules in the code rather than in a policy document.
 Feedback shorter than twenty characters is rejected, because "Good job" is what
@@ -183,6 +210,7 @@ src/
       sitting-report.ts     forensic analysis of one sitting, and sitting comparison
       readiness-report.ts   the printable verdict, with its refusal-to-answer path
     practice/               item selection, delivery, submission
+      self-review.ts        the protocol shown where there is no teacher
       review-rules.ts       what counts as a valid review request and return
       review-access.ts      who may read work that is not their own
       review-actions.ts     the coached path: ask, claim, release, return
